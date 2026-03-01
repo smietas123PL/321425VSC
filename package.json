@@ -1,0 +1,43 @@
+{
+  "name": "agentspark",
+  "version": "1.0.0",
+  "description": "Build your AI agent team in minutes, no code required",
+  "main": "index.html",
+  "scripts": {
+    "start": "python -m http.server 8000",
+    "serve": "npx serve .",
+    "dev": "npx serve . --listen 3000",
+    "format": "prettier --write \"**/*.{html,css,js,json,md}\"",
+    "lint": "eslint . --ext .js",
+    "smoke": "node scripts/release-smoke.mjs",
+    "test": "npm run smoke"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yourusername/agentspark.git"
+  },
+  "keywords": [
+    "ai",
+    "agents",
+    "claude",
+    "anthropic",
+    "prompt-engineering",
+    "no-code",
+    "llm",
+    "chatbot",
+    "automation"
+  ],
+  "author": "AgentSpark Team",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/yourusername/agentspark/issues"
+  },
+  "homepage": "https://agentspark.app",
+  "devDependencies": {
+    "prettier": "^3.1.0",
+    "eslint": "^8.55.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

@@ -1,0 +1,50 @@
+
+# Netlify configuration for AgentSpark
+
+[build]
+  # No build process needed - pure HTML/CSS/JS
+  publish = "."
+  command = "echo 'No build needed!'"
+
+[[redirects]]
+  # SPA-like routing (if needed in future)
+  from = "/*"
+  to = "/index.html"
+  status = 200
+  force = false
+
+[[headers]]
+  # Security headers
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    X-XSS-Protection = "1; mode=block"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "geolocation=(), microphone=(), camera=()"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https:; connect-src 'self' https://*.googleapis.com https://api.openai.com https://api.anthropic.com https://api.mistral.ai https://api.groq.com https://api.github.com https://gist.githubusercontent.com https://raw.githubusercontent.com; object-src 'none'; base-uri 'self'; frame-ancestors 'none'"
+
+[[headers]]
+  # Cache static assets
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/*.json"
+  [headers.values]
+    Cache-Control = "public, max-age=3600"
+
+[[headers]]
+  for = "/*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.css"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Disable Netlify branding (optional)
+[build.environment]
+  NODE_VERSION = "18"

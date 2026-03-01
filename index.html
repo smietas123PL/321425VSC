@@ -2047,12 +2047,12 @@
   .refine-thinking .thinking-dots span:nth-child(2) { animation-delay: 0.2s; }
   .refine-thinking .thinking-dots span:nth-child(3) { animation-delay: 0.4s; }
 
-  @keyframes agentUpdated {
+  @keyframes agent {
     0%   { box-shadow: 0 0 0 rgba(124,196,42,0); border-color: var(--border); }
     30%  { box-shadow: 0 0 24px rgba(124,196,42,0.3); border-color: var(--success); }
     100% { box-shadow: 0 0 0 rgba(124,196,42,0); border-color: var(--border); }
   }
-  .agent-card.just-updated { animation: agentUpdated 1.5s ease forwards; }
+  .agent-card.just-updated { animation: agent 1.5s ease forwards; }
   @keyframes agentAdded {
     0%   { opacity: 0; transform: translateY(12px) scale(0.97); }
     100% { opacity: 1; transform: translateY(0) scale(1); }
@@ -4382,7 +4382,7 @@
 </style>
 </head>
 <body>
-<div class="offline-bar" id="offline-bar">📡 You're offline — AgentSpark loaded from cache</div>
+<div class="offline-bar" id="offline-bar">Działa offline ✓ Załadowano z pamięci podręcznej</div>
 
 <!-- ── NAV DRAWER ── -->
 <div id="nav-drawer-overlay" onclick="closeDrawer()"></div>
@@ -4426,7 +4426,7 @@
     </button>
     <button class="drawer-nav-item" onclick="closeDrawer();openImportModal()">
       <span class="dnav-icon">📥</span>
-      <span class="dnav-label">Import Project</span>
+          <span class="dnav-label" id="drawer-import-label">Import Project</span>
     </button>
     <div class="drawer-divider"></div>
     <span class="drawer-section-label">Preferences</span>
@@ -4521,6 +4521,41 @@
           <h2>✨ Agent Templates</h2>
           <p style="color:var(--muted);margin-top:0.5rem;">Start from a proven team or fork and customize</p>
         </div>
+        
+        <!-- QUICK START SECTION -->
+        <div style="margin-bottom:2rem;">
+          <h3 style="font-size:1.1rem;margin-bottom:1rem;">🚀 Szybki Start</h3>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:1rem;">
+            <!-- Content Team -->
+            <div onclick="startQuickTeam('content')" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1rem;cursor:pointer;transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+              <div style="font-weight:700;margin-bottom:0.5rem;">Content & Social</div>
+              <div style="font-size:0.85rem;color:var(--muted);display:flex;gap:0.5rem;flex-wrap:wrap;">
+                <span style="background:rgba(255,255,255,0.05);padding:2px 6px;border-radius:4px;">SEO</span>
+                <span style="background:rgba(255,255,255,0.05);padding:2px 6px;border-radius:4px;">Social Media</span>
+                <span style="background:rgba(255,255,255,0.05);padding:2px 6px;border-radius:4px;">Content</span>
+              </div>
+            </div>
+            <!-- Support Team -->
+            <div onclick="startQuickTeam('support')" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1rem;cursor:pointer;transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+              <div style="font-weight:700;margin-bottom:0.5rem;">Obsługa Klienta</div>
+              <div style="font-size:0.85rem;color:var(--muted);display:flex;gap:0.5rem;flex-wrap:wrap;">
+                <span style="background:rgba(255,255,255,0.05);padding:2px 6px;border-radius:4px;">Support</span>
+                <span style="background:rgba(255,255,255,0.05);padding:2px 6px;border-radius:4px;">Eskalacja</span>
+                <span style="background:rgba(255,255,255,0.05);padding:2px 6px;border-radius:4px;">Baza Wiedzy</span>
+              </div>
+            </div>
+            <!-- Research Team -->
+            <div onclick="startQuickTeam('research')" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1rem;cursor:pointer;transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+              <div style="font-weight:700;margin-bottom:0.5rem;">Research & Copy</div>
+              <div style="font-size:0.85rem;color:var(--muted);display:flex;gap:0.5rem;flex-wrap:wrap;">
+                <span style="background:rgba(255,255,255,0.05);padding:2px 6px;border-radius:4px;">Research</span>
+                <span style="background:rgba(255,255,255,0.05);padding:2px 6px;border-radius:4px;">Copywriter</span>
+                <span style="background:rgba(255,255,255,0.05);padding:2px 6px;border-radius:4px;">Korekta</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="gallery-controls">
           <div class="gallery-search-wrap">
             <span style="position:absolute;left:0.9rem;top:50%;transform:translateY(-50%);color:var(--muted);font-size:1rem;pointer-events:none;">🔍</span>
@@ -4627,6 +4662,20 @@
               </optgroup>
 </select>
             <div class="model-hint" id="modelHint">Key: Google AI Studio → <strong>makersuite.google.com</strong></div>
+            
+            <!-- POPULAR MODELS 2026 -->
+            <div style="margin-top:0.8rem;border:1px solid var(--border);border-radius:8px;overflow:hidden;">
+              <div onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'" style="padding:0.5rem 0.8rem;background:var(--surface2);font-size:0.75rem;font-weight:700;cursor:pointer;display:flex;justify-content:space-between;">
+                <span>🔥 Popular Models 2026</span>
+                <span>▾</span>
+              </div>
+              <div style="display:none;padding:0.8rem;background:var(--bg);font-size:0.75rem;line-height:1.4;">
+                <div style="margin-bottom:0.5rem;"><strong>Claude 4 Sonnet</strong> — Najlepszy do rozumowania i długich promptów</div>
+                <div style="margin-bottom:0.5rem;"><strong>Gemini 2.5 Pro</strong> — Multimodalny, bardzo tani, świetny do obrazów</div>
+                <div style="margin-bottom:0.5rem;"><strong>Grok 4</strong> — Kreatywny, real-time wiedza z X, bez cenzury</div>
+                <div><strong>GPT-4.1 / o1-pro</strong> — Najmocniejszy w matematyce i kodowaniu</div>
+              </div>
+            </div>
           </div>
           <label class="api-label"><span id="apiKeyLabel">Gemini API Key</span> <span style="color:var(--muted);font-size:0.7rem;">(required)</span></label>
           <div class="api-key-area">
@@ -4701,7 +4750,19 @@
           <div style="max-width:560px;margin:0 auto;padding:1rem 0 2rem;">
             <div class="or-divider" id="or-text" style="margin-bottom:1.5rem;">Describe your project</div>
             <div class="custom-topic">
-              <input type="text" class="input-field" id="customTopic" placeholder="e.g. AI-powered recipe recommender..."/>
+              <input type="text" class="input-field" id="customTopic" list="project-ideas" placeholder="e.g. AI-powered recipe recommender..."/>
+              <datalist id="project-ideas">
+                <option value="Agencja marketingowa AI">
+                <option value="System obsługi klienta e-commerce">
+                <option value="Generator treści na bloga">
+                <option value="Asystent do nauki języków">
+                <option value="Analiza sentymentu w social media">
+                <option value="Planer podróży i budżetu">
+                <option value="Twórca kursów online">
+                <option value="System rekrutacji HR">
+                <option value="Doradca finansowy osobisty">
+                <option value="Optymalizator SEO stron www">
+              </datalist>
               <button class="btn-primary" onclick="startWithTopic()" id="start-btn">Start →</button>
             </div>
             <div style="text-align:center;margin-top:1.5rem;">
@@ -4788,6 +4849,7 @@
         <div class="hero-badge" id="result-badge">MISSION COMPLETE</div>
         <h2 id="result-title">Your AI Team is Ready</h2>
         <p id="result-sub" style="color:var(--muted);">Your AI team is ready — download and deploy</p>
+        <button onclick="regenerateTeam()" style="margin-top:1rem;background:transparent;border:1px solid var(--border);color:var(--accent);padding:0.4rem 0.8rem;border-radius:8px;cursor:pointer;font-family:'Space Mono',monospace;font-size:0.8rem;">↺ Regenerate Team</button>
       </div>
 
       <!-- REFINE PANEL — simplified 2-step UX -->
@@ -5133,6 +5195,19 @@
         <div id="playground-agent-tabs" style="display:flex;gap:0.4rem;flex-wrap:wrap;"></div>
       </div>
     </div>
+
+    <!-- EXAMPLE CONVERSATIONS -->
+    <div style="padding:0.5rem 1.5rem;">
+      <div style="font-size:0.75rem;color:var(--muted);cursor:pointer;border-bottom:1px dashed var(--border);display:inline-block;" onclick="document.getElementById('pg-examples').style.display=document.getElementById('pg-examples').style.display==='none'?'block':'none'">
+        💬 Przykłady gotowych rozmów
+      </div>
+      <div id="pg-examples" style="display:none;margin-top:0.5rem;background:var(--surface2);padding:0.5rem;border-radius:8px;">
+        <button onclick="loadPlaygroundExample('support')" style="display:block;width:100%;text-align:left;background:none;border:none;color:var(--text);padding:0.3rem;cursor:pointer;font-size:0.8rem;">📦 Jak obsłużyć reklamację klienta</button>
+        <button onclick="loadPlaygroundExample('content')" style="display:block;width:100%;text-align:left;background:none;border:none;color:var(--text);padding:0.3rem;cursor:pointer;font-size:0.8rem;">📅 Plan treści na 30 dni</button>
+        <button onclick="loadPlaygroundExample('saas')" style="display:block;width:100%;text-align:left;background:none;border:none;color:var(--text);padding:0.3rem;cursor:pointer;font-size:0.8rem;">📊 Analiza konkurencji SaaS</button>
+      </div>
+    </div>
+
     <!-- Chat area -->
     <div id="playground-messages" style="
       flex:1;overflow-y:auto;padding:1rem 1.5rem;
@@ -5305,20 +5380,20 @@
       <p style="color:var(--muted);font-size:0.9rem;line-height:1.6;margin-bottom:1.5rem;" id="tpl-description"></p>
 
       <div style="margin-bottom:1.5rem;">
-        <div style="font-size:0.72rem;font-family:'Space Mono',monospace;color:var(--accent);letter-spacing:0.08em;margin-bottom:0.75rem;">USE CASES</div>
+        <div id="tpl-usecases-label" style="font-size:0.72rem;font-family:'Space Mono',monospace;color:var(--accent);letter-spacing:0.08em;margin-bottom:0.75rem;">USE CASES</div>
         <ul id="tpl-usecases" style="list-style:none;padding:0;display:flex;flex-direction:column;gap:0.35rem;"></ul>
       </div>
 
       <div style="margin-bottom:1.5rem;">
-        <div style="font-size:0.72rem;font-family:'Space Mono',monospace;color:var(--accent);letter-spacing:0.08em;margin-bottom:0.75rem;">AGENT TEAM</div>
+        <div id="tpl-team-label" style="font-size:0.72rem;font-family:'Space Mono',monospace;color:var(--accent);letter-spacing:0.08em;margin-bottom:0.75rem;">AGENT TEAM</div>
         <div id="tpl-team"></div>
       </div>
 
       <div id="tpl-tags" style="display:flex;flex-wrap:wrap;gap:0.4rem;"></div>
     </div>
     <div style="padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;gap:0.75rem;flex-shrink:0;">
-      <button class="btn-primary" style="flex:1;" onclick="forkTemplate()">🔀 Use This Template</button>
-      <button class="btn-secondary" onclick="closeTemplateDetail()">Cancel</button>
+      <button class="btn-primary" id="tpl-fork-btn" style="flex:1;" onclick="forkTemplate()">🔀 Use This Template</button>
+      <button class="btn-secondary" id="tpl-cancel-btn" onclick="closeTemplateDetail()">Cancel</button>
     </div>
   </div>
 </div>
@@ -5326,7 +5401,7 @@
 <div class="modal-overlay" id="import-modal">
   <div class="modal" style="max-width:620px;">
     <div class="modal-header">
-      <div class="modal-title">📥 Import Project</div>
+      <div class="modal-title" id="import-modal-title">📥 Import Project</div>
       <button class="modal-close" onclick="closeImportModal()">✕</button>
     </div>
     <div style="padding:1.5rem;">
@@ -5655,13 +5730,13 @@ async function renderProjectsList() {
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:0.5rem;">
         <div class="project-card-name">${_escHtml(p.name)}${isCurrent ? '<span class="project-unsaved-dot" title="Current project"></span>' : ''}</div>
       </div>
-      <div class="project-card-topic">📌 ${_escHtml(p.topic||'No topic')}</div>
+      <div class="project-card-topic">📌 ${_escHtml(p.topic||tr('No topic','Brak tematu'))}</div>
       <div class="project-card-meta">
         ${agentCount ? `<span class="project-card-tag">👥 ${agentCount} agents</span>` : ''}
         ${p.level ? `<span class="project-card-tag">${p.level}</span>` : ''}
         ${p.lang  ? `<span class="project-card-tag">${p.lang.toUpperCase()}</span>` : ''}
       </div>
-      <div class="project-card-date">Updated ${updated}</div>
+      <div class="project-card-date">${tr('Updated','Zaktualizowano')} ${updated}</div>
       <div class="project-card-actions" onclick="event.stopPropagation()">
         <button class="project-card-btn" onclick="loadProject('${p.id}')">▶ Open</button>
         <button class="project-card-btn" onclick="forkProject('${p.id}')">⎘ Fork</button>
@@ -5670,6 +5745,50 @@ async function renderProjectsList() {
     </div>
     </div>`;
   }).join('');
+  _localizeProjectCards(list);
+}
+
+function _localizeProjectCards(rootEl) {
+  if (!rootEl) return;
+  const openLabel = tr('Open', 'Otworz');
+  const forkLabel = tr('Fork', 'Kopia');
+  const delLabel = tr('Del', 'Usun');
+  const currentProjectTitle = tr('Current project', 'Aktualny projekt');
+
+  rootEl.querySelectorAll('.project-unsaved-dot').forEach(dot => {
+    dot.setAttribute('title', currentProjectTitle);
+  });
+
+  rootEl.querySelectorAll('.project-card-topic').forEach(el => {
+    el.innerHTML = el.innerHTML.replace('No topic', tr('No topic', 'Brak tematu'));
+  });
+  rootEl.querySelectorAll('.project-card-tag').forEach(el => {
+    el.innerHTML = el.innerHTML.replace(/\bagents\b/g, tr('agents', 'agentow'));
+  });
+  rootEl.querySelectorAll('.project-card-date').forEach(el => {
+    el.innerHTML = el.innerHTML.replace(/^Updated\s+/i, tr('Updated ', 'Zaktualizowano '));
+  });
+
+  const setButtonLabel = (btn, label) => {
+    if (!btn) return;
+    const icon = btn.querySelector('.sa-icon');
+    if (icon) {
+      btn.textContent = '';
+      btn.appendChild(icon);
+      btn.appendChild(document.createTextNode(label));
+      return;
+    }
+    btn.textContent = label;
+  };
+
+  rootEl.querySelectorAll('.swipe-action-btn.open-btn').forEach(btn => setButtonLabel(btn, openLabel));
+  rootEl.querySelectorAll('.swipe-action-btn.fork-btn').forEach(btn => setButtonLabel(btn, forkLabel));
+  rootEl.querySelectorAll('.swipe-action-btn.del-btn').forEach(btn => setButtonLabel(btn, delLabel));
+  rootEl.querySelectorAll('.project-card-btn').forEach(btn => {
+    btn.textContent = btn.textContent
+      .replace(/\bOpen\b/g, openLabel)
+      .replace(/\bFork\b/g, forkLabel);
+  });
 }
 
 async function _updateProjectsBadge() {
@@ -5992,6 +6111,7 @@ instrSteps: [
 };
 
 function t(key) { return T[lang][key]; }
+function tr(enText, plText) { return lang === 'en' ? enText : plText; }
 
 // ─── LANGUAGE ─────────────────────────────────────────────
 function setLang(l) {
@@ -5999,6 +6119,18 @@ function setLang(l) {
   document.getElementById('btn-en').classList.toggle('active', l==='en');
   document.getElementById('btn-pl').classList.toggle('active', l==='pl');
   renderTopicScreen();
+  refreshStaticI18n();
+}
+
+function refreshStaticI18n() {
+  const drawerImport = document.getElementById('drawer-import-label');
+  const importModalTitle = document.getElementById('import-modal-title');
+  const shareCopyBtn = document.getElementById('share-copy-btn');
+  if (drawerImport) drawerImport.textContent = tr('Import Project', 'Importuj projekt');
+  if (importModalTitle) importModalTitle.textContent = tr('📥 Import Project', '📥 Importuj projekt');
+  if (shareCopyBtn && !shareCopyBtn.classList.contains('copied')) {
+    shareCopyBtn.textContent = tr('📋 Copy', '📋 Kopiuj');
+  }
 }
 
 // ─── MODEL SELECTION ──────────────────────────────────────
@@ -7299,6 +7431,10 @@ function showResults(skipReset = false) {
           <div class="agent-role">${agent.role}</div>
           <div class="agent-type-badge ${isTech ? 'badge-tech' : 'badge-biz'}" style="display:inline-block;margin-top:0.4rem;">${isTech ? (lang==='en'?'Technical':'Techniczny') : (lang==='en'?'Business':'Biznesowy')}</div>
         </div>
+        <div style="margin-left:auto;display:flex;gap:6px;">
+           <button class="feedback-btn" onclick="event.stopPropagation();this.innerText='👍';this.style.color='var(--success)';this.style.transform='scale(1.2)'" style="background:none;border:none;cursor:pointer;font-size:1.1rem;opacity:0.6;transition:all 0.2s;" title="Like">👍</button>
+           <button class="feedback-btn" onclick="event.stopPropagation();this.innerText='👎';this.style.color='var(--accent2)';this.style.transform='scale(1.2)'" style="background:none;border:none;cursor:pointer;font-size:1.1rem;opacity:0.6;transition:all 0.2s;" title="Dislike">👎</button>
+        </div>
       </div>
       <div class="agent-card-divider"></div>
       <div class="agent-card-body">
@@ -8366,11 +8502,11 @@ function openSettingsSheet() {
       <div class="ios-sheet" style="max-height:80vh;">
         <div class="ios-sheet-handle"></div>
         <div class="ios-sheet-header">
-          <span class="ios-sheet-title">Settings</span>
+          <span class="ios-sheet-title" id="settings-sheet-title">Settings</span>
           <button class="ios-sheet-close" onclick="document.getElementById('ios-settings-sheet').classList.remove('open')">✕</button>
         </div>
         <div class="ios-sheet-body">
-          <div class="ios-section-label" style="margin-bottom:0.5rem;">Appearance</div>
+          <div class="ios-section-label" style="margin-bottom:0.5rem;" id="settings-appearance-label">Appearance</div>
           <div class="ios-list-group">
             <div class="ios-list-item" onclick="_toggleThemeCore()">
               <div class="ios-list-icon" style="background:rgba(242,185,13,0.15);">🌙</div>
@@ -8378,7 +8514,7 @@ function openSettingsSheet() {
               <span class="ios-list-chevron">›</span>
             </div>
           </div>
-          <div class="ios-section-label" style="margin-bottom:0.5rem;">Language</div>
+          <div class="ios-section-label" style="margin-bottom:0.5rem;" id="settings-language-label">Language</div>
           <div class="ios-list-group">
             <div class="ios-list-item" onclick="setLang('en');document.getElementById('ios-settings-sheet').classList.remove('open')">
               <div class="ios-list-icon" style="background:rgba(242,185,13,0.15);">🇬🇧</div>
@@ -8391,7 +8527,7 @@ function openSettingsSheet() {
               <span id="settings-lang-pl" style="color:var(--accent);font-size:0.9rem;display:none;">✓</span>
             </div>
           </div>
-          <div class="ios-section-label" style="margin-bottom:0.5rem;">About</div>
+          <div class="ios-section-label" style="margin-bottom:0.5rem;" id="settings-about-label">About</div>
           <div class="ios-list-group">
             <div class="ios-list-item">
               <div class="ios-list-icon" style="background:rgba(242,185,13,0.15);">⚡</div>
@@ -8402,7 +8538,7 @@ function openSettingsSheet() {
             </div>
             <div class="ios-list-item" onclick="openImportModal();document.getElementById('ios-settings-sheet').classList.remove('open')">
               <div class="ios-list-icon" style="background:rgba(242,185,13,0.15);">📥</div>
-              <div style="flex:1"><div class="ios-list-label">Import Project</div></div>
+              <div style="flex:1"><div class="ios-list-label" id="settings-import-label">Import Project</div></div>
               <span class="ios-list-chevron">›</span>
             </div>
           </div>
@@ -8421,7 +8557,21 @@ function openSettingsSheet() {
   // Update theme label
   const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
   const themeLabel = document.getElementById('settings-theme-label');
-  if (themeLabel) themeLabel.textContent = isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode';
+  if (themeLabel) themeLabel.textContent = isDark
+    ? tr('Switch to Light Mode', 'Przelacz na jasny motyw')
+    : tr('Switch to Dark Mode', 'Przelacz na ciemny motyw');
+  const titleEl = document.getElementById('settings-sheet-title');
+  const appearanceEl = document.getElementById('settings-appearance-label');
+  const languageEl = document.getElementById('settings-language-label');
+  const aboutEl = document.getElementById('settings-about-label');
+  const importEl = document.getElementById('settings-import-label');
+  const aboutSubEl = sheet.querySelector('.ios-list-sub');
+  if (titleEl) titleEl.textContent = tr('Settings', 'Ustawienia');
+  if (appearanceEl) appearanceEl.textContent = tr('Appearance', 'Wyglad');
+  if (languageEl) languageEl.textContent = tr('Language', 'Jezyk');
+  if (aboutEl) aboutEl.textContent = tr('About', 'O aplikacji');
+  if (importEl) importEl.textContent = tr('Import Project', 'Importuj projekt');
+  if (aboutSubEl) aboutSubEl.textContent = tr('v1.1.0 — AI Agent Team Generator', 'v1.1.0 — Generator zespolu agentow AI');
   sheet.classList.add('open');
 }
 
@@ -8951,7 +9101,7 @@ function openImportModal() {
   if (gistInput) gistInput.value = '';
   _clearGistImportError();
   const gistLabel = document.getElementById('gist-import-label');
-  if (gistLabel) gistLabel.textContent = 'Load →';
+  if (gistLabel) gistLabel.textContent = tr('Load ->', 'Wczytaj ->');
   document.getElementById('import-modal').classList.add('open');
 }
 function closeImportModal() {
@@ -8984,17 +9134,20 @@ async function _processImportFile(file) {
     } else if (ext === 'zip') {
       await _parseImportZip(file);
     } else {
-      _showImportError(`Unsupported file type ".${ext}". Please use .json or .zip`);
+      _showImportError(tr(
+        `Unsupported file type ".${ext}". Please use .json or .zip`,
+        `Nieobslugiwany typ pliku ".${ext}". Uzyj .json lub .zip`
+      ));
     }
   } catch(e) {
-    _showImportError('Failed to read file: ' + e.message);
+    _showImportError(tr('Failed to read file: ', 'Nie udalo sie odczytac pliku: ') + e.message);
   }
 }
 
 async function _parseImportJson(text, filename) {
   let data;
   try { data = JSON.parse(text); }
-  catch(e) { _showImportError('Invalid JSON: ' + e.message); return; }
+  catch(e) { _showImportError(tr('Invalid JSON: ', 'Nieprawidlowy JSON: ') + e.message); return; }
 
   // Support multiple JSON shapes:
   // 1) AgentSpark share payload  { v, agents, files, topic, level, lang }
@@ -9003,11 +9156,14 @@ async function _parseImportJson(text, filename) {
   let payload;
   if (Array.isArray(data) && data[0]?.id && data[0]?.name) {
     // Raw agents array
-    payload = { agents: data, topic: 'Imported', level: 'iskra', files: {} };
+    payload = { agents: data, topic: tr('Imported', 'Zaimportowane'), level: 'iskra', files: {} };
   } else if (data.agents?.length) {
     payload = data;
   } else {
-    _showImportError('No agents found in this JSON file. Make sure it\'s an AgentSpark export.');
+    _showImportError(tr(
+      'No agents found in this JSON file. Make sure it\'s an AgentSpark export.',
+      'W tym pliku JSON nie znaleziono agentow. Upewnij sie, ze to eksport AgentSpark.'
+    ));
     return;
   }
   _importParsed = { ...payload, _sourceFile: filename };
@@ -9016,13 +9172,13 @@ async function _parseImportJson(text, filename) {
 
 async function _parseImportZip(file) {
   if (typeof JSZip === 'undefined') {
-    _showImportError('JSZip library not loaded — cannot read ZIP files.'); return;
+    _showImportError(tr('JSZip library not loaded — cannot read ZIP files.', 'Biblioteka JSZip nie jest zaladowana — nie mozna odczytac pliku ZIP.')); return;
   }
   let zip;
   try {
     zip = await JSZip.loadAsync(file);
   } catch(e) {
-    _showImportError('Cannot open ZIP: ' + e.message); return;
+    _showImportError(tr('Cannot open ZIP: ', 'Nie mozna otworzyc ZIP: ') + e.message); return;
   }
 
   // Strategy 1: look for agentspark.json manifest (lossless)
@@ -9054,11 +9210,11 @@ async function _parseImportZip(file) {
     mdFiles[mf] = await zip.file(mf).async('text');
   }
   if (!mdNames.length) {
-    _showImportError('No recognizable AgentSpark files found in this ZIP.'); return;
+    _showImportError(tr('No recognizable AgentSpark files found in this ZIP.', 'W tym ZIP nie znaleziono rozpoznawalnych plikow AgentSpark.')); return;
   }
   const reconstructed = _reconstructFromMdFiles(mdFiles, file.name);
   if (!reconstructed.agents.length) {
-    _showImportError('Could not reconstruct agents from .md files in this ZIP.'); return;
+    _showImportError(tr('Could not reconstruct agents from .md files in this ZIP.', 'Nie udalo sie odtworzyc agentow z plikow .md w tym ZIP.')); return;
   }
   _importParsed = { ...reconstructed, _sourceFile: file.name };
   _showImportPreview(reconstructed, file.name);
@@ -9068,7 +9224,7 @@ async function _parseImportZip(file) {
 function _reconstructFromMdFiles(mdFiles, zipName) {
   const agents = [];
   const files  = { ...mdFiles };
-  let topic = 'Imported from ZIP';
+  let topic = tr('Imported from ZIP', 'Zaimportowano z ZIP');
 
   // Try to get topic from README.md
   if (mdFiles['README.md']) {
@@ -9112,19 +9268,19 @@ function _showImportPreview(payload, filename) {
 
   content.innerHTML = `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem 1.5rem;margin-bottom:0.75rem;">
-      <div><span style="color:var(--muted);font-size:0.72rem;">FILE</span><br/><strong style="font-size:0.85rem;">${_escHtml(filename)}</strong></div>
-      <div><span style="color:var(--muted);font-size:0.72rem;">TOPIC</span><br/><strong style="font-size:0.85rem;">${_escHtml(payload.topic || '—')}</strong></div>
-      <div><span style="color:var(--muted);font-size:0.72rem;">LEVEL</span><br/><strong style="font-size:0.85rem;">${payload.level || '—'}</strong></div>
-      <div><span style="color:var(--muted);font-size:0.72rem;">FILES</span><br/><strong style="font-size:0.85rem;">${fileCount} .md files</strong></div>
+      <div><span style="color:var(--muted);font-size:0.72rem;">${tr('FILE', 'PLIK')}</span><br/><strong style="font-size:0.85rem;">${_escHtml(filename)}</strong></div>
+      <div><span style="color:var(--muted);font-size:0.72rem;">${tr('TOPIC', 'TEMAT')}</span><br/><strong style="font-size:0.85rem;">${_escHtml(payload.topic || '—')}</strong></div>
+      <div><span style="color:var(--muted);font-size:0.72rem;">${tr('LEVEL', 'POZIOM')}</span><br/><strong style="font-size:0.85rem;">${payload.level || '—'}</strong></div>
+      <div><span style="color:var(--muted);font-size:0.72rem;">${tr('FILES', 'PLIKI')}</span><br/><strong style="font-size:0.85rem;">${fileCount} .md ${tr('files', 'plikow')}</strong></div>
     </div>
-    <div style="font-size:0.72rem;color:var(--muted);margin-bottom:0.4rem;">AGENTS (${agents.length})</div>
+    <div style="font-size:0.72rem;color:var(--muted);margin-bottom:0.4rem;">${tr('AGENTS', 'AGENCI')} (${agents.length})</div>
     <div style="display:flex;flex-wrap:wrap;gap:0.4rem;">
       ${agents.map(a => `<span style="font-size:0.75rem;padding:0.2rem 0.55rem;border-radius:5px;
         background:${a.type==='technical'?'rgba(124,58,255,0.12)':'rgba(255,107,53,0.12)'};
         border:1px solid ${a.type==='technical'?'rgba(196,147,10,0.3)':'rgba(255,107,53,0.3)'};
         color:${a.type==='technical'?'var(--accent3)':'var(--accent2)'}">${a.emoji||'🤖'} ${_escHtml(a.name)}</span>`).join('')}
     </div>
-    ${!agents.length ? '<div style="color:var(--accent2);">⚠ No agents detected</div>' : ''}
+    ${!agents.length ? `<div style="color:var(--accent2);">⚠ ${tr('No agents detected', 'Nie wykryto agentow')}</div>` : ''}
   `;
 
   preview.style.display = 'block';
@@ -9139,7 +9295,7 @@ async function confirmImport() {
   const saveToDb = document.getElementById('import-save-checkbox')?.checked !== false;
 
   // Restore state — same pattern as loadProject / share restore
-  currentTopic    = p.topic   || 'Imported Project';
+  currentTopic    = p.topic   || tr('Imported Project', 'Zaimportowany projekt');
   currentLevel    = p.level   || 'iskra';
   if (p.lang) { lang = p.lang; setLang(lang); }
   generatedAgents = JSON.parse(JSON.stringify(p.agents || []));
@@ -9203,7 +9359,7 @@ function resetImportModal() {
 function _showImportError(msg) {
   const el = document.getElementById('import-error');
   if (!el) return;
-  el.textContent = '⚠ ' + msg;
+  el.textContent = `⚠ ${msg}`;
   el.style.display = 'block';
 }
 function _clearImportError() {
@@ -9261,12 +9417,12 @@ async function copyPromptToClipboard() {
   if (!ta) return;
   try {
     await navigator.clipboard.writeText(ta.value);
-    if (fb) { fb.textContent = '✓ Copied!'; fb.style.opacity = '1'; setTimeout(() => { fb.style.opacity = '0'; }, 2000); }
-    if (btn) { const orig = btn.textContent; btn.textContent = '✓ Copied!'; setTimeout(() => { btn.textContent = orig; }, 1500); }
+    if (fb) { fb.textContent = tr('✓ Copied!', '✓ Skopiowano!'); fb.style.opacity = '1'; setTimeout(() => { fb.style.opacity = '0'; }, 2000); }
+    if (btn) { const orig = btn.textContent; btn.textContent = tr('✓ Copied!', '✓ Skopiowano!'); setTimeout(() => { btn.textContent = orig; }, 1500); }
   } catch(e) {
     ta.select();
     document.execCommand('copy');
-    if (fb) { fb.textContent = '✓ Copied!'; fb.style.opacity = '1'; setTimeout(() => { fb.style.opacity = '0'; }, 2000); }
+    if (fb) { fb.textContent = tr('✓ Copied!', '✓ Skopiowano!'); fb.style.opacity = '1'; setTimeout(() => { fb.style.opacity = '0'; }, 2000); }
   }
 }
 
@@ -10098,7 +10254,7 @@ async function generateShareUrl() {
       sizeEl.className   = parseFloat(kb) > 100 ? 'share-size-warn' : '';
     }
     const agentEl = document.getElementById('share-agent-count');
-    if (agentEl) agentEl.textContent = `${generatedAgents.length} agents`;
+    if (agentEl) agentEl.textContent = `${generatedAgents.length} ${tr('agents', 'agentow')}`;
     const verEl   = document.getElementById('share-version-label');
     if (verEl)    verEl.textContent = `v${versionHistory.length || 1} (latest)`;
     trackEvent('share_created', {
@@ -10185,13 +10341,13 @@ function openShareModal() {
   if(pwInput) pwInput.value = '';
 
   const copyBtn = document.getElementById('share-copy-btn');
-  if(copyBtn) { copyBtn.textContent = '📋 Copy'; copyBtn.classList.remove('copied'); }
+  if(copyBtn) { copyBtn.textContent = tr('📋 Copy', '📋 Kopiuj'); copyBtn.classList.remove('copied'); }
 
   // Reset gist UI
   const gistResult = document.getElementById('gist-result');
   if(gistResult) gistResult.style.display = 'none';
   const gistLabel = document.getElementById('gist-publish-label');
-  if(gistLabel) gistLabel.textContent = '⬆ Publish Gist';
+  if(gistLabel) gistLabel.textContent = tr('Publish Gist', 'Publikuj Gist');
   const gistBtn = document.getElementById('gist-publish-btn');
   if(gistBtn) gistBtn.disabled = false;
 
@@ -10603,7 +10759,7 @@ function renderGalleryGrid() {
   if (!_galleryFiltered.length) {
     grid.innerHTML = `<div class="gallery-empty" style="grid-column:1/-1;">
       <div class="empty-icon">🔍</div>
-      <p>No templates match your search.</p>
+      <p>${tr('No templates match your search.', 'Brak szablonow pasujacych do wyszukiwania.')}</p>
     </div>`;
     return;
   }
@@ -10617,7 +10773,7 @@ function renderGalleryGrid() {
     top.style.cssText = 'display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.6rem;';
     const badge = document.createElement('span');
     badge.className = `template-badge ${t.featured ? 'featured' : ''}`;
-    badge.textContent = t.featured ? '⭐ Featured' : t.category;
+    badge.textContent = t.featured ? tr('Featured', 'Polecany') : t.category;
     top.appendChild(badge);
 
     const title = document.createElement('h3');
@@ -10630,7 +10786,7 @@ function renderGalleryGrid() {
     const meta = document.createElement('div');
     meta.className = 'tpl-card-meta';
     const agentMeta = document.createElement('span');
-    agentMeta.textContent = `🤖 ${t.agentCount} agents`;
+    agentMeta.textContent = `🤖 ${t.agentCount} ${tr('agents', 'agentow')}`;
     const difficultyMeta = document.createElement('span');
     difficultyMeta.textContent = `📊 ${t.difficulty}`;
     meta.appendChild(agentMeta);
@@ -10649,10 +10805,10 @@ function renderGalleryGrid() {
     footer.className = 'tpl-card-footer';
     const hint = document.createElement('span');
     hint.style.cssText = 'font-size:0.75rem;color:var(--muted);';
-    hint.textContent = 'View details →';
+    hint.textContent = tr('View details ->', 'Zobacz szczegoly ->');
     const useBtn = document.createElement('button');
     useBtn.className = 'tpl-fork-btn';
-    useBtn.textContent = '🔀 Use';
+    useBtn.textContent = tr('Use', 'Uzyj');
     useBtn.addEventListener('click', ev => {
       ev.stopPropagation();
       forkTemplateById(t.id);
@@ -10676,11 +10832,19 @@ function showTemplateDetail(id) {
   _selectedTemplate = t;
 
   document.getElementById('tpl-modal-title').textContent = t.title;
-  document.getElementById('tpl-badge').textContent = t.featured ? '⭐ Featured' : t.category;
+  document.getElementById('tpl-badge').textContent = t.featured ? tr('Featured', 'Polecany') : t.category;
   document.getElementById('tpl-badge').className = `template-badge ${t.featured ? 'featured' : ''}`;
   document.getElementById('tpl-difficulty').textContent = `📊 ${t.difficulty}`;
-  document.getElementById('tpl-agent-count').textContent = `🤖 ${t.agentCount} agents`;
+  document.getElementById('tpl-agent-count').textContent = `🤖 ${t.agentCount} ${tr('agents', 'agentow')}`;
   document.getElementById('tpl-description').textContent = t.description;
+  const useCasesLabel = document.getElementById('tpl-usecases-label');
+  const teamLabel = document.getElementById('tpl-team-label');
+  const forkBtn = document.getElementById('tpl-fork-btn');
+  const cancelBtn = document.getElementById('tpl-cancel-btn');
+  if (useCasesLabel) useCasesLabel.textContent = tr('USE CASES', 'ZASTOSOWANIA');
+  if (teamLabel) teamLabel.textContent = tr('AGENT TEAM', 'ZESPOL AGENTOW');
+  if (forkBtn) forkBtn.textContent = tr('Use This Template', 'Uzyj szablonu');
+  if (cancelBtn) cancelBtn.textContent = tr('Cancel', 'Anuluj');
 
   const useCases = document.getElementById('tpl-usecases');
   const team = document.getElementById('tpl-team');
@@ -10791,14 +10955,20 @@ function forkTemplateById(id) {
   const bannerTitle = document.getElementById('shared-banner-title');
   const bannerSub   = document.getElementById('shared-banner-sub');
   if (banner) {
-    bannerTitle.textContent = `🔀 Forked: ${t.title}`;
-    bannerSub.textContent   = 'Template preview. Add your API key to generate a custom version!';
+    bannerTitle.textContent = tr(`🔀 Forked: ${t.title}`, `🔀 Skopiowano: ${t.title}`);
+    bannerSub.textContent   = tr(
+      'Template preview. Add your API key to generate a custom version!',
+      'Podglad szablonu. Dodaj klucz API, aby wygenerowac wlasna wersje!'
+    );
     banner.style.display = 'flex';
   }
 
   closeTemplateDetail();
   showResults(false);
-  showNotif(`✨ Forked "${t.title}" — explore the team or generate your own!`);
+  showNotif(tr(
+    `✨ Forked "${t.title}" — explore the team or generate your own!`,
+    `✨ Skopiowano "${t.title}" — sprawdz zespol lub wygeneruj wlasny!`
+  ));
 }
 
 // ─── LOAD FROM GIST URL ───────────────────────────────────
@@ -10806,7 +10976,7 @@ function forkTemplateById(id) {
 async function loadFromGistUrl() {
   const raw = document.getElementById('gist-import-input')?.value?.trim();
   if (!raw) {
-    _showGistImportError('⚠ Paste a Gist URL or ID first.');
+    _showGistImportError(tr('⚠ Paste a Gist URL or ID first.', '⚠ Najpierw wklej URL lub ID Gist.'));
     return;
   }
 
@@ -10819,13 +10989,13 @@ async function loadFromGistUrl() {
   if (rawMatch) gistId = rawMatch[1];
 
   if (!/^[a-f0-9]{20,}$/i.test(gistId)) {
-    _showGistImportError('⚠ Could not extract a valid Gist ID from that input.');
+    _showGistImportError(tr('⚠ Could not extract a valid Gist ID from that input.', '⚠ Nie udalo sie wyodrebnic poprawnego ID Gist z podanych danych.'));
     return;
   }
 
   const btn = document.getElementById('gist-import-btn');
   const label = document.getElementById('gist-import-label');
-  label.textContent = '⏳ Loading…';
+  label.textContent = tr('⏳ Loading…', '⏳ Wczytywanie…');
   btn.disabled = true;
   _clearGistImportError();
 
@@ -10834,14 +11004,16 @@ async function loadFromGistUrl() {
       headers: { 'Accept': 'application/vnd.github.v3+json' }
     });
     if (!res.ok) {
-      throw new Error(res.status === 404 ? 'Gist not found — check the URL or ID.' : `GitHub error ${res.status}`);
+      throw new Error(res.status === 404
+        ? tr('Gist not found — check the URL or ID.', 'Nie znaleziono Gist — sprawdz URL lub ID.')
+        : tr(`GitHub error ${res.status}`, `Blad GitHub ${res.status}`));
     }
     const data = await res.json();
 
     // Find agentspark-project.json in files
     const files = data.files || {};
     const asFile = files['agentspark-project.json'] || Object.values(files).find(f => f.filename?.includes('agentspark'));
-    if (!asFile) throw new Error('This Gist does not contain an AgentSpark project file.');
+    if (!asFile) throw new Error(tr('This Gist does not contain an AgentSpark project file.', 'Ten Gist nie zawiera pliku projektu AgentSpark.'));
 
     // Fetch raw content (may be truncated in API response)
     let content = asFile.content;
@@ -10852,19 +11024,19 @@ async function loadFromGistUrl() {
 
     let payload;
     try { payload = JSON.parse(content); }
-    catch (e) { throw new Error('Invalid JSON in Gist file.'); }
+    catch (e) { throw new Error(tr('Invalid JSON in Gist file.', 'Nieprawidlowy JSON w pliku Gist.')); }
 
-    if (!payload.agents?.length) throw new Error('No agents found in this Gist.');
+    if (!payload.agents?.length) throw new Error(tr('No agents found in this Gist.', 'W tym Gist nie znaleziono agentow.'));
 
     // Show in import preview
     _importParsed = { ...payload, _sourceFile: `Gist: ${gistId.slice(0,8)}…` };
     _showImportPreview(payload, `Gist from ${data.owner?.login || 'unknown'}: ${data.description || gistId}`);
 
-    label.textContent = '✓ Loaded';
+    label.textContent = tr('✓ Loaded', '✓ Wczytano');
     _clearGistImportError();
   } catch (e) {
     _showGistImportError(`⚠ ${e.message}`);
-    label.textContent = 'Load →';
+    label.textContent = tr('Load ->', 'Wczytaj ->');
     btn.disabled = false;
   }
 }
@@ -10880,22 +11052,24 @@ function _clearGistImportError() {
   const btn = document.getElementById('gist-import-btn');
   const label = document.getElementById('gist-import-label');
   if (btn) btn.disabled = false;
-  if (label && label.textContent !== '✓ Loaded') label.textContent = 'Load →';
+  if (label && label.textContent !== tr('✓ Loaded', '✓ Wczytano')) {
+    label.textContent = tr('Load ->', 'Wczytaj ->');
+  }
 }
 
 // ─── GITHUB GIST PUBLISH ─────────────────────────────────
 async function publishToGist() {
   const token = document.getElementById('gist-token-input').value.trim();
   if(!token) {
-    showNotif('⚠ Enter your GitHub token first', true); return;
+    showNotif(tr('⚠ Enter your GitHub token first', '⚠ Najpierw podaj token GitHub'), true); return;
   }
   if(!generatedAgents.length) {
-    showNotif('⚠ No agents to publish', true); return;
+    showNotif(tr('⚠ No agents to publish', '⚠ Brak agentow do publikacji'), true); return;
   }
 
   const btn = document.getElementById('gist-publish-btn');
   const label = document.getElementById('gist-publish-label');
-  label.textContent = '⏳ Publishing…';
+  label.textContent = tr('⏳ Publishing…', '⏳ Publikowanie…');
   btn.disabled = true;
 
   const payload = {
@@ -10950,21 +11124,21 @@ async function publishToGist() {
     resultEl.style.display = 'block';
     resultEl.innerHTML = `
       <div style="background:rgba(124,196,42,0.1);border:1px solid rgba(124,196,42,0.3);border-radius:8px;padding:0.75rem 1rem;font-size:0.82rem;">
-        <div style="color:var(--success);font-weight:700;margin-bottom:0.4rem;">✓ Published to GitHub Gist!</div>
+        <div style="color:var(--success);font-weight:700;margin-bottom:0.4rem;">${tr('✓ Published to GitHub Gist!', '✓ Opublikowano w GitHub Gist!')}</div>
         <a href="${gistUrl}" target="_blank" style="color:var(--accent);word-break:break-all;">${gistUrl}</a>
         <div style="margin-top:0.5rem;display:flex;gap:0.5rem;">
-          <button onclick="navigator.clipboard.writeText('${gistUrl}').then(()=>showNotif('✓ URL copied!'))"
-            style="background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:0.3rem 0.7rem;font-size:0.75rem;cursor:pointer;">📋 Copy URL</button>
-          <button onclick="navigator.clipboard.writeText('${gistId}').then(()=>showNotif('✓ ID copied!'))"
-            style="background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:0.3rem 0.7rem;font-size:0.75rem;cursor:pointer;">📋 Copy ID</button>
+          <button onclick="navigator.clipboard.writeText('${gistUrl}').then(()=>showNotif('${tr('✓ URL copied!', '✓ URL skopiowany!')}'))"
+            style="background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:0.3rem 0.7rem;font-size:0.75rem;cursor:pointer;">${tr('📋 Copy URL', '📋 Kopiuj URL')}</button>
+          <button onclick="navigator.clipboard.writeText('${gistId}').then(()=>showNotif('${tr('✓ ID copied!', '✓ ID skopiowane!')}'))"
+            style="background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:0.3rem 0.7rem;font-size:0.75rem;cursor:pointer;">${tr('📋 Copy ID', '📋 Kopiuj ID')}</button>
         </div>
       </div>`;
-    label.textContent = '✓ Published';
-    showNotif('✓ Gist published!');
+    label.textContent = tr('✓ Published', '✓ Opublikowano');
+    showNotif(tr('✓ Gist published!', '✓ Gist opublikowany!'));
   } catch(e) {
-    label.textContent = '⬆ Publish Gist';
+    label.textContent = tr('⬆ Publish Gist', '⬆ Publikuj Gist');
     btn.disabled = false;
-    showNotif(`⚠ Gist error: ${e.message}`, true);
+    showNotif(tr(`⚠ Gist error: ${e.message}`, `⚠ Blad Gist: ${e.message}`), true);
   }
 }
 
@@ -10987,7 +11161,7 @@ function openPlayground() {
 
 function exportPlaygroundChat() {
   if (!_playgroundHistory || _playgroundHistory.length === 0) {
-    showNotif('No messages to export yet.', true);
+    showNotif(tr('No messages to export yet.', 'Brak wiadomosci do eksportu.'), true);
     return;
   }
   const agentName  = _playgroundAgent ? _playgroundAgent.name  : 'Agent';
@@ -11015,7 +11189,7 @@ function exportPlaygroundChat() {
   const a    = document.createElement('a');
   a.href = url; a.download = name; a.click();
   URL.revokeObjectURL(url);
-  showNotif('💾 Chat exported as Markdown!');
+  showNotif(tr('💾 Chat exported as Markdown!', '💾 Czat wyeksportowany do Markdown!'));
 }
 
 function closePlayground() {
@@ -11055,7 +11229,10 @@ function _selectPlaygroundAgent(agent, btnEl) {
   // Clear messages and show welcome
   const msgs = document.getElementById('playground-messages');
   msgs.innerHTML = '';
-  _pgAddMessage('system', `You are now talking to **${agent.emoji || '🤖'} ${agent.name}**\n${agent.description || ''}`);
+  _pgAddMessage('system', tr(
+    `You are now talking to **${agent.emoji || '🤖'} ${agent.name}**\n${agent.description || ''}`,
+    `Rozmawiasz teraz z **${agent.emoji || '🤖'} ${agent.name}**\n${agent.description || ''}`
+  ));
   document.getElementById('playground-status').textContent = '';
   document.getElementById('playground-input').focus();
 }
@@ -11089,7 +11266,7 @@ function _pgAddMessage(role, text) {
 
 async function sendPlaygroundMessage() {
   if(!_playgroundAgent) {
-    showNotif('⚠ Select an agent first', true); return;
+    showNotif(tr('⚠ Select an agent first', '⚠ Najpierw wybierz agenta'), true); return;
   }
   const input = document.getElementById('playground-input');
   const text = input.value.trim();
@@ -11159,9 +11336,9 @@ async function copyShareUrl() {
   try {
     await navigator.clipboard.writeText(_shareUrl);
     const btn = document.getElementById('share-copy-btn');
-    btn.textContent = '✓ Copied!';
+    btn.textContent = tr('✓ Copied!', '✓ Skopiowano!');
     btn.classList.add('copied');
-    setTimeout(() => { btn.textContent = '📋 Copy'; btn.classList.remove('copied'); }, 2500);
+    setTimeout(() => { btn.textContent = tr('📋 Copy', '📋 Kopiuj'); btn.classList.remove('copied'); }, 2500);
     showNotif(lang==='en' ? '✓ Share link copied!' : '✓ Link skopiowany!');
   } catch(e) {
     showNotif(lang==='en' ? '⚠ Copy failed' : '⚠ Kopiowanie nieudane', true);
@@ -11392,9 +11569,77 @@ function _themeHoldStart() {
 (async () => {
   const loaded = await loadFromHash();
   if(!loaded) renderTopicScreen();
+  refreshStaticI18n();
   maybeShowOnboarding();
   loadFeaturedTemplates();
 })();
+
+// ─── NEW FEATURES 2026 ──────────────────────────────────
+function startQuickTeam(type) {
+  const configs = {
+    content: {
+      topic: 'Content Marketing Team',
+      roles: ['SEO Specialist', 'Content Writer', 'Social Media Manager']
+    },
+    support: {
+      topic: 'Customer Support Team',
+      roles: ['Customer Support Agent', 'Escalation Manager', 'Knowledge Base Curator']
+    },
+    research: {
+      topic: 'Research & Copy Team',
+      roles: ['Research Analyst', 'Copywriter', 'Language Editor']
+    }
+  };
+  
+  const config = configs[type];
+  if(!config) return;
+  
+  currentTopic = config.topic;
+  showScreen('chat');
+  renderProgressSteps(3); // Show full progress
+  
+  // Fake chat history for context
+  chatHistory = [
+    { role: 'user', text: `I need a ${config.topic}.` },
+    { role: 'ai', text: `I'll create a team with: ${config.roles.join(', ')}.` }
+  ];
+  
+  // Trigger generation
+  generateAgents();
+}
+
+function regenerateTeam() {
+  if(confirm(lang === 'en' ? 'Regenerate team with same settings?' : 'Wygenerować ponownie zespół z tymi samymi ustawieniami?')) {
+    showScreen('chat');
+    generateAgents();
+  }
+}
+
+function loadPlaygroundExample(type) {
+  const examples = {
+    support: "**User:** Kupiłem produkt X, ale przyszedł uszkodzony. Co mam zrobić?\n**Agent:** Bardzo mi przykro z tego powodu. Proszę podać numer zamówienia, a natychmiast zajmę się procesem reklamacji i wymianą towaru na nowy.",
+    content: "**User:** Przygotuj plan postów na LinkedIn na temat AI w marketingu.\n**Agent:** Oto propozycja na 4 tygodnie:\nTydzień 1: Wprowadzenie do AI (Post edukacyjny)\nTydzień 2: Case study wdrożenia (Dowód słuszności)\nTydzień 3: Narzędzia, których używamy (Praktyka)\nTydzień 4: Przyszłość AI w 2026 (Wizjonerski)",
+    saas: "**User:** Przeanalizuj konkurencję dla CRM dla małych firm.\n**Agent:** Głośni konkurenci:\n1. HubSpot (Darmowy start, drogie skalowanie)\n2. Pipedrive (Skupienie na sprzedaży)\n3. Zoho (Wszystko w jednym)\nTwoja szansa: Prostota i AI-first podejście."
+  };
+  
+  const text = examples[type];
+  if(!text) return;
+  
+  const container = document.getElementById('playground-messages');
+  container.innerHTML = '';
+  
+  text.split('\n').forEach(line => {
+    if(!line.trim()) return;
+    const isUser = line.startsWith('**User:**');
+    const content = line.replace(/^\*\*(User|Agent):\*\*\s*/, '');
+    const div = document.createElement('div');
+    div.className = isUser ? 'msg-user' : 'msg-agent';
+    div.textContent = content;
+    container.appendChild(div);
+  });
+  
+  document.getElementById('pg-examples').style.display = 'none';
+}
 
 // ─── PWA ──────────────────────────────────────────────────
 
@@ -11556,7 +11801,13 @@ self.addEventListener('message', e => {
 
   function updateOnlineStatus() {
     if(!offlineBar) return;
-    offlineBar.classList.toggle('visible', !navigator.onLine);
+    const isOffline = !navigator.onLine;
+    if (isOffline) {
+        offlineBar.classList.add('visible');
+        setTimeout(() => offlineBar.classList.remove('visible'), 4000);
+    } else {
+        offlineBar.classList.remove('visible');
+    }
   }
 
   window.addEventListener('online',  updateOnlineStatus);
@@ -11582,7 +11833,7 @@ self.addEventListener('message', e => {
   window.addEventListener('appinstalled', () => {
     hideInstallBanner();
     if(typeof showNotif === 'function') {
-      showNotif('✓ AgentSpark installed!');
+      showNotif(tr('✓ AgentSpark installed!', '✓ AgentSpark zainstalowany!'));
     }
     deferredPrompt = null;
   });
@@ -11596,11 +11847,11 @@ self.addEventListener('message', e => {
     banner.innerHTML = `
       <div class="pwa-install-icon">⚡</div>
       <div class="pwa-install-text">
-        <div class="pwa-install-title">Install AgentSpark</div>
-        <div class="pwa-install-sub">Add to home screen — works offline</div>
+        <div class="pwa-install-title">${tr('Install AgentSpark', 'Zainstaluj AgentSpark')}</div>
+        <div class="pwa-install-sub">${tr('Add to home screen — works offline', 'Dodaj do ekranu glownego — dziala offline')}</div>
       </div>
       <div class="pwa-install-actions">
-        <button class="pwa-install-btn" onclick="window._pwaInstall()">Install</button>
+        <button class="pwa-install-btn" onclick="window._pwaInstall()">${tr('Install', 'Instaluj')}</button>
         <button class="pwa-dismiss-btn" onclick="window._pwaDismiss()">✕</button>
       </div>
     `;
@@ -11641,8 +11892,8 @@ self.addEventListener('message', e => {
     toast.id = 'pwa-update-toast';
     toast.className = 'pwa-update-toast pwa-bottom-sheet';
     toast.innerHTML = `
-      <span>🔄 New version available</span>
-      <button class="pwa-update-btn" onclick="window._pwaUpdate()">Update</button>
+      <span>🔄 ${tr('New version available', 'Dostepna nowa wersja')}</span>
+      <button class="pwa-update-btn" onclick="window._pwaUpdate()">${tr('Update', 'Aktualizuj')}</button>
       <button class="pwa-dismiss-btn" onclick="this.parentElement.remove()" style="font-size:0.7rem;padding:0.25rem 0.5rem;">✕</button>
     `;
     document.body.appendChild(toast);
@@ -11827,12 +12078,12 @@ async function renderHomeProjectsList() {
       onclick="loadProject('${p.id}')"
       onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();loadProject('${p.id}')}">
       <div class="project-card-name">${_escHtml(p.name)}</div>
-      <div class="project-card-topic">📌 ${_escHtml(p.topic||'No topic')}</div>
+      <div class="project-card-topic">📌 ${_escHtml(p.topic||tr('No topic','Brak tematu'))}</div>
       <div class="project-card-meta">
         ${(p.agents||[]).length ? `<span class="project-card-tag">👥 ${(p.agents||[]).length}</span>` : ''}
         ${p.level ? `<span class="project-card-tag">${p.level}</span>` : ''}
       </div>
-      <div class="project-card-date">Updated ${_formatDate(p.updatedAt)}</div>
+      <div class="project-card-date">${tr('Updated','Zaktualizowano')} ${_formatDate(p.updatedAt)}</div>
     </div>
   `).join('');
 }
@@ -12121,3 +12372,8 @@ function showSwToast(msg, isError = true) {
 
 </body>
 </html>
+
+
+
+
+

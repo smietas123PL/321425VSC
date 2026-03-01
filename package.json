@@ -1,6 +1,6 @@
 {
   "name": "agentspark",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Build your AI agent team in minutes, no code required",
   "main": "index.html",
   "scripts": {
@@ -14,8 +14,9 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yourusername/agentspark.git"
+    "url": "git+https://github.com/smietas123PL/321425VSC.git"
   },
+  "homepage": "https://smietas123PL.github.io/321425VSC/",
   "keywords": [
     "ai",
     "agents",

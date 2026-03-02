@@ -391,5 +391,201 @@
         "expertise": ["Polish grammar", "SEO optimization", "Keyword placement", "Readability"]
       }
     }
+  },
+  {
+    "id": "saas-launch-001",
+    "title": "SaaS Launch Team",
+    "description": "A comprehensive team for launching a SaaS product (Product Manager, Frontend, Backend, DevOps, Marketing).",
+    "category": "software-dev",
+    "difficulty": "advanced",
+    "agents": 5,
+    "featured": true,
+    "premium": true,
+    "tags": ["saas", "startup", "product-management", "devops", "marketing"],
+    "preview": "Full-stack team capable of planning, building, deploying, and marketing a SaaS product.",
+    "useCases": [
+      "MVP development",
+      "Product launch",
+      "Full-stack development",
+      "Go-to-market strategy"
+    ],
+    "team": {
+      "Product Manager": {
+        "role": "Product Visionary & Planner",
+        "description": "Defines product roadmap, prioritizes features, and ensures market fit.",
+        "personality": "Visionary, organized, user-centric",
+        "expertise": ["Product strategy", "Roadmapping", "User research", "Prioritization"]
+      },
+      "Frontend Developer": {
+        "role": "UI/UX Implementer",
+        "description": "Builds responsive and interactive user interfaces.",
+        "personality": "Creative, detail-oriented, technical",
+        "expertise": ["React/Vue/Angular", "CSS/Tailwind", "Accessibility", "Performance"]
+      },
+      "Backend Developer": {
+        "role": "API & Logic Builder",
+        "description": "Develops server-side logic, databases, and APIs.",
+        "personality": "Logical, efficient, secure",
+        "expertise": ["Node/Python/Go", "Database design", "API architecture", "Security"]
+      },
+      "DevOps Engineer": {
+        "role": "Infrastructure & CI/CD Specialist",
+        "description": "Manages deployment pipelines, cloud infrastructure, and reliability.",
+        "personality": "Reliable, automation-focused, calm under pressure",
+        "expertise": ["AWS/Azure/GCP", "Docker/Kubernetes", "CI/CD pipelines", "Monitoring"]
+      },
+      "Marketing Lead": {
+        "role": "Growth & User Acquisition",
+        "description": "Develops and executes marketing strategies to acquire users.",
+        "personality": "Persuasive, data-driven, creative",
+        "expertise": ["Digital marketing", "Content strategy", "Growth hacking", "Analytics"]
+      }
+    }
+  },
+  {
+    "id": "research-group-001",
+    "title": "Autonomous Research Group",
+    "description": "A dedicated team for deep research and comprehensive report generation.",
+    "category": "research",
+    "difficulty": "advanced",
+    "agents": 4,
+    "featured": true,
+    "premium": true,
+    "tags": ["research", "analysis", "reporting", "academic"],
+    "preview": "Conducts deep research, analyzes findings, reviews accuracy, and compiles comprehensive reports.",
+    "useCases": [
+      "Market research",
+      "Academic paper drafting",
+      "Competitor analysis",
+      "Trend forecasting"
+    ],
+    "team": {
+      "Lead Researcher": {
+        "role": "Information Gatherer",
+        "description": "Conducts extensive searches, gathers data from multiple sources, and synthesizes information.",
+        "personality": "Curious, thorough, objective",
+        "expertise": ["Search strategies", "Source evaluation", "Data synthesis", "Deep dive research"]
+      },
+      "Data Analyst": {
+        "role": "Quantitative Analyst",
+        "description": "Processes data sets to find patterns, trends, and correlations.",
+        "personality": "Analytical, logical, precise",
+        "expertise": ["Statistical analysis", "Data interpretation", "Pattern recognition", "Excel/Python"]
+      },
+      "Peer Reviewer": {
+        "role": "Quality Assurance",
+        "description": "Critically reviews findings for bias, accuracy, and logical consistency.",
+        "personality": "Critical, skeptical, fair",
+        "expertise": ["Fact-checking", "Bias detection", "Logical reasoning", "Quality control"]
+      },
+      "Chief Editor": {
+        "role": "Report Compiler",
+        "description": "Assembles findings into a cohesive, well-written, and formatted report.",
+        "personality": "Articulate, structured, polished",
+        "expertise": ["Technical writing", "Report formatting", "Narrative structure", "Clarity"]
+      }
+    }
+  },
+  {
+    "id": "social-empire-001",
+    "title": "Social Media Empire",
+    "description": "Complete brand management team for dominating social media channels.",
+    "category": "marketing",
+    "difficulty": "intermediate",
+    "agents": 4,
+    "featured": true,
+    "premium": true,
+    "tags": ["social-media", "brand-management", "content-creation", "community"],
+    "preview": "Strategizes content, designs visuals, creates viral ideas, and manages community engagement.",
+    "useCases": [
+      "Brand building",
+      "Viral marketing",
+      "Community growth",
+      "Content calendar management"
+    ],
+    "team": {
+      "Brand Strategist": {
+        "role": "Campaign Planner",
+        "description": "Develops high-level social media strategies and campaigns aligned with brand goals.",
+        "personality": "Strategic, visionary, trend-aware",
+        "expertise": ["Brand strategy", "Campaign planning", "Audience analysis", "Trend forecasting"]
+      },
+      "Content Creator": {
+        "role": "Copy & Script Writer",
+        "description": "Writes engaging posts, scripts for videos, and captions.",
+        "personality": "Creative, witty, adaptable",
+        "expertise": ["Copywriting", "Scriptwriting", "Storytelling", "Tone matching"]
+      },
+      "Graphic Designer": {
+        "role": "Visual Artist",
+        "description": "Designs eye-catching visuals, thumbnails, and infographics.",
+        "personality": "Artistic, detail-oriented, visual",
+        "expertise": ["Graphic design", "Visual hierarchy", "Color theory", "Tools (Canva/Photoshop)"]
+      },
+      "Community Manager": {
+        "role": "Engagement Specialist",
+        "description": "Interacts with followers, manages comments, and builds community.",
+        "personality": "Friendly, responsive, patient",
+        "expertise": ["Community engagement", "Conflict resolution", "Customer service", "Brand voice"]
+      }
+    }
+  },
+  {
+    "id": "saas-launch-001",
+    "title": "SaaS Launch Team",
+    "description": "Comprehensive team for launching a SaaS product: Product Manager, Frontend, Backend, DevOps, and Marketing.",
+    "category": "technical",
+    "difficulty": "expert",
+    "agentCount": 5,
+    "premium": true,
+    "featured": true,
+    "tags": ["saas", "startup", "devops", "fullstack"],
+    "preview": "End-to-end SaaS development team covering product specs, coding, deployment, and launch strategy.",
+    "useCases": ["MVP Development", "SaaS Launch", "Full-stack Project", "Startup Management"],
+    "team": [
+      { "name": "Product Manager", "role": "Strategy Lead", "description": "Defines roadmap, user stories, and MVP scope.", "expertise": ["Roadmap", "User Stories", "Prioritization"] },
+      { "name": "Frontend Architect", "role": "UI/UX Lead", "description": "Builds responsive React/Vue interfaces.", "expertise": ["React", "CSS/Tailwind", "UX Design"] },
+      { "name": "Backend Engineer", "role": "API & DB Lead", "description": "Designs scalable APIs and database schema.", "expertise": ["Node/Python", "SQL/NoSQL", "API Design"] },
+      { "name": "DevOps Specialist", "role": "Infrastructure Lead", "description": "Handles CI/CD, Docker, and cloud deployment.", "expertise": ["Docker", "AWS/GCP", "CI/CD Pipelines"] },
+      { "name": "Growth Marketer", "role": "Launch Lead", "description": "Plans go-to-market strategy and initial traction.", "expertise": ["SEO", "Content Strategy", "Launch Plan"] }
+    ]
+  },
+  {
+    "id": "research-group-001",
+    "title": "Autonomous Research Group",
+    "description": "Deep research team: Lead Researcher, Data Analyst, Peer Reviewer, and Chief Editor.",
+    "category": "data",
+    "difficulty": "advanced",
+    "agentCount": 4,
+    "premium": true,
+    "featured": false,
+    "tags": ["research", "science", "writing", "analysis"],
+    "preview": "Conducts deep internet research, analyzes data, reviews findings, and compiles final reports.",
+    "useCases": ["Market Research", "Academic Writing", "Competitive Analysis", "Trend Forecasting"],
+    "team": [
+      { "name": "Lead Researcher", "role": "Information Gatherer", "description": "Finds sources, papers, and data points.", "expertise": ["Search", "Source Verification", "Data Gathering"] },
+      { "name": "Data Analyst", "role": "Pattern Finder", "description": "Processes raw data into trends and charts.", "expertise": ["Statistics", "Trends", "Data Cleaning"] },
+      { "name": "Peer Reviewer", "role": "Fact Checker", "description": "Verifies claims and checks for bias.", "expertise": ["Fact Checking", "Bias Detection", "Citation"] },
+      { "name": "Chief Editor", "role": "Final Writer", "description": "Synthesizes everything into a polished report.", "expertise": ["Synthesis", "Clear Writing", "Formatting"] }
+    ]
+  },
+  {
+    "id": "social-empire-001",
+    "title": "Social Media Empire",
+    "description": "Complete brand management: Strategist, Content Creator, Graphic Designer, Community Manager.",
+    "category": "creative",
+    "difficulty": "intermediate",
+    "agentCount": 4,
+    "premium": true,
+    "featured": false,
+    "tags": ["social-media", "marketing", "brand", "design"],
+    "preview": "Manages brand voice, creates viral content, designs visuals, and engages with the community.",
+    "useCases": ["Brand Building", "Influencer Management", "Viral Campaigns", "Community Growth"],
+    "team": [
+      { "name": "Brand Strategist", "role": "Vision Lead", "description": "Sets tone of voice and campaign goals.", "expertise": ["Brand Strategy", "Campaign Planning", "Analytics"] },
+      { "name": "Content Creator", "role": "Copywriter", "description": "Writes hooks, captions, and scripts.", "expertise": ["Copywriting", "Viral Hooks", "Scripts"] },
+      { "name": "Visual Designer", "role": "Art Director", "description": "Describes visuals, thumbnails, and layouts.", "expertise": ["Image Prompts", "Color Theory", "Composition"] },
+      { "name": "Community Manager", "role": "Engagement Lead", "description": "Replies to comments and manages crisis.", "expertise": ["Engagement", "Crisis Mgmt", "Customer Service"] }
+    ]
   }
 ]

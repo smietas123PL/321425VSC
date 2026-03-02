@@ -173,11 +173,18 @@ async function loadProject(id) {
 
 // ── Delete project ────────────────────────────────────────
 async function deleteProject(id, name) {
-  const confirmed = window.confirm(
-    lang === 'en'
-      ? `Delete project "${name}"? This cannot be undone.`
-      : `Usunąć projekt "${name}"? Tej operacji nie można cofnąć.`
-  );
+  const confirmed = await (window.uiConfirm
+    ? window.uiConfirm(
+      `Delete project "${name}"? This cannot be undone.`,
+      `Usunąć projekt "${name}"? Tej operacji nie można cofnąć.`,
+      'Delete Project',
+      'Usuwanie projektu'
+    )
+    : Promise.resolve(window.confirm(
+      lang === 'en'
+        ? `Delete project "${name}"? This cannot be undone.`
+        : `Usunąć projekt "${name}"? Tej operacji nie można cofnąć.`
+    )));
   if (!confirmed) return;
   try {
     await dbDelete(id);
@@ -367,8 +374,16 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
   // Initialize collapsible API setup — open by default
   toggleApiSetup(true);
-  // Restore saved API key if any
-  const savedKey = localStorage.getItem('agentspark-api-key');
+  // Restore session API key; migrate legacy localStorage value once.
+  let savedKey = sessionStorage.getItem('agentspark-api-key');
+  if (!savedKey) {
+    const legacyKey = localStorage.getItem('agentspark-api-key');
+    if (legacyKey) {
+      savedKey = legacyKey;
+      sessionStorage.setItem('agentspark-api-key', legacyKey);
+      localStorage.removeItem('agentspark-api-key');
+    }
+  }
   if (savedKey) {
     apiKey = savedKey;
     const inp = document.getElementById('apiKeySetupInput');

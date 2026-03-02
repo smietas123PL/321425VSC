@@ -8,16 +8,13 @@ const fail = [];
 const indexHtml = read('index.html');
 const manifest = JSON.parse(read('manifest.json'));
 const serviceWorker = read('service-worker.js');
-const inlineScripts = [...indexHtml.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)];
-const mainInlineScript = inlineScripts
-  .map(m => m[1])
-  .filter(Boolean)
-  .sort((a, b) => b.length - a.length)[0] || '';
+const appJs = read('js/app.js');
+const galleryJs = read('js/gallery.js');
 
 const checks = [
   {
     name: 'Gallery remote fetch uses relative path',
-    ok: indexHtml.includes("fetch('./featured_templates.json'")
+    ok: galleryJs.includes("fetch('./featured_templates.json'")
   },
   {
     name: 'Unsafe inline gallery onclick removed',
@@ -25,19 +22,19 @@ const checks = [
   },
   {
     name: 'Template schema normalization exists',
-    ok: indexHtml.includes('function normalizeTemplate(raw)')
+    ok: galleryJs.includes('function normalizeTemplate(raw)')
   },
   {
     name: 'AI HTML sanitizer exists',
-    ok: indexHtml.includes('function sanitizeRichText(input)')
+    ok: appJs.includes('function sanitizeRichText(input)')
   },
   {
     name: 'Share payload schema validation exists',
-    ok: indexHtml.includes('function validateSharePayload(raw)')
+    ok: appJs.includes('function validateSharePayload(raw)')
   },
   {
     name: 'Share limits are defined',
-    ok: indexHtml.includes('const SHARE_LIMITS =')
+    ok: appJs.includes('const SHARE_LIMITS =')
   },
   {
     name: 'Manifest start_url is relative',
@@ -56,13 +53,25 @@ const checks = [
     ok: serviceWorker.includes("new Response('Offline'")
   },
   {
-    name: 'Main inline script parses without syntax errors',
+    name: 'Main app script parses without syntax errors',
     ok: (() => {
-      if (!mainInlineScript) return false;
       try {
         // Syntax check only, no execution.
         // eslint-disable-next-line no-new-func
-        new Function(mainInlineScript);
+        new Function(appJs);
+        return true;
+      } catch {
+        return false;
+      }
+    })()
+  },
+  {
+    name: 'Gallery script parses without syntax errors',
+    ok: (() => {
+      try {
+        // Syntax check only, no execution.
+        // eslint-disable-next-line no-new-func
+        new Function(galleryJs);
         return true;
       } catch {
         return false;

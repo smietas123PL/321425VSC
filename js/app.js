@@ -21,7 +21,7 @@ function onModelChange() {
   const headerInputEl = document.getElementById('apiKeyInput');
 
   if(labelEl)  labelEl.textContent = info.label;
-  if(hintEl)   hintEl.innerHTML = info.hint;
+  if(hintEl)   hintEl.innerHTML = `${info.hint}<br/><span style="color:var(--muted)">${tr('Stored only for this session', 'Przechowywany tylko w tej sesji')}</span>`;
   if(inputEl)  inputEl.placeholder = info.placeholder;
   if(headerInputEl) headerInputEl.placeholder = info.label;
 
@@ -38,9 +38,12 @@ function syncApiKey(val) {
   const headerInput = document.getElementById('apiKeyInput');
   if(headerInput) headerInput.value = apiKey;
   if (apiKey.length > 10) {
-    localStorage.setItem('agentspark-api-key', apiKey);
+    sessionStorage.setItem('agentspark-api-key', apiKey);
+    localStorage.removeItem('agentspark-api-key');
     const demoCta = document.getElementById('demo-cta');
     if (demoCta) demoCta.style.display = 'none';
+  } else {
+    sessionStorage.removeItem('agentspark-api-key');
   }
   checkApiKey();
 }
@@ -146,8 +149,12 @@ function startWithTopic() {
   const val = document.getElementById('apiKeySetupInput').value.trim();
   apiKey = val;
   if(!apiKey || apiKey.length < 10) {
-    showNotif(lang==='en' ? `⚠ Please enter a valid ${MODEL_KEY_HINTS[selectedModel.tag]?.label || 'API key'}` : `⚠ Podaj prawidłowy klucz ${MODEL_KEY_HINTS[selectedModel.tag]?.label || 'API'}`, true);
-    return;
+    showNotif(
+      tr(
+        'ℹ No BYOK provided — backend server key will be used if configured',
+        'ℹ Nie podano BYOK — backend użyje klucza serwerowego, jeśli skonfigurowany'
+      )
+    );
   }
   const topic = document.getElementById('customTopic').value.trim();
   if(!topic) {
@@ -568,6 +575,12 @@ function renderScoring(data) {
 }
 
 async function generateAgents() {
+  if (window._isGeneratingTeam) return;
+  window._isGeneratingTeam = true;
+  const startBtn = document.getElementById('start-btn');
+  const regenBtns = Array.from(document.querySelectorAll('button[onclick*="regenerateTeam"]'));
+  if (startBtn) startBtn.disabled = true;
+  regenBtns.forEach(b => { b.disabled = true; });
   addTypingIndicator();
   const history = chatHistory.map(m => `${m.role === 'user' ? 'User' : 'AgentSpark'}: ${m.text}`).join('\n');
   const prompt = `Here is the complete interview:\n${history}\n\n[GENERATE]\nGenerate the agent team JSON now based on the interview.`;
@@ -632,6 +645,10 @@ async function generateAgents() {
       success: false,
       reason: String(err?.message || 'generation_error').slice(0, 120)
     });
+  } finally {
+    window._isGeneratingTeam = false;
+    if (startBtn) startBtn.disabled = false;
+    regenBtns.forEach(b => { b.disabled = false; });
   }
 }
 
@@ -1926,485 +1943,7 @@ function renderProgressSteps(activeIndex) {
 }
 
 // ─── AI MODELS & ORCHESTRATION ─────────────────────────────
-const MODEL_KEY_HINTS = {
-  'gemini':    { label:'Gemini API Key', url:'https://aistudio.google.com/apikey' },
-  'openai':    { label:'OpenAI API Key', url:'https://platform.openai.com/api-keys' },
-  'mistral':   { label:'Mistral API Key', url:'https://console.mistral.ai/api-keys' },
-  'groq':      { label:'Groq API Key', url:'https://console.groq.com/keys' },
-  'anthropic': { label:'Anthropic API Key', url:'https://console.anthropic.com/settings/keys' },
-};
-
-async function callSingleModel(m, key, systemInstruction, userMessage, _traceLabel, multiTurnMessages, onChunk) {
-  const provider = m.provider || 'gemini';
-  const url = m.endpoint;
-  const isGemini = provider === 'gemini';
-  const isAnthropic = provider === 'anthropic';
-  
-  const headers = { 'Content-Type': 'application/json' };
-  let body = {};
-
-  if (isGemini) {
-    // Determine endpoint for streaming vs regular
-    const finalUrl = onChunk 
-      ? `${url.replace(':generateContent', ':streamGenerateContent')}?key=${key}&alt=sse`
-      : `${url}?key=${key}`;
-      
-    body = {
-      contents: multiTurnMessages ? multiTurnMessages : [{ role: 'user', parts: [{ text: userMessage }] }],
-      generationConfig: { temperature: 0.7, maxOutputTokens: 2048 }
-    };
-    if(systemInstruction) body.systemInstruction = { parts: [{ text: systemInstruction }] };
-
-    try {
-      const response = await fetch(finalUrl, { method: 'POST', headers, body: JSON.stringify(body) });
-      if (!response.ok) {
-        const errTxt = await response.text();
-        throw new Error(`Gemini Error ${response.status}: ${errTxt}`);
-      }
-
-      if (onChunk) {
-        // STREAMING HANDLING FOR GEMINI
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let fullText = '';
-        
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          const chunk = decoder.decode(value, { stream: true });
-          const lines = chunk.split('\n');
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              try {
-                const data = JSON.parse(line.slice(6));
-                const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-                if (text) {
-                  fullText += text;
-                  onChunk(text);
-                }
-              } catch (e) { /* ignore parse errors for partial chunks */ }
-            }
-          }
-        }
-        return fullText;
-      } else {
-        // REGULAR HANDLING
-        const data = await response.json();
-        return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-      }
-    } catch (e) { throw e; }
-
-  } else if (isAnthropic) {
-    headers['x-api-key'] = key;
-    headers['anthropic-version'] = '2023-06-01';
-    headers['anthropic-dangerous-direct-browser-access'] = 'true'; // Dev only
-
-    const messages = multiTurnMessages || [{ role: 'user', content: userMessage }];
-    body = {
-      model: m.model,
-      messages: messages,
-      system: systemInstruction,
-      max_tokens: 2048,
-      stream: !!onChunk
-    };
-
-    const response = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body) });
-    if (!response.ok) {
-      const errTxt = await response.text();
-      throw new Error(`Anthropic Error ${response.status}: ${errTxt}`);
-    }
-
-    if (onChunk) {
-      // STREAMING FOR ANTHROPIC
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let fullText = '';
-      
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        const chunk = decoder.decode(value);
-        const lines = chunk.split('\n');
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            try {
-              const eventData = JSON.parse(line.slice(6));
-              if (eventData.type === 'content_block_delta' && eventData.delta?.text) {
-                fullText += eventData.delta.text;
-                onChunk(eventData.delta.text);
-              }
-            } catch(e) {}
-          }
-        }
-      }
-      return fullText;
-    } else {
-      const data = await response.json();
-      return data.content?.[0]?.text || '';
-    }
-
-  } else {
-    // OpenAI / Mistral / Groq
-    headers['Authorization'] = `Bearer ${key}`;
-    const messages = multiTurnMessages || [
-      { role: 'system', content: systemInstruction || 'You are a helpful assistant.' },
-      { role: 'user', content: userMessage }
-    ];
-    body = {
-      model: m.model,
-      messages: messages,
-      temperature: 0.7,
-      stream: !!onChunk
-    };
-
-    const response = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body) });
-    if (!response.ok) {
-      const errTxt = await response.text();
-      throw new Error(`${provider} Error ${response.status}: ${errTxt}`);
-    }
-
-    if (onChunk) {
-      // STREAMING FOR OPENAI/GROQ
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let fullText = '';
-      
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        const chunk = decoder.decode(value);
-        const lines = chunk.split('\n');
-        for (const line of lines) {
-          if (line.startsWith('data: ') && line !== 'data: [DONE]') {
-            try {
-              const data = JSON.parse(line.slice(6));
-              const text = data.choices?.[0]?.delta?.content;
-              if (text) {
-                fullText += text;
-                onChunk(text);
-              }
-            } catch(e) {}
-          }
-        }
-      }
-      return fullText;
-    } else {
-      const data = await response.json();
-      return data.choices?.[0]?.message?.content || '';
-    }
-  }
-}
-
-// Wrapper with retries
-async function callGemini(systemInstruction, userMessage, _traceLabel = 'Task', multiTurnMessages = null, onChunk = null) {
-// ...existing code...
-// Retry logic handles static responses only for now to keep it simple, 
-// unless we refactor retry to handle stream interruption.
-// For now, if streaming fails, it throws and user can retry manually.
-  try {
-    return await callSingleModel(selectedModel, apiKey, systemInstruction, userMessage, _traceLabel, multiTurnMessages, onChunk);
-  } catch (e) {
-    console.warn(`Attempt 1 failed: ${e.message}`);
-    // If it was a stream call, we probably can't retry seamlessly mid-stream.
-    // But for a fresh start:
-    if (!navigator.onLine) throw new Error('Offline');
-    // Simple retry for non-streaming, or if streaming failed immediately
-    return await callSingleModel(selectedModel, apiKey, systemInstruction, userMessage, _traceLabel, multiTurnMessages, onChunk);
-  }
-}
-// ─── AI API (multi-provider + automatic fallback) ─────────
-
-// Cost per 1M tokens (input+output blended estimate) in USD
-// Sources: official pricing pages, Jan 2025
-const MODEL_COST_PER_1M = {
-  // Gemini
-  'gemini-2.5-flash-preview-05-20': 0.30,
-  'gemini-2.5-pro-preview-06-05':   3.50,
-  'gemini-2.0-flash':       0.30,
-  'gemini-2.0-flash-exp':   0.00,
-  'gemini-1.5-flash':       0.15,
-  'gemini-1.5-pro':         3.50,
-  // OpenAI
-  'gpt-4o':                 7.50,
-  'gpt-4o-mini':            0.30,
-  'gpt-4-turbo':            15.00,
-  // Anthropic
-  'claude-sonnet-4-6':      4.50,
-  'claude-opus-4-6':       22.50,
-  'claude-opus-4-5':       22.50,
-  'claude-sonnet-4-5':      4.50,
-  'claude-haiku-4-5-20251001': 0.40,
-  // Mistral
-  'mistral-large-latest':   3.00,
-  'ministral-14b-latest':   0.40,
-  'ministral-8b-latest':    0.10,
-  'ministral-3b-latest':    0.04,
-  'mistral-small-latest':   0.30,
-  'open-mistral-nemo':      0.15,
-  // Groq (free tier but noting cost)
-  'llama-3.3-70b-versatile': 0.00,
-  'llama-3.1-8b-instant':    0.00,
-  'gemma2-9b-it':            0.00,
-};
-
-function _estimateCost(model, tokens) {
-  if (!tokens || tokens <= 0) return null;
-  const rate = MODEL_COST_PER_1M[model];
-  if (rate === undefined) return null;
-  return (tokens / 1_000_000) * rate;
-}
-
-function _formatCost(usd) {
-  if (usd === null || usd === undefined) return null;
-  if (usd === 0) return '$0.00';
-  if (usd < 0.000001) return '<$0.000001';
-  if (usd < 0.01) return `$${usd.toFixed(5)}`;
-  return `$${usd.toFixed(4)}`;
-}
-
-
-const FALLBACK_CHAINS = {
-  gemini: [
-    { provider:'gemini', model:'gemini-2.5-flash-preview-05-20', endpoint:'https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}', tag:'gemini', label:'Gemini 2.5 Flash' },
-    { provider:'gemini', model:'gemini-2.0-flash',               endpoint:'https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}', tag:'gemini', label:'Gemini 2.0 Flash' },
-    { provider:'gemini', model:'gemini-1.5-flash',               endpoint:'https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}', tag:'gemini', label:'Gemini 1.5 Flash' },
-  ],
-  openai: [
-    { provider:'openai', model:'gpt-4o',      endpoint:'https://api.openai.com/v1/chat/completions', tag:'openai', label:'GPT-4o' },
-    { provider:'openai', model:'gpt-4o-mini', endpoint:'https://api.openai.com/v1/chat/completions', tag:'openai', label:'GPT-4o mini' },
-    { provider:'openai', model:'gpt-4-turbo', endpoint:'https://api.openai.com/v1/chat/completions', tag:'openai', label:'GPT-4 Turbo' },
-  ],
-  anthropic: [
-    { provider:'anthropic', model:'claude-sonnet-4-6', endpoint:'https://api.anthropic.com/v1/messages', tag:'anthropic', label:'Claude Sonnet 4.6' },
-    { provider:'anthropic', model:'claude-haiku-4-5-20251001', endpoint:'https://api.anthropic.com/v1/messages', tag:'anthropic', label:'Claude Haiku 4.5' },
-  ],
-  mistral: [
-    { provider:'openai', model:'mistral-large-latest',  endpoint:'https://api.mistral.ai/v1/chat/completions', tag:'mistral', label:'Mistral Large' },
-    { provider:'openai', model:'mistral-small-latest',  endpoint:'https://api.mistral.ai/v1/chat/completions', tag:'mistral', label:'Mistral Small' },
-    { provider:'openai', model:'open-mistral-nemo',     endpoint:'https://api.mistral.ai/v1/chat/completions', tag:'mistral', label:'Mistral Nemo' },
-  ],
-  groq: [
-    { provider:'openai', model:'llama-3.3-70b-versatile', endpoint:'https://api.groq.com/openai/v1/chat/completions', tag:'groq', label:'Llama 3.3 70B' },
-    { provider:'openai', model:'llama-3.1-8b-instant',    endpoint:'https://api.groq.com/openai/v1/chat/completions', tag:'groq', label:'Llama 3.1 8B' },
-    { provider:'openai', model:'gemma2-9b-it',            endpoint:'https://api.groq.com/openai/v1/chat/completions', tag:'groq', label:'Gemma2 9B' },
-  ],
-};
-
-// Errors that justify trying a fallback (rate limit, overload, server error)
-function isFallbackable(status, message) {
-  if([429, 500, 502, 503, 504, 529].includes(status)) return true;
-  const msg = (message || '').toLowerCase();
-  return msg.includes('rate limit') || msg.includes('overloaded') ||
-         msg.includes('capacity') || msg.includes('timeout') ||
-         msg.includes('quota') || msg.includes('unavailable');
-}
-
-// Update typing indicator text without replacing the dots
-function setTypingStatus(text) {
-  const el = document.getElementById('typing-indicator');
-  if(!el) return;
-  let label = el.querySelector('.typing-status-label');
-  if(!label) {
-    label = document.createElement('div');
-    label.className = 'typing-status-label';
-    label.style.cssText = 'font-size:0.68rem;font-family:"Space Mono",monospace;color:var(--muted);margin-top:0.4rem;';
-    el.appendChild(label);
-  }
-  label.textContent = text;
-}
-
-// Single model call — throws with {status, message} on failure
-async function callSingleModel(m, key, systemInstruction, userMessage, _traceLabel, multiTurnMessages) {
-  const { provider, model, endpoint } = m;
-  const t0 = Date.now();
-
-  // Register span as pending
-  const span = {
-    id: traceSpans.length,
-    label: _traceLabel || 'API Call',
-    model: m.label || model,
-    provider,
-    startMs: t0,
-    endMs: null,
-    durationMs: null,
-    status: 'pending',   // pending | ok | fallback | error
-    isFallback: false,
-    tokens: null,
-    error: null,
-  };
-  if(!traceSessionStart) traceSessionStart = t0;
-  traceSpans.push(span);
-  renderTraceLive();  // show pending bar immediately
-
-  const finalize = (status, tokens, error) => {
-    span.endMs = Date.now();
-    span.durationMs = span.endMs - span.startMs;
-    span.status = status;
-    span.tokens = tokens || null;
-    span.cost   = tokens ? _estimateCost(m.model, tokens) : null;
-    span.error = error || null;
-    renderTraceLive();
-  };
-
-  try {
-    let result, tokens = null;
-
-    if(provider === 'gemini') {
-      const url = endpoint.replace('{model}', model).replace('{key}', key);
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          systemInstruction: { parts: [{ text: systemInstruction }] },
-          contents: multiTurnMessages
-            ? multiTurnMessages.map(msg => ({
-                role: msg.role === 'assistant' ? 'model' : 'user',
-                parts: [{ text: msg.content }]
-              }))
-            : [{ role: 'user', parts: [{ text: userMessage }] }],
-          generationConfig: { temperature: 0.8, maxOutputTokens: 4096 }
-        })
-      });
-      if(!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        const e = new Error(err.error?.message || `Gemini error ${res.status}`);
-        e.status = res.status;
-        finalize('error', null, e.message);
-        throw e;
-      }
-      const data = await res.json();
-      tokens = data.usageMetadata
-        ? (data.usageMetadata.totalTokenCount || null)
-        : null;
-      result = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    }
-
-    else if(provider === 'openai') {
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
-        body: JSON.stringify({
-          model,
-          messages: multiTurnMessages
-            ? [{ role:'system', content: systemInstruction }, ...multiTurnMessages]
-            : [{ role:'system', content: systemInstruction }, { role:'user', content: userMessage }],
-          temperature: 0.8, max_tokens: 4096
-        })
-      });
-      if(!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        const e = new Error(err.error?.message || `API error ${res.status}`);
-        e.status = res.status;
-        finalize('error', null, e.message);
-        throw e;
-      }
-      const data = await res.json();
-      tokens = data.usage?.total_tokens || null;
-      result = data.choices?.[0]?.message?.content || '';
-    }
-
-    else if(provider === 'anthropic') {
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': key,
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true'
-        },
-        body: JSON.stringify({
-          model,
-          system: systemInstruction,
-          messages: multiTurnMessages || [{ role: 'user', content: userMessage }],
-          max_tokens: 4096
-        })
-      });
-      if(!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        const e = new Error(err.error?.message || `Anthropic error ${res.status}`);
-        e.status = res.status;
-        finalize('error', null, e.message);
-        throw e;
-      }
-      const data = await res.json();
-      tokens = data.usage ? (data.usage.input_tokens + data.usage.output_tokens) : null;
-      result = data.content?.[0]?.text || '';
-    }
-
-    else {
-      const e = new Error(`Unknown provider: ${provider}`);
-      finalize('error', null, e.message);
-      throw e;
-    }
-
-    finalize('ok', tokens, null);
-    return result;
-
-  } catch(err) {
-    // Only finalize if not already done inside branches
-    if(span.status === 'pending') finalize('error', null, err.message);
-    throw err;
-  }
-}
-
-// Main entry — tries selected model, then falls back through chain
-async function callGemini(systemInstruction, userMessage, traceLabel, multiTurnMessages) {
-  const key = apiKey || document.getElementById('apiKeyInput')?.value?.trim();
-  if(!key) throw new Error('No API key — please enter your key');
-
-  // Build attempt list: selected model first, then rest of its chain
-  const chain = FALLBACK_CHAINS[selectedModel.tag] || [];
-  // Put selected model at front, deduplicate by model name
-  const primary = { ...selectedModel };
-  const rest = chain.filter(m => m.model !== primary.model);
-  const attempts = [primary, ...rest];
-
-  let lastError = null;
-  for(let i = 0; i < attempts.length; i++) {
-    const m = attempts[i];
-    const spanLabel = traceLabel
-      ? (i > 0 ? `${traceLabel} (fallback)` : traceLabel)
-      : (i > 0 ? `Fallback #${i}` : 'API Call');
-
-    if(i > 0) {
-      setTypingStatus(`⚠ ${attempts[i-1].label || attempts[i-1].model} failed — trying ${m.label || m.model}…`);
-      await new Promise(r => setTimeout(r, 600)); // brief pause before retry
-    }
-    try {
-      const result = await callSingleModel(m, key, systemInstruction, userMessage, spanLabel, multiTurnMessages);
-
-      // If we used a fallback, mark the span and notify user
-      if(i > 0) {
-        const span = traceSpans[traceSpans.length - 1];
-        if(span) { span.status = 'fallback'; span.isFallback = true; }
-        renderTraceLive();
-        const modelName = m.label || m.model;
-        setTimeout(() => showNotif(
-          lang === 'en'
-            ? `↩ Fell back to ${modelName}`
-            : `↩ Przełączono na ${modelName}`
-        ), 300);
-        // Update header badge to reflect actual model used
-        const badgeEl = document.getElementById('headerModelBadge');
-        if(badgeEl) badgeEl.textContent = m.model + ' (fallback)';
-      }
-      setTypingStatus('');
-      return result;
-    } catch(err) {
-      lastError = err;
-      const fallbackable = isFallbackable(err.status, err.message);
-      // If not a fallbackable error (e.g. 401 auth), fail immediately
-      if(!fallbackable) {
-        console.warn(`[AgentSpark] Non-fallbackable error on ${m.model}:`, err.message);
-        break;
-      }
-      console.warn(`[AgentSpark] Fallback triggered (${m.model}): ${err.message}`);
-    }
-  }
-
-  setTypingStatus('');
-  throw lastError || new Error('All models failed');
-}
+// moved to js/core/generation-client.js
 
 // ─── UTILS ────────────────────────────────────────────────
 // ─── COLLAPSIBLE API SETUP ────────────────────────────────
@@ -2655,13 +2194,14 @@ function renderResults() {
   showResults(false);
 }
 
-function restart() {
+async function restart() {
   // If there's unsaved work and a project in progress, offer to save
   if (generatedAgents.length && _currentProjectId === null) {
-    const save = window.confirm(
-      lang === 'en'
-        ? 'Save current project before starting over?'
-        : 'Zapisać bieżący projekt przed rozpoczęciem od nowa?'
+    const save = await uiConfirm(
+      'Save current project before starting over?',
+      'Zapisać bieżący projekt przed rozpoczęciem od nowa?',
+      'Save Project',
+      'Zapis projektu'
     );
     if (save) { saveCurrentProject(false); }
   }
@@ -4254,76 +3794,6 @@ function _unlockShowError() {
   document.getElementById('unlock-modal').classList.add('open');
 }
 
-let _shareUrl  = '';
-let _shareMode = 'open';
-
-async function generateShareUrl() {
-  const password    = document.getElementById('share-password-input')?.value?.trim() || '';
-  const usePassword = _shareMode === 'password' && password.length > 0;
-
-  // Build state payload
-  const payload = {
-    v:      3,             // v3 = AES-GCM encrypted (v2 = legacy XOR)
-    topic:  currentTopic,
-    level:  currentLevel,
-    lang,
-    agents: generatedAgents,
-    files:  generatedFiles,
-    ts:     Date.now(),
-    pw:     usePassword,
-  };
-
-  try {
-    const jsonStr = JSON.stringify(payload);
-    let dataToCompress;
-
-    if (usePassword) {
-      // Encrypt with AES-256-GCM, then compress the packed binary
-      const encrypted = await aesGcmEncrypt(jsonStr, password);
-      dataToCompress  = encrypted;                       // Uint8Array
-      const compressed = await _compressBytes(dataToCompress);
-      const encoded    = uint8ToBase64url(compressed);
-      const base       = window.location.href.split('#')[0];
-      _shareUrl        = `${base}#share=${encoded}`;
-    } else {
-      const compressed = await compress(jsonStr);
-      const encoded    = uint8ToBase64url(compressed);
-      const base       = window.location.href.split('#')[0];
-      _shareUrl        = `${base}#share=${encoded}`;
-    }
-
-    if (_shareUrl.length > SHARE_LIMITS.maxHashChars) {
-      throw new Error('Share URL exceeds safe size limit');
-    }
-
-    const displayEl = document.getElementById('share-url-display');
-    if (displayEl) displayEl.value = _shareUrl;
-
-    const kb     = (_shareUrl.length / 1024).toFixed(1);
-    const sizeEl = document.getElementById('share-size-label');
-    if (sizeEl) {
-      sizeEl.textContent = `${kb} KB`;
-      sizeEl.className   = parseFloat(kb) > 100 ? 'share-size-warn' : '';
-    }
-    const agentEl = document.getElementById('share-agent-count');
-    if (agentEl) agentEl.textContent = `${generatedAgents.length} ${tr('agents', 'agentow')}`;
-    const verEl   = document.getElementById('share-version-label');
-    if (verEl)    verEl.textContent = `v${versionHistory.length || 1} (latest)`;
-    trackEvent('share_created', {
-      success: true,
-      hash_kb: Number((_shareUrl.length / 1024).toFixed(1)),
-      agents: generatedAgents.length
-    });
-
-  } catch(e) {
-    const displayEl = document.getElementById('share-url-display');
-    if (displayEl) displayEl.value = 'Error generating link: ' + e.message;
-    trackEvent('share_created', {
-      success: false,
-      reason: String(e?.message || 'unknown_error').slice(0, 120)
-    });
-  }
-}
 
 // Compress raw Uint8Array (for encrypted binary blobs)
 async function _compressBytes(bytes) {
@@ -4364,52 +3834,7 @@ async function _decompressBytes(bytes) {
   return out;
 }
 
-function onShareModeChange() {
-  const val = document.querySelector('input[name="share-mode"]:checked')?.value || 'open';
-  _shareMode = val;
-
-  document.getElementById('share-opt-open').classList.toggle('active', val === 'open');
-  document.getElementById('share-opt-password').classList.toggle('active', val === 'password');
-
-  const pwRow = document.getElementById('share-password-row');
-  if(pwRow) pwRow.style.display = val === 'password' ? 'flex' : 'none';
-
-  generateShareUrl();
-}
-
-function openShareModal() {
-  if(!generatedAgents.length) {
-    showNotif(lang==='en' ? '⚠ Generate a team first' : '⚠ Najpierw wygeneruj zespół', true);
-    return;
-  }
-  _shareMode = 'open';
-  // Reset UI
-  const openOpt = document.querySelector('input[name="share-mode"][value="open"]');
-  if(openOpt) openOpt.checked = true;
-  document.getElementById('share-opt-open').classList.add('active');
-  document.getElementById('share-opt-password').classList.remove('active');
-  document.getElementById('share-password-row').style.display = 'none';
-  const pwInput = document.getElementById('share-password-input');
-  if(pwInput) pwInput.value = '';
-
-  const copyBtn = document.getElementById('share-copy-btn');
-  if(copyBtn) { copyBtn.textContent = tr('📋 Copy', '📋 Kopiuj'); copyBtn.classList.remove('copied'); }
-
-  // Reset gist UI
-  const gistResult = document.getElementById('gist-result');
-  if(gistResult) gistResult.style.display = 'none';
-  const gistLabel = document.getElementById('gist-publish-label');
-  if(gistLabel) gistLabel.textContent = tr('Publish Gist', 'Publikuj Gist');
-  const gistBtn = document.getElementById('gist-publish-btn');
-  if(gistBtn) gistBtn.disabled = false;
-
-  document.getElementById('share-modal').classList.add('open');
-  generateShareUrl();
-}
-
-function closeShareModal() {
-  document.getElementById('share-modal').classList.remove('open');
-}
+// share modal functions moved to js/features/share.js
 
 // ─── ONBOARDING WIZARD ────────────────────────────────────
 
@@ -4424,7 +3849,7 @@ const OB_PROVIDER_CONFIG = {
 };
 
 function maybeShowOnboarding() {
-  const hasKey   = !!localStorage.getItem('agentspark-api-key');
+  const hasKey   = !!sessionStorage.getItem('agentspark-api-key');
   const hasSeen  = !!localStorage.getItem('agentspark-onboarding-done');
   const isShared = window.location.hash.startsWith('#share=');
   if (!hasKey && !hasSeen && !isShared) {
@@ -4771,207 +4196,7 @@ async function publishToGist() {
 }
 
 // ─── PLAYGROUND ──────────────────────────────────────────
-let _playgroundAgent = null;
-let _playgroundHistory = [];
-
-function openPlayground() {
-  if(!generatedAgents.length) {
-    showNotif(lang === 'en' ? '⚠ Generate a team first' : '⚠ Najpierw wygeneruj zespół', true);
-    return;
-  }
-  _playgroundHistory = [];
-  _renderPlaygroundTabs();
-  document.getElementById('playground-modal').classList.add('open');
-  // Select first agent
-  const firstTab = document.getElementById('playground-agent-tabs').querySelector('.pg-tab');
-  if(firstTab) firstTab.click();
-}
-
-function exportPlaygroundChat() {
-  if (!_playgroundHistory || _playgroundHistory.length === 0) {
-    showNotif(tr('No messages to export yet.', 'Brak wiadomosci do eksportu.'), true);
-    return;
-  }
-  const agentName  = _playgroundAgent ? _playgroundAgent.name  : 'Agent';
-  const agentEmoji = _playgroundAgent ? (_playgroundAgent.emoji || '🤖') : '🤖';
-  const date = new Date().toLocaleDateString('en-GB', {year:'numeric',month:'long',day:'numeric'});
-  const time = new Date().toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'});
-
-  let md = '# 🧪 Playground Chat — ' + agentEmoji + ' ' + agentName + '\n\n';
-  md += '**Project:** ' + (currentTopic || 'AgentSpark') + '  \n';
-  md += '**Agent:** ' + agentName + '  \n';
-  md += '**Exported:** ' + date + ' at ' + time + '  \n\n---\n\n';
-
-  _playgroundHistory.forEach(msg => {
-    const isUser  = msg.role === 'user';
-    const speaker = isUser ? '👤 **You**' : (agentEmoji + ' **' + agentName + '**');
-    md += '### ' + speaker + '\n\n' + msg.content + '\n\n---\n\n';
-  });
-
-  md += '*Generated by [AgentSpark](https://agentspark.app)*';
-
-  const slug = (currentTopic || 'chat').toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'');
-  const name = 'playground-' + slug + '-' + agentName.toLowerCase().replace(/\s+/g,'-') + '.md';
-  const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href = url; a.download = name; a.click();
-  URL.revokeObjectURL(url);
-  showNotif(tr('💾 Chat exported as Markdown!', '💾 Czat wyeksportowany do Markdown!'));
-}
-
-function closePlayground() {
-  document.getElementById('playground-modal').classList.remove('open');
-}
-
-function _renderPlaygroundTabs() {
-  const container = document.getElementById('playground-agent-tabs');
-  container.innerHTML = '';
-  generatedAgents.forEach((agent, i) => {
-    const btn = document.createElement('button');
-    btn.className = 'pg-tab';
-    btn.dataset.idx = i;
-    btn.innerHTML = `<span>${agent.emoji || '🤖'}</span> ${agent.name}`;
-    btn.style.cssText = `
-      background:var(--surface2);border:1px solid var(--border);color:var(--muted);
-      border-radius:20px;padding:0.3rem 0.75rem;font-size:0.78rem;cursor:pointer;
-      font-family:'Manrope',sans-serif;transition:all 0.15s;white-space:nowrap;`;
-    btn.onclick = () => _selectPlaygroundAgent(agent, btn);
-    container.appendChild(btn);
-  });
-}
-
-function _selectPlaygroundAgent(agent, btnEl) {
-  _playgroundAgent = agent;
-  _playgroundHistory = [];
-  // Update tab styles
-  document.querySelectorAll('.pg-tab').forEach(b => {
-    b.style.background = 'var(--surface2)';
-    b.style.borderColor = 'var(--border)';
-    b.style.color = 'var(--muted)';
-  });
-  btnEl.style.background = 'rgba(242,185,13,0.12)';
-  btnEl.style.borderColor = 'var(--accent)';
-  btnEl.style.color = 'var(--accent)';
-
-  // Clear messages and show welcome
-  const msgs = document.getElementById('playground-messages');
-  msgs.innerHTML = '';
-  _pgAddMessage('system', tr(
-    `You are now talking to **${agent.emoji || '🤖'} ${agent.name}**\n${agent.description || ''}`,
-    `Rozmawiasz teraz z **${agent.emoji || '🤖'} ${agent.name}**\n${agent.description || ''}`
-  ));
-  document.getElementById('playground-status').textContent = '';
-  document.getElementById('playground-input').focus();
-}
-
-function _pgAddMessage(role, text) {
-  const msgs = document.getElementById('playground-messages');
-  const div = document.createElement('div');
-  div.style.cssText = `display:flex;gap:0.6rem;align-items:flex-start;${role === 'user' ? 'flex-direction:row-reverse;' : ''}`;
-
-  const avatar = document.createElement('div');
-  avatar.style.cssText = `width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-    font-size:0.85rem;flex-shrink:0;
-    ${role === 'user' ? 'background:rgba(242,185,13,0.15);border:1px solid rgba(242,185,13,0.3);' :
-      role === 'system' ? 'background:rgba(100,120,255,0.1);border:1px solid rgba(100,120,255,0.2);' :
-      'background:var(--surface2);border:1px solid var(--border);'}`;
-  avatar.textContent = role === 'user' ? '👤' : role === 'system' ? 'ℹ' : (_playgroundAgent?.emoji || '🤖');
-
-  const bubble = document.createElement('div');
-  bubble.style.cssText = `max-width:80%;padding:0.6rem 0.9rem;border-radius:12px;font-size:0.85rem;line-height:1.55;
-    ${role === 'user' ? 'background:rgba(242,185,13,0.12);border:1px solid rgba(242,185,13,0.2);color:var(--text);border-top-right-radius:3px;' :
-      role === 'system' ? 'background:rgba(100,120,255,0.07);border:1px solid rgba(100,120,255,0.15);color:var(--muted);font-size:0.78rem;border-top-left-radius:3px;' :
-      'background:var(--surface2);border:1px solid var(--border);color:var(--text);border-top-left-radius:3px;'}`;
-  bubble.innerHTML = renderMarkdown(text);
-
-  div.appendChild(avatar);
-  div.appendChild(bubble);
-  msgs.appendChild(div);
-  msgs.scrollTop = msgs.scrollHeight;
-  return div;
-}
-
-async function sendPlaygroundMessage() {
-  if(!_playgroundAgent) {
-    showNotif(tr('⚠ Select an agent first', '⚠ Najpierw wybierz agenta'), true); return;
-  }
-  const input = document.getElementById('playground-input');
-  const text = input.value.trim();
-  if(!text) return;
-
-  input.value = '';
-  input.style.height = 'auto';
-  const sendBtn = document.getElementById('playground-send-btn');
-  sendBtn.disabled = true;
-
-  _pgAddMessage('user', text);
-  _playgroundHistory.push({ role: 'user', content: text });
-
-  // Typing indicator
-  const typingDiv = document.createElement('div');
-  typingDiv.style.cssText = 'display:flex;gap:0.6rem;align-items:center;';
-  typingDiv.innerHTML = `
-    <div style="width:28px;height:28px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);
-      display:flex;align-items:center;justify-content:center;font-size:0.85rem;flex-shrink:0;">${_playgroundAgent.emoji || '🤖'}</div>
-    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;border-top-left-radius:3px;
-      padding:0.6rem 0.9rem;font-size:0.85rem;color:var(--muted);">
-      <span style="animation:pgDots 1.2s infinite">●</span>
-      <span style="animation:pgDots 1.2s 0.4s infinite">●</span>
-      <span style="animation:pgDots 1.2s 0.8s infinite">●</span>
-    </div>`;
-  const msgs = document.getElementById('playground-messages');
-  msgs.appendChild(typingDiv);
-  msgs.scrollTop = msgs.scrollHeight;
-
-  document.getElementById('playground-status').textContent = `${_playgroundAgent.name} is thinking…`;
-
-  // Build system prompt from agent's agentMd + skillMd
-  const systemPrompt = [
-    _playgroundAgent.agentMd || '',
-    _playgroundAgent.skillMd || ''
-  ].filter(Boolean).join('\n\n---\n\n') ||
-  `You are ${_playgroundAgent.name}. ${_playgroundAgent.description || ''}`;
-
-  try {
-    const reply = await callGemini(systemPrompt, text, `🧪 Playground · ${_playgroundAgent.name}`, _playgroundHistory);
-    msgs.removeChild(typingDiv);
-    _pgAddMessage('assistant', reply);
-    _playgroundHistory.push({ role: 'assistant', content: reply });
-    document.getElementById('playground-status').textContent = `${_playgroundHistory.filter(m=>m.role==='assistant').length} responses`;
-  } catch(e) {
-    msgs.removeChild(typingDiv);
-    _pgAddMessage('system', `⚠ Error: ${e.message}`);
-    document.getElementById('playground-status').textContent = '';
-  } finally {
-    sendBtn.disabled = false;
-    input.focus();
-  }
-}
-
-function clearPlayground() {
-  _playgroundHistory = [];
-  const msgs = document.getElementById('playground-messages');
-  msgs.innerHTML = '';
-  if(_playgroundAgent) {
-    _pgAddMessage('system', `Chat cleared. You are talking to **${_playgroundAgent.emoji || '🤖'} ${_playgroundAgent.name}**`);
-  }
-  document.getElementById('playground-status').textContent = '';
-}
-
-async function copyShareUrl() {
-  if(!_shareUrl) return;
-  try {
-    await navigator.clipboard.writeText(_shareUrl);
-    const btn = document.getElementById('share-copy-btn');
-    btn.textContent = tr('✓ Copied!', '✓ Skopiowano!');
-    btn.classList.add('copied');
-    setTimeout(() => { btn.textContent = tr('📋 Copy', '📋 Kopiuj'); btn.classList.remove('copied'); }, 2500);
-    showNotif(lang==='en' ? '✓ Share link copied!' : '✓ Link skopiowany!');
-  } catch(e) {
-    showNotif(lang==='en' ? '⚠ Copy failed' : '⚠ Kopiowanie nieudane', true);
-  }
-}
+// moved to js/features/playground.js
 
 // ── Load from URL hash on startup ──────────────────────────
 async function loadFromHash() {
@@ -5119,12 +4344,6 @@ async function loadFromHash() {
   }
 }
 
-document.getElementById('share-modal').addEventListener('click', function(e) {
-  if(e.target === this) closeShareModal();
-});
-document.getElementById('playground-modal').addEventListener('click', function(e) {
-  if(e.target === this) closePlayground();
-});
 document.getElementById('template-detail-overlay').addEventListener('click', function(e) {
   if(e.target === this) closeTemplateDetail();
 });
@@ -5236,38 +4455,19 @@ function startQuickTeam(type) {
   generateAgents();
 }
 
-function regenerateTeam() {
-  if(confirm(lang === 'en' ? 'Regenerate team with same settings?' : 'Wygenerować ponownie zespół z tymi samymi ustawieniami?')) {
-    showScreen('chat');
-    generateAgents();
-  }
+async function regenerateTeam() {
+  const agreed = await uiConfirm(
+    'Regenerate team with same settings?',
+    'Wygenerować ponownie zespół z tymi samymi ustawieniami?',
+    'Regenerate Team',
+    'Regeneracja zespołu'
+  );
+  if (!agreed) return;
+  showScreen('chat');
+  generateAgents();
 }
 
-function loadPlaygroundExample(type) {
-  const examples = {
-    support: "**User:** Kupiłem produkt X, ale przyszedł uszkodzony. Co mam zrobić?\n**Agent:** Bardzo mi przykro z tego powodu. Proszę podać numer zamówienia, a natychmiast zajmę się procesem reklamacji i wymianą towaru na nowy.",
-    content: "**User:** Przygotuj plan postów na LinkedIn na temat AI w marketingu.\n**Agent:** Oto propozycja na 4 tygodnie:\nTydzień 1: Wprowadzenie do AI (Post edukacyjny)\nTydzień 2: Case study wdrożenia (Dowód słuszności)\nTydzień 3: Narzędzia, których używamy (Praktyka)\nTydzień 4: Przyszłość AI w 2026 (Wizjonerski)",
-    saas: "**User:** Przeanalizuj konkurencję dla CRM dla małych firm.\n**Agent:** Głośni konkurenci:\n1. HubSpot (Darmowy start, drogie skalowanie)\n2. Pipedrive (Skupienie na sprzedaży)\n3. Zoho (Wszystko w jednym)\nTwoja szansa: Prostota i AI-first podejście."
-  };
-  
-  const text = examples[type];
-  if(!text) return;
-  
-  const container = document.getElementById('playground-messages');
-  container.innerHTML = '';
-  
-  text.split('\n').forEach(line => {
-    if(!line.trim()) return;
-    const isUser = line.startsWith('**User:**');
-    const content = line.replace(/^\*\*(User|Agent):\*\*\s*/, '');
-    const div = document.createElement('div');
-    div.className = isUser ? 'msg-user' : 'msg-agent';
-    div.textContent = content;
-    container.appendChild(div);
-  });
-  
-  document.getElementById('pg-examples').style.display = 'none';
-}
+// loadPlaygroundExample moved to js/features/playground.js
 
 // ─── PWA ──────────────────────────────────────────────────
 
@@ -5988,4 +5188,3 @@ function showSwToast(msg, isError = true) {
   };
 })();
 
-</script>

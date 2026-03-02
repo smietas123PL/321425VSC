@@ -1,11 +1,15 @@
 ﻿// ─── REVENUECAT & SUBSCRIPTIONS (#PRO) ───────────────────
 // ═══════════════════════════════════════════════════════════
 
-const RC_API_KEY = 'test_tkdeANlqTMmdcfjpXSXxoREROOA'; // RevenueCat TEST Key
+const RC_API_KEY = window.__AGENTSPARK_CONFIG__?.REVENUECAT_API_KEY || null;
 const RC_ENTITLEMENT = 'pro_access'; // Name of entitlement in RevenueCat
 
 // Initialize RevenueCat
 async function initRevenueCat() {
+  if (!RC_API_KEY) {
+    console.info('RevenueCat key not configured; subscription checks disabled');
+    return;
+  }
   if (!window.Purchases) {
     console.warn('RevenueCat SDK not loaded');
     return;
@@ -23,7 +27,7 @@ async function initRevenueCat() {
   }
 }
 
-async function checkProStatus(uid) {
+async function _checkRevenueCatProStatus(uid) {
   if (!uid || !window.Purchases) return;
   try {
     const { Purchases } = window.Purchases;
@@ -112,44 +116,124 @@ function closePaywall() {
 
 window.currentUser = null;
 window.isPro = false;
+const AUTH_TOKEN_KEY = 'agentspark-auth-token';
+const DEVICE_EMAIL_KEY = 'agentspark-device-email';
+const toMillis = (v) => {
+  if (typeof v === 'number') return v;
+  const n = Date.parse(v);
+  return Number.isFinite(n) ? n : 0;
+};
+
+function getAuthToken() {
+  return localStorage.getItem(AUTH_TOKEN_KEY) || '';
+}
+
+function setAuthToken(token) {
+  if (token) localStorage.setItem(AUTH_TOKEN_KEY, token);
+  else localStorage.removeItem(AUTH_TOKEN_KEY);
+}
+
+function getDeviceEmail() {
+  const existing = localStorage.getItem(DEVICE_EMAIL_KEY);
+  if (existing) return existing;
+  const id = (crypto?.randomUUID ? crypto.randomUUID() : `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`).replace(/[^a-zA-Z0-9_]/g, '');
+  const email = `agentspark_${id.toLowerCase()}@local.agentspark`;
+  localStorage.setItem(DEVICE_EMAIL_KEY, email);
+  return email;
+}
+
+async function apiFetch(path, options = {}, requireAuth = true) {
+  if (typeof window.agentsparkApiFetch !== 'function') {
+    throw new Error('API client not initialized');
+  }
+  const token = requireAuth ? getAuthToken() : '';
+  return window.agentsparkApiFetch(path, { ...options, token });
+}
+
+async function backendRegister() {
+  const email = getDeviceEmail();
+  const name = email.split('@')[0].slice(0, 18);
+  const data = await apiFetch('/auth/register', {
+    method: 'POST',
+    body: JSON.stringify({ email, name }),
+  }, false);
+  return data;
+}
+
+async function restoreBackendSession() {
+  const token = getAuthToken();
+  if (!token) {
+    updateAuthUI(null);
+    return;
+  }
+  try {
+    const data = await apiFetch('/auth/me', { method: 'GET' }, true);
+    updateAuthUI(data.user || null);
+  } catch (e) {
+    setAuthToken('');
+    updateAuthUI(null);
+  }
+}
 
 function updateAuthUI(user) {
   const btn = document.getElementById('auth-btn');
+  if (!btn) return;
   const label = btn.querySelector('.auth-label');
   const icon = btn.querySelector('.auth-icon');
   
   if (user) {
-    window.currentUser = user;
-    label.textContent = user.displayName?.split(' ')[0] || 'User';
+    window.currentUser = {
+      ...user,
+      uid: user.id || user.uid,
+      displayName: user.name || user.displayName || user.email?.split('@')[0] || 'User',
+    };
+    label.textContent = window.currentUser.displayName.split(' ')[0] || 'User';
     icon.textContent = '✅';
     btn.classList.add('active');
-    btn.title = `Logged in as ${user.email}`;
+    btn.title = `Logged in as ${window.currentUser.email || 'user'}`;
     
-    // Check Pro status (dummy for now, will connect to RevenueCat later)
-    checkProStatus(user.uid);
+    checkProStatus(window.currentUser.uid);
   } else {
     window.currentUser = null;
-    label.textContent = 'Login';
+    label.textContent = tr('Login', 'Logowanie');
     icon.textContent = '👤';
     btn.classList.remove('active');
-    btn.title = 'Login with Google';
+    btn.title = tr('Login with backend account', 'Zaloguj kontem backend');
     window.isPro = false;
   }
 }
 
 async function toggleAuth() {
-  const { auth, provider, signInWithPopup, signOut } = window.fb;
   if (window.currentUser) {
-    if (confirm(lang==='en' ? 'Log out?' : 'Wylogować się?')) {
-      await signOut(auth);
+    const shouldLogout = await (window.uiConfirm
+      ? window.uiConfirm(
+        'Log out?',
+        'Wylogować się?',
+        'Log Out',
+        'Wylogowanie'
+      )
+      : Promise.resolve(confirm(lang==='en' ? 'Log out?' : 'Wylogować się?')));
+    if (shouldLogout) {
+      try {
+        await apiFetch('/auth/logout', { method: 'POST' }, true);
+      } catch (e) {
+        console.warn('Logout API warning:', e.message);
+      }
+      setAuthToken('');
+      updateAuthUI(null);
       showNotif(lang==='en' ? '👋 Logged out' : '👋 Wylogowano');
-      // Clear cloud projects from memory/view, keep local
       renderProjectsList();
     }
   } else {
     try {
-      const res = await signInWithPopup(auth, provider);
-      showNotif(lang==='en' ? `👋 Welcome, ${res.user.displayName}!` : `👋 Witaj, ${res.user.displayName}!`);
+      const data = await backendRegister();
+      setAuthToken(data.token || '');
+      updateAuthUI(data.user || null);
+      showNotif(lang==='en'
+        ? `👋 Welcome, ${window.currentUser?.displayName || 'User'}!`
+        : `👋 Witaj, ${window.currentUser?.displayName || 'Użytkowniku'}!`
+      );
+      await syncProjectsWithCloud();
     } catch (e) {
       console.error(e);
       showNotif('Auth Error: ' + e.message, true);
@@ -158,30 +242,43 @@ async function toggleAuth() {
 }
 
 async function syncProjectsWithCloud() {
-  if (!window.currentUser) return;
-  const { db, collection, getDocs, doc, setDoc } = window.fb;
-  const uid = window.currentUser.uid;
-  const projectsRef = collection(db, 'users', uid, 'projects');
+  if (!window.currentUser || !getAuthToken()) return;
 
   showNotif(lang==='en' ? '☁ Syncing...' : '☁ Synchronizacja...');
 
   try {
-    // 1. Get cloud projects
-    const snapshot = await getDocs(projectsRef);
-    const cloudProjects = [];
-    snapshot.forEach(doc => cloudProjects.push(doc.data()));
+    const remote = await apiFetch('/projects', { method: 'GET' }, true);
+    const cloudProjects = Array.isArray(remote.projects) ? remote.projects : [];
+    const localProjects = await dbGetAll();
+    const localMap = new Map(localProjects.map((p) => [p.id, p]));
+    const cloudMap = new Map(cloudProjects.map((p) => [p.id, p]));
 
-    // 2. Merge with local IndexedDB
-    for (const p of cloudProjects) {
-      await dbPut(p); // Update local with cloud version
+    for (const cp of cloudProjects) {
+      const lp = localMap.get(cp.id);
+      if (!lp || toMillis(cp.updatedAt) > toMillis(lp.updatedAt)) {
+        await dbPut({
+          ...lp,
+          ...cp,
+          createdAt: toMillis(cp.createdAt) || lp?.createdAt || Date.now(),
+          updatedAt: toMillis(cp.updatedAt) || lp?.updatedAt || Date.now(),
+          agents: cp.agents || [],
+          files: cp.files || [],
+        });
+      }
     }
 
-    // 3. Upload local projects that are newer or missing in cloud
-    const localProjects = await dbGetAll();
-    for (const p of localProjects) {
-      const cloudP = cloudProjects.find(cp => cp.id === p.id);
-      if (!cloudP || p.updatedAt > cloudP.updatedAt) {
-        await setDoc(doc(db, 'users', uid, 'projects', p.id), p);
+    for (const lp of localProjects) {
+      const cp = cloudMap.get(lp.id);
+      if (!cp) {
+        await apiFetch('/projects', {
+          method: 'POST',
+          body: JSON.stringify(lp),
+        }, true);
+      } else if (toMillis(lp.updatedAt) > toMillis(cp.updatedAt)) {
+        await apiFetch(`/projects/${encodeURIComponent(lp.id)}`, {
+          method: 'PUT',
+          body: JSON.stringify(lp),
+        }, true);
       }
     }
 
@@ -193,12 +290,22 @@ async function syncProjectsWithCloud() {
   }
 }
 
-// Dummy function until RevenueCat is integrated
 async function checkProStatus(uid) {
-  // In future: Check RevenueCat or Firestore for subscription
-  window.isPro = false; 
-  // Update UI to reflect Pro status if needed
+  if (!uid) return;
+  if (!RC_API_KEY || !window.Purchases) {
+    window.isPro = false;
+    updateProUI(false);
+    return;
+  }
+  await _checkRevenueCatProStatus(uid);
 }
+
+window.addEventListener('DOMContentLoaded', () => {
+  restoreBackendSession().catch((e) => {
+    console.warn('Auth bootstrap failed:', e.message);
+    updateAuthUI(null);
+  });
+});
 
 // ─── PERSISTENT PROJECTS (#1) ────────────────────────────
 // ═══════════════════════════════════════════════════════════

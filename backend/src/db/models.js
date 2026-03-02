@@ -1,10 +1,11 @@
 import { runQuery, getQuery, allQuery } from './init.js';
+import crypto from 'crypto';
 
 // Helper for generating UUID v4
 function uuidv4() {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
     var r = Math.random() * 16 | 0,
-        v = c === 'x' ? r : (r & 0x3 | 0x8);
+      v = c === 'x' ? r : (r & 0x3 | 0x8);
     return v.toString(16);
   });
 }
@@ -134,6 +135,29 @@ export async function updateProject(projectId, updateData) {
 export async function deleteProject(projectId) {
   await runQuery('DELETE FROM projects WHERE id = ?', [projectId]);
   return { success: true };
+}
+
+// ─── REFRESH TOKENS ────────────────────────────
+
+export async function createRefreshToken(userId) {
+  const token = crypto.randomBytes(40).toString('hex');
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + 30); // Ważne 30 dni
+
+  await runQuery(
+    'INSERT INTO refresh_tokens (userId, token, expiresAt) VALUES (?, ?, ?)',
+    [userId, token, expiresAt.toISOString()]
+  );
+
+  return token;
+}
+
+export async function getRefreshToken(token) {
+  return getQuery('SELECT * FROM refresh_tokens WHERE token = ?', [token]);
+}
+
+export async function deleteRefreshToken(token) {
+  await runQuery('DELETE FROM refresh_tokens WHERE token = ?', [token]);
 }
 
 // ─── AUDIT LOG ─────────────────────────────────

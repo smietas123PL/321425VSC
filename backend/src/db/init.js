@@ -108,11 +108,24 @@ async function createTables() {
       )
     `);
 
+    // Refresh tokens
+    await run(`
+      CREATE TABLE IF NOT EXISTS refresh_tokens (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        userId TEXT NOT NULL,
+        token TEXT UNIQUE NOT NULL,
+        expiresAt DATETIME NOT NULL,
+        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY(userId) REFERENCES users(id) ON DELETE CASCADE
+      )
+    `);
+
     // Create indexes
     await run('CREATE INDEX IF NOT EXISTS idx_projects_userId ON projects(userId)');
     await run('CREATE INDEX IF NOT EXISTS idx_projects_updatedAt ON projects(updatedAt)');
     await run('CREATE INDEX IF NOT EXISTS idx_audit_userId ON audit_log(userId)');
     await run('CREATE INDEX IF NOT EXISTS idx_shares_projectId ON project_shares(projectId)');
+    await run('CREATE INDEX IF NOT EXISTS idx_refresh_tokens_token ON refresh_tokens(token)');
 
     console.log('✓ All tables created successfully');
   } catch (error) {

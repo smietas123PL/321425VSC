@@ -12,6 +12,16 @@
     const finalHeaders = { 'Content-Type': 'application/json', ...headers };
     if (token) finalHeaders.Authorization = `Bearer ${token}`;
 
+    const isMutatingProject = path.includes('/projects') && ['POST', 'PUT', 'DELETE'].includes(method.toUpperCase());
+
+    if (!navigator.onLine && isMutatingProject) {
+      if (window.enqueueSyncAction) {
+        await window.enqueueSyncAction({ path, method, body, timestamp: Date.now() });
+        console.log('[Offline] Action queued:', method, path);
+        return { success: true, queued: true };
+      }
+    }
+
     const response = await fetch(`${API_BASE}${path}`, {
       method,
       headers: finalHeaders,

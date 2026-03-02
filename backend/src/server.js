@@ -15,6 +15,10 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+if (!process.env.JWT_SECRET) {
+  process.env.JWT_SECRET = 'dev_super_secret_jwt_key_change_in_production_immediately';
+}
+
 // ─── SECURITY MIDDLEWARE ────────────────────────────────
 // Helmet helps secure Express by setting various HTTP headers
 app.use(helmet({

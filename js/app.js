@@ -1,42 +1,42 @@
 ﻿// ─── MODEL SELECTION ──────────────────────────────────────
 const MODEL_KEY_HINTS = {
-  gemini:    { label: 'Gemini API Key',    hint: 'Key: Google AI Studio → makersuite.google.com',   placeholder: 'AIza...' },
-  openai:    { label: 'OpenAI API Key',    hint: 'Key: platform.openai.com/api-keys',                placeholder: 'sk-...' },
-  anthropic: { label: 'Anthropic API Key', hint: 'Key: console.anthropic.com/settings/keys',         placeholder: 'sk-ant-...' },
-  mistral:   { label: 'Mistral API Key',   hint: 'Key: console.mistral.ai/api-keys',                 placeholder: 'your-mistral-key' },
-  groq:      { label: 'Groq API Key',      hint: 'Key: console.groq.com/keys',                       placeholder: 'gsk_...' },
+  gemini: { label: 'Gemini API Key', hint: 'Key: Google AI Studio → makersuite.google.com', placeholder: 'AIza...' },
+  openai: { label: 'OpenAI API Key', hint: 'Key: platform.openai.com/api-keys', placeholder: 'sk-...' },
+  anthropic: { label: 'Anthropic API Key', hint: 'Key: console.anthropic.com/settings/keys', placeholder: 'sk-ant-...' },
+  mistral: { label: 'Mistral API Key', hint: 'Key: console.mistral.ai/api-keys', placeholder: 'your-mistral-key' },
+  groq: { label: 'Groq API Key', hint: 'Key: console.groq.com/keys', placeholder: 'gsk_...' },
 };
 
 function onModelChange() {
   const sel = document.getElementById('modelSelect');
-  if(!sel) return;
+  if (!sel) return;
   const parts = sel.value.split('|');
   const label = sel.options[sel.selectedIndex]?.text || parts[1];
   selectedModel = { provider: parts[0], model: parts[1], endpoint: parts[2], tag: parts[3], label };
 
   const info = MODEL_KEY_HINTS[selectedModel.tag] || MODEL_KEY_HINTS.gemini;
   const labelEl = document.getElementById('apiKeyLabel');
-  const hintEl  = document.getElementById('modelHint');
+  const hintEl = document.getElementById('modelHint');
   const inputEl = document.getElementById('apiKeySetupInput');
   const headerInputEl = document.getElementById('apiKeyInput');
 
-  if(labelEl)  labelEl.textContent = info.label;
-  if(hintEl)   hintEl.innerHTML = `${info.hint}<br/><span style="color:var(--muted)">${tr('Stored only for this session', 'Przechowywany tylko w tej sesji')}</span>`;
-  if(inputEl)  inputEl.placeholder = info.placeholder;
-  if(headerInputEl) headerInputEl.placeholder = info.label;
+  if (labelEl) labelEl.textContent = info.label;
+  if (hintEl) hintEl.innerHTML = `${info.hint}<br/><span style="color:var(--muted)">${tr('Stored only for this session', 'Przechowywany tylko w tej sesji')}</span>`;
+  if (inputEl) inputEl.placeholder = info.placeholder;
+  if (headerInputEl) headerInputEl.placeholder = info.label;
 
   // Reset key when switching provider
   apiKey = '';
-  if(inputEl) inputEl.value = '';
+  if (inputEl) inputEl.value = '';
   const status = document.getElementById('apiKeySetupStatus');
-  if(status) { status.textContent = ''; status.className = 'api-key-status'; }
+  if (status) { status.textContent = ''; status.className = 'api-key-status'; }
 }
 
 // ─── API KEY ──────────────────────────────────────────────
 function syncApiKey(val) {
   apiKey = val.trim();
   const headerInput = document.getElementById('apiKeyInput');
-  if(headerInput) headerInput.value = apiKey;
+  if (headerInput) headerInput.value = apiKey;
   if (apiKey.length > 10) {
     sessionStorage.setItem('agentspark-api-key', apiKey);
     localStorage.removeItem('agentspark-api-key');
@@ -51,11 +51,11 @@ function checkApiKey() {
   const val = apiKey || document.getElementById('apiKeySetupInput')?.value?.trim() || '';
   apiKey = val;
   const status = document.getElementById('apiKeySetupStatus');
-  if(val.length > 10) {
-    if(status) { status.textContent = '✓ Key set'; status.className = 'api-key-status ok'; }
+  if (val.length > 10) {
+    if (status) { status.textContent = '✓ Key set'; status.className = 'api-key-status ok'; }
     _updateApiKeyDot('ready');
   } else {
-    if(status) { status.textContent = ''; status.className = 'api-key-status'; }
+    if (status) { status.textContent = ''; status.className = 'api-key-status'; }
     _updateApiKeyDot('');
   }
 }
@@ -63,10 +63,10 @@ function checkApiKey() {
 // ─── TOPIC SCREEN ─────────────────────────────────────────
 function renderLevelGrid() {
   const grid = document.getElementById('level-grid');
-  if(!grid) return;
+  if (!grid) return;
   grid.innerHTML = '';
   const label = document.getElementById('level-section-label');
-  if(label) label.textContent = lang === 'en' ? 'COMPLEXITY LEVEL' : 'POZIOM ZŁOŻONOŚCI';
+  if (label) label.textContent = lang === 'en' ? 'COMPLEXITY LEVEL' : 'POZIOM ZŁOŻONOŚCI';
 
   t('levels').forEach(level => {
     const div = document.createElement('div');
@@ -78,7 +78,7 @@ function renderLevelGrid() {
       <div class="level-name" style="color:${level.color}">${level.name}</div>
       <div class="level-tagline">${level.tagline}</div>
       <div class="level-agents" style="color:${level.color};border-color:${level.color}33;background:${level.color}11">
-        ${level.agentCount} ${lang==='en'?'agents':'agentów'}
+        ${level.agentCount} ${lang === 'en' ? 'agents' : 'agentów'}
       </div>
     `;
     div.title = level.desc;
@@ -148,7 +148,7 @@ function renderTopicScreen() {
 function startWithTopic() {
   const val = document.getElementById('apiKeySetupInput').value.trim();
   apiKey = val;
-  if(!apiKey || apiKey.length < 10) {
+  if (!apiKey || apiKey.length < 10) {
     showNotif(
       tr(
         'ℹ No BYOK provided — backend server key will be used if configured',
@@ -157,8 +157,8 @@ function startWithTopic() {
     );
   }
   const topic = document.getElementById('customTopic').value.trim();
-  if(!topic) {
-    showNotif(lang==='en' ? '⚠ Please select or enter a topic' : '⚠ Wybierz lub wpisz temat', true);
+  if (!topic) {
+    showNotif(lang === 'en' ? '⚠ Please select or enter a topic' : '⚠ Wybierz lub wpisz temat', true);
     return;
   }
   currentTopic = topic;
@@ -177,10 +177,10 @@ function startChat() {
   document.getElementById('apiKeyInput').value = apiKey;
   // Show model badge in header
   const badgeEl = document.getElementById('headerModelBadge');
-  if(badgeEl) badgeEl.textContent = selectedModel.model;
+  if (badgeEl) badgeEl.textContent = selectedModel.model;
   document.getElementById('sidebar-topic').textContent = currentTopic;
   const lvl = t('levels').find(l => l.id === currentLevel);
-  if(lvl) {
+  if (lvl) {
     document.getElementById('sidebar-level').textContent = lvl.emoji;
     document.getElementById('sidebar-level-name').textContent = lvl.name;
     document.getElementById('sidebar-level-name').style.color = lvl.color;
@@ -202,9 +202,9 @@ function startChat() {
       let parsed = null;
       try {
         const m = reply.match(/\{[\s\S]*\}/);
-        if(m) parsed = JSON.parse(m[0]);
-      } catch(e) {}
-      if(parsed && parsed.question && parsed.options) {
+        if (m) parsed = JSON.parse(m[0]);
+      } catch (e) { }
+      if (parsed && parsed.question && parsed.options) {
         addMessage('ai', parsed.question);
         renderOptions(parsed);
       } else {
@@ -304,11 +304,11 @@ function selectOption(label, text) {
   // Mark all choice cards in the last choices-msg
   const msgs = document.querySelectorAll('.choices-msg');
   const last = msgs[msgs.length - 1];
-  if(last) {
+  if (last) {
     last.querySelectorAll('.choice-wrap').forEach(w => {
       const card = w.querySelector('.choice-card');
-      if(card) {
-        if(card.dataset.label === label) {
+      if (card) {
+        if (card.dataset.label === label) {
           w.classList.add('selected');
           card.classList.add('selected');
         } else {
@@ -323,10 +323,10 @@ function selectOption(label, text) {
 async function submitAnswer(answer) {
   clearOptions();
   addMessage('user', answer);
-  chatHistory.push({ role:'user', text: answer });
+  chatHistory.push({ role: 'user', text: answer });
   questionCount++;
 
-  if(conversationState === 'interview') {
+  if (conversationState === 'interview') {
     addTypingIndicator();
     try {
       const history = chatHistory.map(m => `${m.role === 'user' ? 'User' : 'AgentSpark'}: ${m.text}`).join('\n');
@@ -338,27 +338,27 @@ async function submitAnswer(answer) {
       let parsed = null;
       try {
         const jsonMatch = reply.match(/\{[\s\S]*\}/);
-        if(jsonMatch) parsed = JSON.parse(jsonMatch[0]);
-      } catch(e) { /* fallback below */ }
+        if (jsonMatch) parsed = JSON.parse(jsonMatch[0]);
+      } catch (e) { /* fallback below */ }
 
-      if(parsed && parsed.complete) {
+      if (parsed && parsed.complete) {
         // Interview complete
-        if(parsed.summary) addMessage('ai', parsed.summary);
-        chatHistory.push({ role:'ai', text: parsed.summary || 'Interview complete.' });
+        if (parsed.summary) addMessage('ai', parsed.summary);
+        chatHistory.push({ role: 'ai', text: parsed.summary || 'Interview complete.' });
         conversationState = 'generating';
         renderProgressSteps(1);
         clearOptions();
         setTimeout(generateAgents, 1200);
-      } else if(parsed && parsed.question && parsed.options) {
+      } else if (parsed && parsed.question && parsed.options) {
         // Valid question JSON — show question as AI message, options as cards
         addMessage('ai', parsed.question);
-        chatHistory.push({ role:'ai', text: parsed.question });
+        chatHistory.push({ role: 'ai', text: parsed.question });
         renderOptions(parsed);
       } else {
         // Fallback: show raw reply and try legacy parse
         addMessage('ai', reply);
-        chatHistory.push({ role:'ai', text: reply });
-        if(reply.includes('[INTERVIEW_COMPLETE]') || questionCount >= MAX_QUESTIONS) {
+        chatHistory.push({ role: 'ai', text: reply });
+        if (reply.includes('[INTERVIEW_COMPLETE]') || questionCount >= MAX_QUESTIONS) {
           conversationState = 'generating';
           renderProgressSteps(1);
           clearOptions();
@@ -367,7 +367,7 @@ async function submitAnswer(answer) {
           renderOptionsLegacy(reply);
         }
       }
-    } catch(err) {
+    } catch (err) {
       removeTypingIndicator();
       addMessage('ai', `Error: ${err.message}`);
     }
@@ -393,7 +393,7 @@ function _buildChoiceCard(label, optText, impact) {
   card.appendChild(labelEl);
   card.appendChild(textEl);
 
-  if(impact) {
+  if (impact) {
     const infoBtn = document.createElement('button');
     infoBtn.className = 'choice-info-btn';
     infoBtn.title = 'Show details';
@@ -418,21 +418,21 @@ function _buildChoiceCard(label, optText, impact) {
 
 function renderOptions(parsed) {
   // parsed is a JSON object: { question, options: [{label, text, impact}] }
-  if(!parsed || !parsed.options) return;
+  if (!parsed || !parsed.options) return;
   const panel = document.getElementById('question-panel');
   const panelText = document.getElementById('question-panel-text');
   const panelChoices = document.getElementById('question-panel-choices');
-  if(!panel || !panelText || !panelChoices) return;
+  if (!panel || !panelText || !panelChoices) return;
 
   // Show section badge if present
   let sectionBadge = panel.querySelector('.question-section-badge');
-  if(!sectionBadge) {
+  if (!sectionBadge) {
     sectionBadge = document.createElement('div');
     sectionBadge.className = 'question-section-badge';
     panel.insertBefore(sectionBadge, panel.firstChild);
   }
   const sectionIcons = { Business: '💼', Frontend: '🎨', Backend: '⚙️' };
-  if(parsed.section) {
+  if (parsed.section) {
     sectionBadge.textContent = (sectionIcons[parsed.section] || '') + ' ' + parsed.section;
     sectionBadge.style.display = 'inline-block';
   } else {
@@ -447,17 +447,17 @@ function renderOptions(parsed) {
   panel.style.display = 'flex';
 
   const chatEl = document.getElementById('chat-messages');
-  if(chatEl) chatEl.scrollTop = chatEl.scrollHeight;
+  if (chatEl) chatEl.scrollTop = chatEl.scrollHeight;
 }
 
 function renderOptionsLegacy(text) {
   // Fallback for non-JSON AI responses
   const matches = [...text.matchAll(/([A-D])\)\s*(.+?)(?=\n[A-D]\)|$)/gs)];
-  if(matches.length === 0) return;
+  if (matches.length === 0) return;
   const panel = document.getElementById('question-panel');
   const panelText = document.getElementById('question-panel-text');
   const panelChoices = document.getElementById('question-panel-choices');
-  if(!panel) return;
+  if (!panel) return;
   panelText.textContent = '';
   panelChoices.innerHTML = '';
   matches.forEach(m => {
@@ -471,9 +471,9 @@ function renderOptionsLegacy(text) {
 
 function clearOptions() {
   const panel = document.getElementById('question-panel');
-  if(panel) panel.style.display = 'none';
+  if (panel) panel.style.display = 'none';
   const panelChoices = document.getElementById('question-panel-choices');
-  if(panelChoices) panelChoices.innerHTML = '';
+  if (panelChoices) panelChoices.innerHTML = '';
 }
 
 async function generateScoring(history) {
@@ -511,14 +511,14 @@ Language: ${lang === 'en' ? 'English' : 'Polish'}`;
     const match = raw.match(/\{[\s\S]*\}/);
     if (!match) return null;
     return JSON.parse(match[0]);
-  } catch(e) {
+  } catch (e) {
     console.warn('Scoring failed:', e);
     return null;
   }
 }
 
 function renderScoring(data) {
-  if(!data) return;
+  if (!data) return;
   const panel = document.getElementById('scoring-panel');
   panel.style.display = 'block';
 
@@ -527,15 +527,15 @@ function renderScoring(data) {
   const suggestedLvl = t('levels').find(l => l.id === data.suggestedLevel);
 
   const _metricInfo = {
-    'Technical Complexity':  { low: '0–40: Simple tech stack, mostly standard tools.', mid: '40–70: Custom logic, APIs or real-time features needed.', high: '70–100: Complex architecture, microservices or AI.' },
-    'Business Complexity':   { low: '0–40: Straightforward model, few stakeholders.', mid: '40–70: Multiple user roles or revenue streams.', high: '70–100: Complex ops, compliance or multi-market.' },
-    'Integration Needs':     { low: '0–40: Few or no external services required.', mid: '40–70: Several APIs like payments or auth needed.', high: '70–100: Heavy integrations, real-time data sync.' },
-    'Scalability Demand':    { low: '0–40: Small user base, no scaling pressure.', mid: '40–70: Growth expected, some infrastructure planning.', high: '70–100: High traffic, distributed systems required.' },
+    'Technical Complexity': { low: '0–40: Simple tech stack, mostly standard tools.', mid: '40–70: Custom logic, APIs or real-time features needed.', high: '70–100: Complex architecture, microservices or AI.' },
+    'Business Complexity': { low: '0–40: Straightforward model, few stakeholders.', mid: '40–70: Multiple user roles or revenue streams.', high: '70–100: Complex ops, compliance or multi-market.' },
+    'Integration Needs': { low: '0–40: Few or no external services required.', mid: '40–70: Several APIs like payments or auth needed.', high: '70–100: Heavy integrations, real-time data sync.' },
+    'Scalability Demand': { low: '0–40: Small user base, no scaling pressure.', mid: '40–70: Growth expected, some infrastructure planning.', high: '70–100: High traffic, distributed systems required.' },
   };
   const metricsHTML = (data.metrics || []).map(m => {
     const info = _metricInfo[m.label] || {};
     const tier = m.value < 40 ? info.low : m.value < 70 ? info.mid : info.high;
-    const tipId = 'tip-' + m.label.replace(/\s+/g,'-');
+    const tipId = 'tip-' + m.label.replace(/\s+/g, '-');
     const infoBtn = tier ? '<button class="metric-info-btn" onclick="document.getElementById(\'' + tipId + '\').classList.toggle(\'visible\')" title="What does this mean?">\u2139\ufe0f</button>' : '';
     const tipDiv = tier ? '<div class="metric-tip" id="' + tipId + '">' + tier + '</div>' : '';
     return '<div class="score-metric">'
@@ -551,14 +551,14 @@ function renderScoring(data) {
 
   panel.innerHTML = `
     <div class="scoring-header">
-      <h3>${lang==='en' ? 'PROJECT SCORING' : 'OCENA PROJEKTU'}</h3>
+      <h3>${lang === 'en' ? 'PROJECT SCORING' : 'OCENA PROJEKTU'}</h3>
       <div class="score-badge">
         <div class="score-number" style="color:${scoreColor}">${data.overallScore}</div>
-        <div class="score-label"><strong>${data.overallLabel}</strong>${lang==='en'?'out of 100':'na 100'}</div>
+        <div class="score-label"><strong>${data.overallLabel}</strong>${lang === 'en' ? 'out of 100' : 'na 100'}</div>
       </div>
     </div>
     <div class="scoring-grid">${metricsHTML}</div>
-    ${risksHTML ? `<div class="scoring-risks"><h4>${lang==='en'?'⚠ POTENTIAL RISKS':'⚠ POTENCJALNE RYZYKA'}</h4>${risksHTML}</div>` : ''}
+    ${risksHTML ? `<div class="scoring-risks"><h4>${lang === 'en' ? '⚠ POTENTIAL RISKS' : '⚠ POTENCJALNE RYZYKA'}</h4>${risksHTML}</div>` : ''}
     <div class="level-suggestion ${isWarn ? 'warn' : ''}">
       <span class="ls-icon">${suggestionIcon}</span>
       <span>${data.levelSuggestion}${suggestedLvl && isWarn ? ' <strong>→ ' + suggestedLvl.name + '</strong>' : ''}</span>
@@ -567,7 +567,7 @@ function renderScoring(data) {
 
   // Single-frame rAF to trigger CSS transition after DOM paint
   requestAnimationFrame(() => {
-    if(!document.getElementById('screen-results').classList.contains('active')) return;
+    if (!document.getElementById('screen-results').classList.contains('active')) return;
     panel.querySelectorAll('.score-metric-fill').forEach(bar => {
       setTimeout(() => { bar.style.width = (bar.dataset.target || 0) + '%'; }, 100);
     });
@@ -582,6 +582,7 @@ async function generateAgents() {
   if (startBtn) startBtn.disabled = true;
   regenBtns.forEach(b => { b.disabled = true; });
   addTypingIndicator();
+  if (typeof showLoader === 'function') showLoader(lang === 'en' ? 'Generating team...' : 'Generowanie zespołu...', true);
   const history = chatHistory.map(m => `${m.role === 'user' ? 'User' : 'AgentSpark'}: ${m.text}`).join('\n');
   const prompt = `Here is the complete interview:\n${history}\n\n[GENERATE]\nGenerate the agent team JSON now based on the interview.`;
 
@@ -589,9 +590,10 @@ async function generateAgents() {
     const levelData = t('levels').find(l => l.id === currentLevel) || t('levels')[0];
     const raw = await callGemini(getSystemPrompt(), prompt, `⚡ Generate Team · ${levelData.agentCount} agents · ${currentLevel}`);
     removeTypingIndicator();
+    if (typeof hideLoader === 'function') hideLoader();
 
     const jsonMatch = raw.match(/\{[\s\S]*\}/);
-    if(!jsonMatch) throw new Error('Could not parse agent data');
+    if (!jsonMatch) throw new Error('Could not parse agent data');
     const data = JSON.parse(jsonMatch[0]);
 
     generatedAgents = data.agents || [];
@@ -616,7 +618,7 @@ async function generateAgents() {
     });
 
     renderProgressSteps(3);
-    addMessage('ai', lang==='en'
+    addMessage('ai', lang === 'en'
       ? `✅ Done! I've designed ${generatedAgents.length} specialized agents for your "${currentTopic}" app. Your files are ready — switching to results view now!`
       : `✅ Gotowe! Zaprojektowałem ${generatedAgents.length} wyspecjalizowanych agentów dla Twojej aplikacji "${currentTopic}". Pliki są gotowe — przechodzę do widoku wyników!`
     );
@@ -638,8 +640,9 @@ async function generateAgents() {
       });
       showResults();
     }, 1800);
-  } catch(err) {
+  } catch (err) {
     removeTypingIndicator();
+    if (typeof hideLoader === 'function') hideLoader();
     addMessage('ai', `Generation error: ${err.message}. Please try again.`);
     trackEvent('team_generated', {
       success: false,
@@ -654,11 +657,11 @@ async function generateAgents() {
 
 function generateReadme() {
   const technical = generatedAgents.filter(a => a.type === 'technical');
-  const business  = generatedAgents.filter(a => a.type !== 'technical');
+  const business = generatedAgents.filter(a => a.type !== 'technical');
   const techList = technical.map(a => `- **${a.name}** [TECHNICAL] (${a.role}): ${a.description}`).join('\n');
-  const bizList  = business.map(a  => `- **${a.name}** [BUSINESS] (${a.role}): ${a.description}`).join('\n');
+  const bizList = business.map(a => `- **${a.name}** [BUSINESS] (${a.role}): ${a.description}`).join('\n');
   const lvl = t('levels').find(l => l.id === currentLevel);
-  return `# AgentSpark — Generated Team\n\n**Project:** ${currentTopic}\n**Level:** ${lvl ? lvl.name : currentLevel}\n**Generated:** ${new Date().toLocaleString()}\n**Language:** ${lang.toUpperCase()}\n\n## ⚙️ Technical Agents\n\n${techList || 'none'}\n\n## 💼 Business Agents\n\n${bizList || 'none'}\n\n## Files\n\n${Object.keys(generatedFiles).filter(f=>f!=='README.md').map(f=>`- \`${f}\``).join('\n')}\n\n## How to use\n\nSee instructions inside the app or visit agentspark docs\n`;
+  return `# AgentSpark — Generated Team\n\n**Project:** ${currentTopic}\n**Level:** ${lvl ? lvl.name : currentLevel}\n**Generated:** ${new Date().toLocaleString()}\n**Language:** ${lang.toUpperCase()}\n\n## ⚙️ Technical Agents\n\n${techList || 'none'}\n\n## 💼 Business Agents\n\n${bizList || 'none'}\n\n## Files\n\n${Object.keys(generatedFiles).filter(f => f !== 'README.md').map(f => `- \`${f}\``).join('\n')}\n\n## How to use\n\nSee instructions inside the app or visit agentspark docs\n`;
 }
 
 
@@ -669,13 +672,13 @@ let graphAnimFrame = null;
 
 function buildGraphFromAgents() {
   const agents = generatedAgents;
-  if(!agents.length) return;
+  if (!agents.length) return;
 
   const canvas = document.getElementById('agent-graph');
-  if(!canvas) return;
+  if (!canvas) return;
 
   // Cancel any running animation before rebuilding
-  if(graphAnimFrame) {
+  if (graphAnimFrame) {
     cancelAnimationFrame(graphAnimFrame);
     graphAnimFrame = null;
   }
@@ -688,7 +691,7 @@ function buildGraphFromAgents() {
   const radius = Math.min(W, H) * 0.33;
 
   const tech = agents.filter(a => a.type === 'technical');
-  const biz  = agents.filter(a => a.type !== 'technical');
+  const biz = agents.filter(a => a.type !== 'technical');
 
   graphNodes = [];
 
@@ -715,8 +718,8 @@ function buildGraphFromAgents() {
   });
 
   graphEdges = [];
-  for(let i = 0; i < tech.length - 1; i++) {
-    graphEdges.push({ from: tech[i].id, to: tech[i+1].id, label: 'pipeline', style: 'tech' });
+  for (let i = 0; i < tech.length - 1; i++) {
+    graphEdges.push({ from: tech[i].id, to: tech[i + 1].id, label: 'pipeline', style: 'tech' });
   }
   biz.forEach(b => {
     tech.forEach(tn => {
@@ -729,7 +732,7 @@ function buildGraphFromAgents() {
 
 function drawGraph() {
   const canvas = document.getElementById('agent-graph');
-  if(!canvas) return;
+  if (!canvas) return;
   const ctx = canvas.getContext('2d');
   const W = canvas.width, H = canvas.height;
 
@@ -737,13 +740,13 @@ function drawGraph() {
 
   ctx.strokeStyle = 'rgba(242,185,13,0.04)';
   ctx.lineWidth = 1;
-  for(let x = 0; x < W; x += 40) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
-  for(let y = 0; y < H; y += 40) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+  for (let x = 0; x < W; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+  for (let y = 0; y < H; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
 
   graphEdges.forEach(edge => {
     const from = graphNodes.find(n => n.id === edge.from);
-    const to   = graphNodes.find(n => n.id === edge.to);
-    if(!from || !to) return;
+    const to = graphNodes.find(n => n.id === edge.to);
+    if (!from || !to) return;
 
     const isBiz = edge.style === 'biz';
     const color = isBiz ? 'rgba(255,107,53,0.35)' : 'rgba(242,185,13,0.4)';
@@ -751,7 +754,7 @@ function drawGraph() {
     ctx.beginPath();
     ctx.strokeStyle = color;
     ctx.lineWidth = isBiz ? 1.5 : 2;
-    if(isBiz) ctx.setLineDash([4, 4]);
+    if (isBiz) ctx.setLineDash([4, 4]);
     else ctx.setLineDash([]);
 
     const mx = (from.x + to.x) / 2;
@@ -764,7 +767,7 @@ function drawGraph() {
     const angle = Math.atan2(to.y - my, to.x - mx);
     const arrowLen = 8;
     ctx.beginPath();
-    ctx.fillStyle = color.replace('0.35','0.7').replace('0.4','0.8');
+    ctx.fillStyle = color.replace('0.35', '0.7').replace('0.4', '0.8');
     ctx.moveTo(to.x, to.y);
     ctx.lineTo(to.x - arrowLen * Math.cos(angle - 0.4), to.y - arrowLen * Math.sin(angle - 0.4));
     ctx.lineTo(to.x - arrowLen * Math.cos(angle + 0.4), to.y - arrowLen * Math.sin(angle + 0.4));
@@ -774,8 +777,8 @@ function drawGraph() {
 
   graphNodes.forEach(node => {
     const isTech = node.type === 'technical';
-    const color  = isTech ? '#f2b90d' : '#e05a1a';
-    const glow   = isTech ? 'rgba(242,185,13,0.25)' : 'rgba(224,90,26,0.22)';
+    const color = isTech ? '#f2b90d' : '#e05a1a';
+    const glow = isTech ? 'rgba(242,185,13,0.25)' : 'rgba(224,90,26,0.22)';
 
     ctx.beginPath();
     ctx.arc(node.x, node.y, node.r + 8, 0, Math.PI * 2);
@@ -801,7 +804,7 @@ function drawGraph() {
     words.forEach(w => {
       const test = line + (line ? ' ' : '') + w;
       ctx.font = 'bold 10px Manrope, sans-serif';
-      if(ctx.measureText(test).width > maxW && line) {
+      if (ctx.measureText(test).width > maxW && line) {
         lines.push(line); line = w;
       } else { line = test; }
     });
@@ -821,7 +824,7 @@ let pulseT = 0;
 function drawGraphPulse() {
   pulseT += 0.02;
   const canvas = document.getElementById('agent-graph');
-  if(!canvas || !document.getElementById('screen-results').classList.contains('active')) return;
+  if (!canvas || !document.getElementById('screen-results').classList.contains('active')) return;
 
   // Full redraw each frame so glows don't accumulate
   const ctx = canvas.getContext('2d');
@@ -831,20 +834,20 @@ function drawGraphPulse() {
   // Background grid
   ctx.strokeStyle = 'rgba(242,185,13,0.04)';
   ctx.lineWidth = 1;
-  for(let x = 0; x < W; x += 40) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
-  for(let y = 0; y < H; y += 40) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+  for (let x = 0; x < W; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+  for (let y = 0; y < H; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
 
   // Edges
   graphEdges.forEach(edge => {
     const from = graphNodes.find(n => n.id === edge.from);
-    const to   = graphNodes.find(n => n.id === edge.to);
-    if(!from || !to) return;
+    const to = graphNodes.find(n => n.id === edge.to);
+    if (!from || !to) return;
     const isBiz = edge.style === 'biz';
     const color = isBiz ? 'rgba(255,107,53,0.35)' : 'rgba(242,185,13,0.4)';
     ctx.beginPath();
     ctx.strokeStyle = color;
     ctx.lineWidth = isBiz ? 1.5 : 2;
-    if(isBiz) ctx.setLineDash([4, 4]);
+    if (isBiz) ctx.setLineDash([4, 4]);
     else ctx.setLineDash([]);
     const mx = (from.x + to.x) / 2;
     const my = (from.y + to.y) / 2 - 30;
@@ -855,7 +858,7 @@ function drawGraphPulse() {
     const angle = Math.atan2(to.y - my, to.x - mx);
     const arrowLen = 8;
     ctx.beginPath();
-    ctx.fillStyle = color.replace('0.35','0.7').replace('0.4','0.8');
+    ctx.fillStyle = color.replace('0.35', '0.7').replace('0.4', '0.8');
     ctx.moveTo(to.x, to.y);
     ctx.lineTo(to.x - arrowLen * Math.cos(angle - 0.4), to.y - arrowLen * Math.sin(angle - 0.4));
     ctx.lineTo(to.x - arrowLen * Math.cos(angle + 0.4), to.y - arrowLen * Math.sin(angle + 0.4));
@@ -866,11 +869,11 @@ function drawGraphPulse() {
   // Nodes with pulse
   graphNodes.forEach(node => {
     const isTech = node.type === 'technical';
-    const color  = isTech ? '#f2b90d' : '#e05a1a';
-    const phase  = pulseT + (isTech ? 0 : Math.PI);
-    const pulse  = Math.sin(phase) * 3;
-    const glowA  = 0.15 + Math.abs(Math.sin(phase)) * 0.12;
-    const glow   = isTech ? `rgba(196,147,10,${glowA})` : `rgba(255,107,53,${glowA * 0.85})`;
+    const color = isTech ? '#f2b90d' : '#e05a1a';
+    const phase = pulseT + (isTech ? 0 : Math.PI);
+    const pulse = Math.sin(phase) * 3;
+    const glowA = 0.15 + Math.abs(Math.sin(phase)) * 0.12;
+    const glow = isTech ? `rgba(196,147,10,${glowA})` : `rgba(255,107,53,${glowA * 0.85})`;
 
     ctx.beginPath();
     ctx.arc(node.x, node.y, node.r + 8 + pulse, 0, Math.PI * 2);
@@ -896,7 +899,7 @@ function drawGraphPulse() {
     words.forEach(w => {
       ctx.font = 'bold 10px Manrope, sans-serif';
       const test = line + (line ? ' ' : '') + w;
-      if(ctx.measureText(test).width > maxW && line) { lines.push(line); line = w; }
+      if (ctx.measureText(test).width > maxW && line) { lines.push(line); line = w; }
       else { line = test; }
     });
     lines.push(line);
@@ -911,7 +914,7 @@ function drawGraphPulse() {
 
 // ─── REFINE MODE ─────────────────────────────────────────────
 let refineSnapshots = [];      // legacy — kept for revertLastRefine compat
-let versionHistory  = [];      // rich version objects: { id, label, ts, agents, files, diff }
+let versionHistory = [];      // rich version objects: { id, label, ts, agents, files, diff }
 let selectedRefineAction = null;
 let versionPanelOpen = false;
 
@@ -933,10 +936,10 @@ function openRefine() {
   // Always start at step 1
   const s1 = document.getElementById('refine-step1');
   const s2 = document.getElementById('refine-step2');
-  if(s1) s1.style.display = 'block';
-  if(s2) s2.style.display = 'none';
+  if (s1) s1.style.display = 'block';
+  if (s2) s2.style.display = 'none';
   const applyBtn = document.getElementById('refine-apply-btn');
-  if(applyBtn) applyBtn.style.display = 'none';
+  if (applyBtn) applyBtn.style.display = 'none';
   document.getElementById('refine-history').innerHTML = '';
   _pendingRefineData = null;
 
@@ -953,7 +956,7 @@ function openRefine() {
       chips.querySelectorAll('.refine-chip').forEach(c => c.classList.remove('active'));
       chip.classList.add('active');
       const ta = document.getElementById('refine-input');
-      if(!ta.value.trim()) {
+      if (!ta.value.trim()) {
         const hints = {
           improve: lang === 'en' ? 'Improve overall agent descriptions and add more specific skills...' : 'Ulepsz opisy agentów i dodaj bardziej szczegółowe umiejętności...',
           add: lang === 'en' ? 'Add a [type] agent that handles [responsibility]...' : 'Dodaj agenta [typ] który zajmuje się [odpowiedzialność]...',
@@ -978,11 +981,11 @@ function closeRefine() {
   // Reset to step 1
   const s1 = document.getElementById('refine-step1');
   const s2 = document.getElementById('refine-step2');
-  if(s1) s1.style.display = 'block';
-  if(s2) s2.style.display = 'none';
+  if (s1) s1.style.display = 'block';
+  if (s2) s2.style.display = 'none';
   const applyBtn = document.getElementById('refine-apply-btn');
-  if(applyBtn) applyBtn.style.display = 'none';
-  if(isRefining) {
+  if (applyBtn) applyBtn.style.display = 'none';
+  if (isRefining) {
     isRefining = false;
     document.getElementById('refine-submit-btn').disabled = false;
     removeRefineThinking();
@@ -994,7 +997,7 @@ function updateRefineCounter() {
   const counter = document.getElementById('refine-counter');
   const revertBtn = document.getElementById('refine-revert-btn');
   // ── FIX: was missing quotes around 'ę' causing SyntaxError ──
-  if(lang === 'pl') {
+  if (lang === 'pl') {
     const suffix = count === 1 ? 'ę' : count > 1 && count < 5 ? 'e' : 'i';
     counter.textContent = count > 0 ? `Wykonano ${count} rewizj${suffix}` : '';
   } else {
@@ -1035,7 +1038,7 @@ function addRefineThinking() {
 
 function removeRefineThinking() {
   const el = document.getElementById('refine-thinking-indicator');
-  if(el) el.remove();
+  if (el) el.remove();
 }
 
 function getRefineSystemPrompt() {
@@ -1082,7 +1085,7 @@ let _pendingRefineData = null;
 async function submitRefine() {
   const input = document.getElementById('refine-input');
   const text = input.value.trim();
-  if(!text || isRefining) return;
+  if (!text || isRefining) return;
 
   const actionCtx = selectedRefineAction ? '[Action: ' + selectedRefineAction + '] ' : '';
   const fullRequest = actionCtx + text;
@@ -1105,20 +1108,21 @@ async function submitRefine() {
       ? 'Previous context:\n' + history + '\n\nNew request: ' + fullRequest
       : 'Request: ' + fullRequest;
 
-    const refineActionEmoji = { improve:'⚡', add:'➕', remove:'🗑', connections:'🔗' };
+    const refineActionEmoji = { improve: '⚡', add: '➕', remove: '🗑', connections: '🔗' };
     const refineEmoji = refineActionEmoji[selectedRefineAction] || '✏️';
     const refineVer = versionHistory.length + 1;
     const raw = await callGemini(getRefineSystemPrompt(), prompt, refineEmoji + ' Refine · v' + refineVer + (selectedRefineAction ? ' · ' + selectedRefineAction : ''));
     removeRefineThinking();
+    if (typeof hideLoader === 'function') hideLoader();
 
     const markerIdx = raw.indexOf('[UPDATED_TEAM]');
     let summary = '', jsonPart = '';
-    if(markerIdx !== -1) {
+    if (markerIdx !== -1) {
       summary = raw.slice(0, markerIdx).trim();
       jsonPart = raw.slice(markerIdx + '[UPDATED_TEAM]'.length).trim();
     } else {
       const jm = raw.match(/\{[\s\S]*"agents"[\s\S]*\}/);
-      if(jm) {
+      if (jm) {
         jsonPart = jm[0];
         summary = raw.slice(0, raw.indexOf(jm[0])).trim() || (lang === 'en' ? 'Team updated.' : 'Zespół zaktualizowany.');
       } else {
@@ -1127,35 +1131,36 @@ async function submitRefine() {
     }
 
     const jm2 = jsonPart.match(/\{[\s\S]*\}/);
-    if(!jm2) throw new Error('No JSON in response');
+    if (!jm2) throw new Error('No JSON in response');
     const data = JSON.parse(jm2[0]);
-    if(!data.agents || !Array.isArray(data.agents)) throw new Error('Invalid agents data');
+    if (!data.agents || !Array.isArray(data.agents)) throw new Error('Invalid agents data');
 
     const prevIds = new Set(generatedAgents.map(a => a.id));
-    const newIds  = new Set(data.agents.map(a => a.id));
-    const addedIds   = [...newIds].filter(id => !prevIds.has(id));
+    const newIds = new Set(data.agents.map(a => a.id));
+    const addedIds = [...newIds].filter(id => !prevIds.has(id));
     const removedIds = [...prevIds].filter(id => !newIds.has(id));
-    const changedIds = [...newIds].filter(id => prevIds.has(id) && JSON.stringify(data.agents.find(a=>a.id===id)) !== JSON.stringify(generatedAgents.find(a=>a.id===id)));
+    const changedIds = [...newIds].filter(id => prevIds.has(id) && JSON.stringify(data.agents.find(a => a.id === id)) !== JSON.stringify(generatedAgents.find(a => a.id === id)));
     const removedNames = Object.fromEntries(removedIds.map(id => [id, generatedAgents.find(a => a.id === id)?.name || id]));
 
     const diffBadges = [
-      ...addedIds.map(id => '<span class="refine-diff-added">+' + (data.agents.find(a=>a.id===id)?.name || id) + '</span>'),
+      ...addedIds.map(id => '<span class="refine-diff-added">+' + (data.agents.find(a => a.id === id)?.name || id) + '</span>'),
       ...removedIds.map(id => '<span class="refine-diff-removed">-' + removedNames[id] + '</span>'),
-      ...changedIds.map(id => '<span class="refine-diff-changed">~' + (data.agents.find(a=>a.id===id)?.name || id) + '</span>'),
+      ...changedIds.map(id => '<span class="refine-diff-changed">~' + (data.agents.find(a => a.id === id)?.name || id) + '</span>'),
     ].join(' ');
 
     addRefineMessage('ai', (summary || '') + (diffBadges ? '<br/><br/>' + diffBadges : ''));
     _pendingRefineData = { data, text, fullRequest, addedIds, removedIds, changedIds, removedNames, summary };
 
     const applyBtn = document.getElementById('refine-apply-btn');
-    if(applyBtn) {
+    if (applyBtn) {
       applyBtn.style.display = 'inline-flex';
       document.getElementById('refine-apply-label').textContent = t('refineApply');
     }
     updateRefineCounter();
 
-  } catch(err) {
+  } catch (err) {
     removeRefineThinking();
+    if (typeof hideLoader === 'function') hideLoader();
     addRefineMessage('ai', '<span style="color:var(--accent2)">⚠ ' + err.message + '</span>');
     showNotif(lang === 'en' ? '⚠ Refine failed.' : '⚠ Błąd generowania.', true);
     _pendingRefineData = null;
@@ -1166,7 +1171,7 @@ async function submitRefine() {
 }
 
 function applyRefinement() {
-  if(!_pendingRefineData) return;
+  if (!_pendingRefineData) return;
   const { data, text, fullRequest, addedIds, removedIds, changedIds, removedNames, summary } = _pendingRefineData;
   _pendingRefineData = null;
 
@@ -1181,7 +1186,7 @@ function applyRefinement() {
     delete generatedFiles['agent-' + id + '.md'];
     delete generatedFiles['skill-' + id + '.md'];
   });
-  if(data.teamConfig) generatedFiles['team-config.md'] = data.teamConfig;
+  if (data.teamConfig) generatedFiles['team-config.md'] = data.teamConfig;
   generatedFiles['README.md'] = generateReadme();
 
   refineHistory.push({ role: 'user', text: fullRequest });
@@ -1205,13 +1210,13 @@ function applyRefinement() {
   scheduleAutoSave();
 
   setTimeout(() => {
-    addedIds.forEach(id => { const c = document.querySelector('[data-agent-id="' + id + '"]'); if(c) c.classList.add('just-added'); });
-    changedIds.forEach(id => { const c = document.querySelector('[data-agent-id="' + id + '"]'); if(c) c.classList.add('just-updated'); });
+    addedIds.forEach(id => { const c = document.querySelector('[data-agent-id="' + id + '"]'); if (c) c.classList.add('just-added'); });
+    changedIds.forEach(id => { const c = document.querySelector('[data-agent-id="' + id + '"]'); if (c) c.classList.add('just-updated'); });
   }, 150);
   setTimeout(() => buildGraphFromAgents(), 300);
   showNotif(lang === 'en' ? '✓ Team updated!' : '✓ Zespół zaktualizowany!');
   const revertBtn = document.getElementById('refine-revert-btn');
-  if(revertBtn) revertBtn.style.display = 'inline-flex';
+  if (revertBtn) revertBtn.style.display = 'inline-flex';
 }
 
 function backToRefineStep1() {
@@ -1219,13 +1224,13 @@ function backToRefineStep1() {
   document.getElementById('refine-step1').style.display = 'block';
   document.getElementById('refine-step2').style.display = 'none';
   const applyBtn = document.getElementById('refine-apply-btn');
-  if(applyBtn) applyBtn.style.display = 'none';
+  if (applyBtn) applyBtn.style.display = 'none';
   document.getElementById('refine-history').innerHTML = '';
   document.getElementById('refine-input').focus();
 }
 
 function revertLastRefine() {
-  if(!refineSnapshots.length) return;
+  if (!refineSnapshots.length) return;
   const snap = refineSnapshots.pop();
   generatedAgents = snap.agents;
   generatedFiles = snap.files;
@@ -1237,640 +1242,15 @@ function revertLastRefine() {
   showNotif(lang === 'en' ? '↩ Reverted.' : '↩ Przywrócono.');
 }
 
-// ─── RESULTS SCREEN ───────────────────────────────────────
-function showResults(skipReset = false) {
-  showScreen('results');
-  _updateContextBar('results');
-  // Show skeleton while agents render
-  if (!skipReset) _renderSkeletonCards(4);
-
-  document.getElementById('result-badge').textContent = t('resultBadge');
-  document.getElementById('result-title').textContent = t('resultTitle');
-  document.getElementById('result-sub').textContent = t('resultSub');
-  document.getElementById('download-btn').textContent = t('downloadBtn');
-  document.getElementById('instr-btn').textContent = t('instrBtn');
-  document.getElementById('refine-btn').textContent = t('refineBtn');
-  document.getElementById('md-preview-btn').textContent = lang === 'en' ? '📄 Preview Docs' : '📄 Podgląd Docs';
-  document.getElementById('fw-export-btn').textContent = lang === 'en' ? '🚀 Export Framework' : '🚀 Eksport Framework';
-
-  renderVersionPanel();
-  renderTraceLive();
-
-  if(!skipReset) {
-    refineHistory = [];
-    isRefining = false;
-    refineSnapshots = [];
-    selectedRefineAction = null;
-    document.getElementById('refine-panel').style.display = 'none';
-    document.getElementById('refine-history').innerHTML = '';
-  }
-
-  const lvl = t('levels').find(l => l.id === currentLevel);
-  if(lvl) {
-    document.getElementById('result-badge').textContent = lvl.emoji + ' ' + lvl.name.toUpperCase() + ' — ' + t('resultBadge');
-    document.getElementById('result-badge').style.borderColor = lvl.color + '66';
-    document.getElementById('result-badge').style.color = lvl.color;
-  }
-
-  if(!skipReset) {
-    let scoringAttempts = 0;
-    const tryRenderScoring = () => {
-      scoringAttempts++;
-      if(window._scoringData !== undefined) {
-        renderScoring(window._scoringData);
-      } else if(scoringAttempts < 30) {
-        setTimeout(tryRenderScoring, 400);
-      }
-      // silently give up after 12s — scoring is non-critical
-    };
-    setTimeout(tryRenderScoring, 300);
-  }
-
-  // Always ensure graph section is visible when results are shown
-  document.getElementById('graph-title').textContent = lang==='en' ? 'Agent Dependency Graph' : 'Graf Zależności Agentów';
-  document.getElementById('graph-section').style.display = 'block';
-
-  // Auto-save hook (#1)
-  _onAgentsReady();
-
-  const grid = document.getElementById('agents-grid');
-  grid.innerHTML = '';
-
-  const technical = generatedAgents.filter(a => a.type === 'technical');
-  const business  = generatedAgents.filter(a => a.type !== 'technical');
-
-  function makeAgentCard(agent) {
-    const isTech = agent.type === 'technical';
-    const card = document.createElement('div');
-    card.className = 'agent-card';
-    card.dataset.type = agent.type || 'technical';
-    card.dataset.agentId = agent.id;
-    card.innerHTML = `
-      <div class="agent-card-header">
-        <div class="agent-avatar" style="background:${isTech ? 'linear-gradient(145deg,#c49a0a,#f2b90d)' : 'linear-gradient(145deg,#c44010,#e05a1a)'}">${agent.emoji || '🤖'}</div>
-        <div class="agent-card-meta">
-          <div class="agent-name">${agent.name}</div>
-          <div class="agent-role">${agent.role}</div>
-          <div class="agent-type-badge ${isTech ? 'badge-tech' : 'badge-biz'}" style="display:inline-block;margin-top:0.4rem;">${isTech ? (lang==='en'?'Technical':'Techniczny') : (lang==='en'?'Business':'Biznesowy')}</div>
-        </div>
-        <div style="margin-left:auto;display:flex;gap:6px;">
-           <button class="feedback-btn" onclick="event.stopPropagation();this.innerText='👍';this.style.color='var(--success)';this.style.transform='scale(1.2)'" style="background:none;border:none;cursor:pointer;font-size:1.1rem;opacity:0.6;transition:all 0.2s;" title="Like">👍</button>
-           <button class="feedback-btn" onclick="event.stopPropagation();this.innerText='👎';this.style.color='var(--accent2)';this.style.transform='scale(1.2)'" style="background:none;border:none;cursor:pointer;font-size:1.1rem;opacity:0.6;transition:all 0.2s;" title="Dislike">👎</button>
-        </div>
-      </div>
-      <div class="agent-card-divider"></div>
-      <div class="agent-card-body">
-        <div class="agent-desc">${agent.description}</div>
-        <div class="file-chips-group">
-          <span class="file-chips-label">Files</span>
-          <div class="file-chips">
-            <div class="file-chip" tabindex="0" role="button" onclick="previewFile('agent-${agent.id}.md')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();previewFile('agent-${agent.id}.md')}">agent-${agent.id}.md</div>
-            <div class="file-chip" tabindex="0" role="button" onclick="previewFile('skill-${agent.id}.md')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();previewFile('skill-${agent.id}.md')}">skill-${agent.id}.md</div>
-          </div>
-        </div>
-      </div>
-    `;
-    card.tabIndex = 0;
-    card.setAttribute('role', 'article');
-    card.setAttribute('aria-label', `${agent.name} — ${agent.role}`);
-    return card;
-  }
-
-  function makeSection(title, icon, agents, colorClass) {
-    if(agents.length === 0) return;
-    const section = document.createElement('div');
-    section.className = 'agent-section';
-    section.innerHTML = `<div class="agent-section-header ${colorClass}"><span>${icon}</span><span>${title}</span><span class="section-count">${agents.length}</span></div>`;
-    const sg = document.createElement('div');
-    sg.className = 'agents-grid';
-    agents.forEach(a => sg.appendChild(makeAgentCard(a)));
-    section.appendChild(sg);
-    grid.appendChild(section);
-  }
-
-  makeSection(
-    lang==='en' ? 'Technical Agents — Build your app' : 'Agenci Techniczni — Budują aplikację',
-    '⚙️', technical, 'section-tech'
-  );
-  makeSection(
-    lang==='en' ? 'Business Agents — Shape your vision' : 'Agenci Biznesowi — Nadają kontekst',
-    '💼', business, 'section-biz'
-  );
-
-  const configWrap = document.createElement('div');
-  configWrap.className = 'agent-section';
-  configWrap.innerHTML = `<div class="agent-section-header section-config"><span>🔗</span><span>${lang==='en'?'Team Configuration':'Konfiguracja Zespołu'}</span></div>`;
-  const configGrid = document.createElement('div');
-  configGrid.className = 'agents-grid';
-  const configCard = document.createElement('div');
-  configCard.className = 'agent-card';
-  configCard.innerHTML = `
-    <div class="agent-card-header">
-      <div class="agent-avatar" style="background:linear-gradient(145deg,#2a2510,#3a3218)">🔗</div>
-      <div class="agent-card-meta">
-        <div class="agent-name">${lang==='en' ? 'Team Configuration' : 'Konfiguracja Zespołu'}</div>
-        <div class="agent-role">Orchestration</div>
-      </div>
-    </div>
-    <div class="agent-card-divider"></div>
-    <div class="agent-card-body">
-      <div class="agent-desc">${lang==='en' ? 'Defines how all agents connect and collaborate.' : 'Definiuje jak agenci się łączą i współpracują.'}</div>
-      <div class="file-chips-group">
-        <span class="file-chips-label">Files</span>
-        <div class="file-chips">
-          <div class="file-chip" onclick="previewFile('team-config.md')">team-config.md</div>
-          <div class="file-chip" onclick="previewFile('README.md')">README.md</div>
-        </div>
-      </div>
-    </div>
-  `;
-  configGrid.appendChild(configCard);
-  configWrap.appendChild(configGrid);
-  grid.appendChild(configWrap);
-  // Sync FAB after agents rendered
-  _syncFab();
-
-  setTimeout(() => {
-    buildGraphFromAgents();
-    const gc = document.querySelector('.graph-container');
-    if(gc && !gc.querySelector('.graph-legend')) {
-      const leg = document.createElement('div');
-      leg.className = 'graph-legend';
-      leg.innerHTML = `
-        <span><div class="legend-dot" style="background:#f2b90d"></div>${lang==='en'?'Technical agent':'Agent techniczny'}</span>
-        <span><div class="legend-dot" style="background:#e05a1a"></div>${lang==='en'?'Business agent':'Agent biznesowy'}</span>
-        <span style="font-size:0.65rem;margin-left:auto;color:var(--muted)">— — ${lang==='en'?'context flow':'przepływ kontekstu'} &nbsp;&nbsp;—— ${lang==='en'?'pipeline':'pipeline'}</span>
-      `;
-      gc.appendChild(leg);
-    }
-  }, 100);
-}
-
-function showInstructions() {
-  const section = document.getElementById('instructions-section');
-  const isHidden = getComputedStyle(section).display === 'none';
-  section.style.display = isHidden ? 'block' : 'none';
-  if(isHidden) {
-    document.getElementById('instr-title').textContent = t('instrTitle');
-    const steps = document.getElementById('instr-steps');
-    steps.innerHTML = '';
-    t('instrSteps').forEach((step, i) => {
-      const div = document.createElement('div');
-      div.className = 'instruction-step';
-      div.innerHTML = `<div class="num">0${i+1}</div><div class="content"><strong>${step.title}</strong><p>${step.body}</p></div>`;
-      steps.appendChild(div);
-    });
-    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
-}
-
-async function downloadZip() {
-  if(typeof JSZip === 'undefined') {
-    showNotif('JSZip not loaded', true);
-    trackEvent('export_zip', { success: false, reason: 'jszip_missing' });
-    return;
-  }
-  const zip = new JSZip();
-
-  // ── Core agent files ──────────────────────────────────────
-  Object.entries(generatedFiles).forEach(([name, content]) => {
-    zip.file(name, content);
-  });
-
-  // ── config.json — structured metadata ────────────────────
-  const cfg = {
-    name: currentTopic,
-    version: '1.0.0',
-    generated_by: 'AgentSpark v1.1.0',
-    generated_at: new Date().toISOString(),
-    level: currentLevel,
-    agents: generatedAgents.map(a => ({
-      id: a.id, name: a.name, role: a.role,
-      description: a.description,
-      agent_file: 'agent-' + a.id + '.md',
-      skill_file:  'skill-' + a.id + '.md'
-    })),
-    usage: {
-      primary_model: 'claude-sonnet-4-6 / gpt-4o / gemini-2.5-flash',
-      pattern: 'Each agent file is a system prompt. Load into your preferred AI platform.'
-    }
-  };
-  zip.file('config.json', JSON.stringify(cfg, null, 2));
-
-  // ── agentspark.json — full re-import manifest ─────────────
-  const manifest = {
-    v: 2, source: 'agentspark', topic: currentTopic,
-    level: currentLevel, lang, agents: generatedAgents,
-    files: generatedFiles, ts: Date.now()
-  };
-  zip.file('agentspark.json', JSON.stringify(manifest, null, 2));
-
-  // ── examples/python_example.py ────────────────────────────
-  const firstId  = generatedAgents[0] ? generatedAgents[0].id : 'agent-0';
-  const pyAgents = generatedAgents.map(a =>
-    '    "' + a.id + '": open("agent-' + a.id + '.md").read(),'
-  ).join('\n');
-  const pyCode = [
-    '#!/usr/bin/env python3',
-    '"""',
-    currentTopic + ' — AgentSpark Team',
-    'Generated by AgentSpark v1.1.0',
-    '',
-    'Usage:',
-    '  pip install anthropic',
-    '  python python_example.py',
-    '"""',
-    '',
-    'import anthropic',
-    '',
-    'AGENTS = {',
-    pyAgents,
-    '}',
-    '',
-    'client = anthropic.Anthropic()  # set ANTHROPIC_API_KEY env var',
-    '',
-    'def chat_with_agent(agent_id, user_message, history=None):',
-    '    system_prompt = AGENTS[agent_id]',
-    '    messages = list(history or [])',
-    '    messages.append({"role": "user", "content": user_message})',
-    '    response = client.messages.create(',
-    '        model="claude-sonnet-4-6",',
-    '        max_tokens=2048,',
-    '        system=system_prompt,',
-    '        messages=messages',
-    '    )',
-    '    return response.content[0].text',
-    '',
-    'if __name__ == "__main__":',
-    '    agent_id = "' + firstId + '"',
-    '    print(f"Chatting with: {agent_id}\\n")',
-    '    reply = chat_with_agent(agent_id, "Hello! What can you help me with?")',
-    '    print(f"Agent: {reply}")',
-    ''
-  ].join('\n');
-  zip.file('examples/python_example.py', pyCode);
-
-  // ── examples/node_example.mjs ─────────────────────────────
-  const jsAgents = generatedAgents.map(a =>
-    '  "' + a.id + '": fs.readFileSync(path.join(__dirname, "..", "agent-' + a.id + '.md"), "utf8"),'
-  ).join('\n');
-  const jsCode = [
-    '// ' + currentTopic + ' — AgentSpark Team',
-    '// npm install @anthropic-ai/sdk',
-    '',
-    'import Anthropic from "@anthropic-ai/sdk";',
-    'import fs from "fs";',
-    'import path from "path";',
-    'import { fileURLToPath } from "url";',
-    '',
-    'const __dirname = path.dirname(fileURLToPath(import.meta.url));',
-    '',
-    'const AGENTS = {',
-    jsAgents,
-    '};',
-    '',
-    'const client = new Anthropic(); // set ANTHROPIC_API_KEY env var',
-    '',
-    'async function chatWithAgent(agentId, userMessage, history = []) {',
-    '  const systemPrompt = AGENTS[agentId];',
-    '  const messages = [...history, { role: "user", content: userMessage }];',
-    '  const response = await client.messages.create({',
-    '    model: "claude-sonnet-4-6", max_tokens: 2048,',
-    '    system: systemPrompt, messages',
-    '  });',
-    '  return response.content[0].text;',
-    '}',
-    '',
-    'const agentId = "' + firstId + '";',
-    'console.log(`Chatting with: ${agentId}\\n`);',
-    'const reply = await chatWithAgent(agentId, "Hello! What can you help me with?");',
-    'console.log(`Agent: ${reply}`);',
-    ''
-  ].join('\n');
-  zip.file('examples/node_example.mjs', jsCode);
-
-  // ── Generate and trigger download ────────────────────────
-  const blob = await zip.generateAsync({ type: 'blob' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'agentspark-' + currentTopic.toLowerCase().replace(/\s+/g,'-') + '.zip';
-  a.click();
-  showNotif(lang==='en' ? '✓ ZIP downloaded! Includes Python & Node.js examples.' : '✓ ZIP pobrany z przykładami Python i Node.js!');
-  trackEvent('export_zip', {
-    success: true,
-    agents: generatedAgents.length,
-    files: Object.keys(generatedFiles || {}).length
-  });
-}
-
-// ─── MARKDOWN RENDERER ───────────────────────────────────
-function renderMarkdown(md) {
-  if(!md) return '';
-
-  // Step 1: Extract fenced code blocks and inline code before ANY other processing
-  // so that their content is never HTML-escaped or regex-mangled
-  const codeBlocks = [];
-  const inlineCodes = [];
-
-  let text = md
-    // Fenced code blocks: save content raw, replace with placeholder
-    .replace(/```([\w]*)\n?([\s\S]*?)```/g, (_, lang, code) => {
-      const escaped = code.trim()
-        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      const idx = codeBlocks.length;
-      codeBlocks.push(`<pre><code>${escaped}</code></pre>`);
-      return `\x02CODE_BLOCK_${idx}\x03`;
-    })
-    // Inline code: save raw, replace with placeholder
-    .replace(/`([^`\n]+)`/g, (_, code) => {
-      const escaped = code
-        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      const idx = inlineCodes.length;
-      inlineCodes.push(`<code>${escaped}</code>`);
-      return `\x02INLINE_CODE_${idx}\x03`;
-    });
-
-  // Step 2: Escape remaining HTML in normal text
-  text = text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
-
-  // Step 3: Apply markdown transformations
-  text = text
-    // Headings
-    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
-    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
-    .replace(/^# (.+)$/gm, '<h1>$1</h1>')
-    // Horizontal rule
-    .replace(/^---$/gm, '<hr>')
-    // Bold + italic
-    .replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
-    // Bold
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    // Italic (skip lone asterisks used as list bullets)
-    .replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, '<em>$1</em>')
-    // Unordered lists
-    .replace(/^\s*[-+] (.+)$/gm, '<li>$1</li>')
-    // Ordered lists
-    .replace(/^\s*\d+\. (.+)$/gm, '<li>$1</li>')
-    // Blockquotes
-    .replace(/^&gt; (.+)$/gm, '<blockquote>$1</blockquote>');
-
-  // Step 4: Line-by-line block wrapping — prevents paragraph text from being
-  // swallowed into <ul> when it appears in the same \n\n block as list items
-  const outLines = [];
-  let inList = false;
-  let paraAcc = [];
-
-  const flushPara = () => {
-    if (paraAcc.length) {
-      outLines.push('<p>' + paraAcc.join('<br>') + '</p>');
-      paraAcc = [];
-    }
-  };
-  const flushList = () => {
-    if (inList) { outLines.push('</ul>'); inList = false; }
-  };
-
-  text.split('\n').forEach(rawLine => {
-    const line = rawLine.trim();
-
-    if (!line) {
-      flushPara();
-      flushList();
-      return;
-    }
-
-    // Block-level tags / placeholders — emit as-is
-    if (line.startsWith('<h')      || line.startsWith('<pre')       ||
-        line.startsWith('<hr')     || line.startsWith('<blockquote') ||
-        line.startsWith('\x02CODE_BLOCK_')) {
-      flushPara();
-      flushList();
-      outLines.push(line);
-      return;
-    }
-
-    // List item
-    if (line.startsWith('<li>')) {
-      flushPara();
-      if (!inList) { outLines.push('<ul>'); inList = true; }
-      outLines.push(line);
-      return;
-    }
-
-    // Regular text
-    flushList();
-    paraAcc.push(line);
-  });
-
-  flushPara();
-  flushList();
-
-  text = outLines.join('\n');
-
-  // Step 5: Restore code placeholders
-  codeBlocks.forEach((html, i) => {
-    text = text.replace(`\x02CODE_BLOCK_${i}\x03`, html);
-  });
-  inlineCodes.forEach((html, i) => {
-    text = text.replace(`\x02INLINE_CODE_${i}\x03`, html);
-  });
-
-  return text;
-}
-
-// ─── FILE PREVIEW MODAL ───────────────────────────────────
-function previewFile(filename) {
-  const content = generatedFiles[filename];
-  if(!content) return;
-
-  currentModalFile = filename;
-  currentModalTab = 'preview';
-
-  document.getElementById('modal-title').textContent = filename;
-  document.getElementById('modal-filesize').textContent =
-    `${(new Blob([content]).size / 1024).toFixed(1)} KB`;
-
-  // Render both panes
-  document.getElementById('modal-preview-pane').innerHTML = renderMarkdown(content);
-  document.getElementById('modal-raw-pane').textContent = content;
-
-  // Show preview by default
-  switchModalTab('preview');
-
-  document.getElementById('modal').classList.add('open');
-}
-
-function switchModalTab(tab) {
-  currentModalTab = tab;
-  const previewPane = document.getElementById('modal-preview-pane');
-  const rawPane = document.getElementById('modal-raw-pane');
-  const tabPreview = document.getElementById('tab-preview');
-  const tabRaw = document.getElementById('tab-raw');
-
-  if(tab === 'preview') {
-    previewPane.style.display = 'block';
-    rawPane.style.display = 'none';
-    tabPreview.classList.add('active');
-    tabRaw.classList.remove('active');
-  } else {
-    previewPane.style.display = 'none';
-    rawPane.style.display = 'block';
-    tabPreview.classList.remove('active');
-    tabRaw.classList.add('active');
-  }
-}
-
-function downloadCurrentFile() {
-  if(!currentModalFile || !generatedFiles[currentModalFile]) return;
-  const blob = new Blob([generatedFiles[currentModalFile]], { type: 'text/markdown' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = currentModalFile;
-  a.click();
-  showNotif(`✓ ${currentModalFile} downloaded`);
-}
-
-function closeModal() {
-  document.getElementById('modal').classList.remove('open');
-}
-
-// ─── MARKDOWN BROWSER (all files) ─────────────────────────
-function openMarkdownPreview() {
-  if(!Object.keys(generatedFiles).length) {
-    showNotif(lang==='en' ? '⚠ No files yet — generate a team first' : '⚠ Brak plików — najpierw wygeneruj zespół', true);
-    return;
-  }
-  const modal = document.getElementById('md-browser-modal');
-  modal.classList.add('open');
-
-  const mdFiles = Object.keys(generatedFiles).filter(f => f.endsWith('.md'));
-  const sidebar = document.getElementById('md-browser-sidebar');
-  sidebar.innerHTML = '';
-
-  // File groups
-  const groups = [
-    { label: lang==='en' ? '📋 Config' : '📋 Konfiguracja', files: mdFiles.filter(f => f === 'README.md' || f === 'team-config.md') },
-    { label: lang==='en' ? '⚙️ Agents' : '⚙️ Agenci', files: mdFiles.filter(f => f.startsWith('agent-')) },
-    { label: lang==='en' ? '🎯 Skills' : '🎯 Umiejętności', files: mdFiles.filter(f => f.startsWith('skill-')) },
-  ];
-
-  groups.forEach(group => {
-    if(!group.files.length) return;
-
-    const groupLabel = document.createElement('div');
-    groupLabel.style.cssText = 'font-size:0.6rem;font-family:"Space Mono",monospace;color:var(--muted);padding:0.6rem 1rem 0.3rem;letter-spacing:0.1em;text-transform:uppercase;';
-    groupLabel.textContent = group.label;
-    sidebar.appendChild(groupLabel);
-
-    group.files.forEach(f => {
-      const item = document.createElement('button');
-      item.style.cssText = `
-        display:block;width:100%;text-align:left;
-        background:none;border:none;border-left:2px solid transparent;
-        color:var(--muted);padding:0.5rem 1rem;
-        font-family:'Space Mono',monospace;font-size:0.68rem;
-        cursor:pointer;transition:all 0.15s;line-height:1.4;
-        word-break:break-all;
-      `;
-      item.textContent = f;
-      item.dataset.file = f;
-      item.onmouseenter = () => { if(f !== mdBrowserActiveFile) item.style.color = 'var(--text)'; };
-      item.onmouseleave = () => { if(f !== mdBrowserActiveFile) item.style.color = 'var(--muted)'; };
-      item.onclick = () => selectMdBrowserFile(f);
-      sidebar.appendChild(item);
-    });
-  });
-
-  // Select first file
-  if(mdFiles.length > 0) {
-    selectMdBrowserFile('README.md' in generatedFiles ? 'README.md' : mdFiles[0]);
-  }
-}
-
-function selectMdBrowserFile(filename) {
-  mdBrowserActiveFile = filename;
-  const content = generatedFiles[filename] || '';
-
-  // Update sidebar active state
-  document.querySelectorAll('#md-browser-sidebar button').forEach(btn => {
-    const isActive = btn.dataset.file === filename;
-    btn.style.borderLeftColor = isActive ? 'var(--accent)' : 'transparent';
-    btn.style.color = isActive ? 'var(--accent)' : 'var(--muted)';
-    btn.style.background = isActive ? 'rgba(242,185,13,0.06)' : 'none';
-  });
-
-  document.getElementById('md-browser-rendered').innerHTML = renderMarkdown(content);
-  document.getElementById('md-browser-active-file').textContent =
-    `${filename} · ${(new Blob([content]).size / 1024).toFixed(1)} KB`;
-
-  // Scroll content pane to top
-  const contentPane = document.getElementById('md-browser-content');
-  contentPane.scrollTop = 0;
-}
-
-function closeMdBrowser() {
-  document.getElementById('md-browser-modal').classList.remove('open');
-}
-
-async function downloadAllMd() {
-  if(typeof JSZip === 'undefined') {
-    showNotif('JSZip not loaded', true); return;
-  }
-  const zip = new JSZip();
-  Object.entries(generatedFiles)
-    .filter(([name]) => name.endsWith('.md'))
-    .forEach(([name, content]) => zip.file(name, content));
-
-  const blob = await zip.generateAsync({ type: 'blob' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `agentspark-docs-${currentTopic.toLowerCase().replace(/\s+/g,'-')}.zip`;
-  a.click();
-  showNotif(lang === 'en' ? '✓ Docs ZIP downloaded!' : '✓ Docs ZIP pobrany!');
-}
-
 // ─── CHAT HELPERS ─────────────────────────────────────────
 function sanitizeRichText(input) {
-  const allowed = new Set(['A', 'B', 'STRONG', 'I', 'EM', 'CODE', 'PRE', 'BR', 'P', 'UL', 'OL', 'LI', 'BLOCKQUOTE', 'H1', 'H2', 'H3']);
-  const template = document.createElement('template');
-  template.innerHTML = String(input || '');
-
-  const nodes = [...template.content.querySelectorAll('*')];
-  nodes.forEach(node => {
-    if (!allowed.has(node.tagName)) {
-      node.replaceWith(document.createTextNode(node.textContent || ''));
-      return;
-    }
-
-    [...node.attributes].forEach(attr => {
-      const name = attr.name.toLowerCase();
-      const value = attr.value.trim();
-      if (name.startsWith('on')) {
-        node.removeAttribute(attr.name);
-        return;
-      }
-      if (name === 'style' || name === 'srcdoc') {
-        node.removeAttribute(attr.name);
-        return;
-      }
-      if (node.tagName !== 'A' && (name === 'href' || name === 'target' || name === 'rel')) {
-        node.removeAttribute(attr.name);
-        return;
-      }
-      if (node.tagName === 'A' && name === 'href') {
-        const safeHref = /^(https?:|mailto:)/i.test(value);
-        if (!safeHref) node.removeAttribute('href');
-        else {
-          node.setAttribute('target', '_blank');
-          node.setAttribute('rel', 'noopener noreferrer');
-        }
-      }
+  if (typeof DOMPurify !== 'undefined') {
+    return DOMPurify.sanitize(input, {
+      ALLOWED_TAGS: ['a', 'b', 'strong', 'i', 'em', 'code', 'pre', 'br', 'p', 'ul', 'ol', 'li', 'blockquote', 'h1', 'h2', 'h3'],
+      ADD_ATTR: ['target']
     });
-  });
-  return template.innerHTML;
+  }
+  return String(input || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 function addMessage(role, text) {
@@ -1880,11 +1260,11 @@ function addMessage(role, text) {
   div.className = `msg ${role}`;
   const sender = document.createElement('div');
   sender.className = 'msg-sender';
-  sender.textContent = role === 'ai' ? '⚡ AgentSpark' : (lang==='en'?'You':'Ty');
+  sender.textContent = role === 'ai' ? '⚡ AgentSpark' : (lang === 'en' ? 'You' : 'Ty');
   const bubble = document.createElement('div');
   bubble.className = 'msg-bubble';
   // User messages are plain text; AI messages pass through strict HTML sanitizer.
-  if(role === 'user') {
+  if (role === 'user') {
     bubble.textContent = cleanText;
   } else {
     const sanitized = sanitizeRichText(cleanText);
@@ -1916,7 +1296,7 @@ function addTypingIndicator() {
 
 function removeTypingIndicator() {
   const el = document.getElementById('typing-indicator');
-  if(el) el.remove();
+  if (el) el.remove();
 }
 
 // ─── PROGRESS ─────────────────────────────────────────────
@@ -1926,7 +1306,7 @@ function renderProgressSteps(activeIndex) {
   t('progressSteps').forEach((label, i) => {
     const div = document.createElement('div');
     div.className = `step ${i < activeIndex ? 'done' : i === activeIndex ? 'active' : ''}`;
-    div.innerHTML = `<div class="step-num">${i < activeIndex ? '✓' : i+1}</div><span>${label}</span>`;
+    div.innerHTML = `<div class="step-num">${i < activeIndex ? '✓' : i + 1}</div><span>${label}</span>`;
     container.appendChild(div);
   });
   // iOS progress bar update
@@ -2053,18 +1433,18 @@ function showScreen(name) {
 function syncIosTabBar(screenName) {
   // Map screens to tabs
   const tabMap = {
-    'topic':    'home',
-    'gallery':  'gallery',
+    'topic': 'home',
+    'gallery': 'gallery',
     'projects': 'projects',
-    'chat':     'chat',
-    'results':  'results',
+    'chat': 'chat',
+    'results': 'results',
   };
   const activeTab = tabMap[screenName] || 'home';
 
   // Show/hide contextual tabs
-  const chatTab    = document.getElementById('tab-chat');
+  const chatTab = document.getElementById('tab-chat');
   const resultsTab = document.getElementById('tab-results');
-  if (chatTab)    chatTab.style.display    = (screenName === 'chat' || screenName === 'results') ? '' : 'none';
+  if (chatTab) chatTab.style.display = (screenName === 'chat' || screenName === 'results') ? '' : 'none';
   if (resultsTab) resultsTab.style.display = (screenName === 'results') ? '' : 'none';
 
   // Set active state
@@ -2074,12 +1454,12 @@ function syncIosTabBar(screenName) {
 }
 
 function iosTabNav(tab) {
-  if (tab === 'home')      showScreen('topic');
-  else if (tab === 'gallery')   { showScreen('gallery'); initGallery(); }
-  else if (tab === 'projects')  openProjectsScreen();
-  else if (tab === 'chat')      showScreen('chat');
-  else if (tab === 'results')   showScreen('results');
-  else if (tab === 'settings')  openSettingsSheet();
+  if (tab === 'home') showScreen('topic');
+  else if (tab === 'gallery') { showScreen('gallery'); initGallery(); }
+  else if (tab === 'projects') openProjectsScreen();
+  else if (tab === 'chat') showScreen('chat');
+  else if (tab === 'results') showScreen('results');
+  else if (tab === 'settings') openSettingsSheet();
 }
 
 function openSettingsSheet() {
@@ -2177,7 +1557,7 @@ function toggleChatSidebar() {
   localStorage.setItem('agentspark-sidebar-collapsed', _sidebarCollapsed ? '1' : '0');
 }
 // Restore sidebar state on load
-(function() {
+(function () {
   window.addEventListener('DOMContentLoaded', () => {
     if (localStorage.getItem('agentspark-sidebar-collapsed') === '1') {
       _sidebarCollapsed = true;
@@ -2224,18 +1604,18 @@ async function restart() {
   mdBrowserActiveFile = '';
   document.getElementById('chat-messages').innerHTML = '';
   clearOptions();
-  if(document.getElementById('refine-history')) document.getElementById('refine-history').innerHTML = '';
+  if (document.getElementById('refine-history')) document.getElementById('refine-history').innerHTML = '';
   document.getElementById('refine-panel').style.display = 'none';
   document.getElementById('version-panel').style.display = 'none';
   currentLevel = 'iskra';
   MAX_QUESTIONS = 4;
-  if(graphAnimFrame) { cancelAnimationFrame(graphAnimFrame); graphAnimFrame = null; }
+  if (graphAnimFrame) { cancelAnimationFrame(graphAnimFrame); graphAnimFrame = null; }
   graphNodes = []; graphEdges = [];
   document.getElementById('scoring-panel').style.display = 'none';
   document.getElementById('trace-panel').style.display = 'none';
   document.getElementById('graph-section').style.display = 'none';
   const gc = document.querySelector('.graph-container');
-  if(gc) { const leg = gc.querySelector('.graph-legend'); if(leg) leg.remove(); }
+  if (gc) { const leg = gc.querySelector('.graph-legend'); if (leg) leg.remove(); }
   document.getElementById('instructions-section').style.display = 'none';
   document.getElementById('apiKeyHeader').style.display = 'none';
   showScreen('topic');
@@ -2285,9 +1665,9 @@ function toggleTracePanel() {
 
 function renderTraceLive() {
   const panel = document.getElementById('trace-panel');
-  if(!panel) return;
+  if (!panel) return;
 
-  if(!traceSpans.length) { panel.style.display = 'none'; return; }
+  if (!traceSpans.length) { panel.style.display = 'none'; return; }
   panel.style.display = 'block';
 
   // Count badge
@@ -2301,13 +1681,13 @@ function renderTraceLive() {
   const totalCost = traceSpans.reduce((n, s) => n + (s.cost || 0), 0);
   const hasCostData = traceSpans.some(s => s.cost !== null && s.cost !== undefined);
   const hasFallback = traceSpans.some(s => s.isFallback);
-  const hasError    = traceSpans.some(s => s.status === 'error');
-  const hasPending  = traceSpans.some(s => s.status === 'pending');
+  const hasError = traceSpans.some(s => s.status === 'error');
+  const hasPending = traceSpans.some(s => s.status === 'pending');
   pills.innerHTML = `
     <span class="trace-pill ${hasError ? 'error' : hasFallback ? 'warn' : 'ok'}">
       ${hasError ? '⚠ error' : hasFallback ? '↩ fallback' : '✓ ok'}
     </span>
-    <span class="trace-pill">${(totalMs/1000).toFixed(1)}s total</span>
+    <span class="trace-pill">${(totalMs / 1000).toFixed(1)}s total</span>
     ${totalTok ? `<span class="trace-pill">${totalTok.toLocaleString()} tokens</span>` : ''}
     ${hasCostData && totalCost > 0 ? `<span class="trace-pill" style="color:var(--success);border-color:rgba(124,196,42,0.3);background:rgba(124,196,42,0.07);" title="Estimated API cost for this session">~${_formatCost(totalCost)}</span>` : ''}
     ${hasPending ? `<span class="trace-pill">⏳ running…</span>` : ''}
@@ -2318,33 +1698,33 @@ function renderTraceLive() {
 
   // Calculate timeline scale
   const sessionStart = traceSessionStart || (traceSpans[0]?.startMs || Date.now());
-  const sessionEnd   = Math.max(...traceSpans.map(s => s.endMs || Date.now()));
+  const sessionEnd = Math.max(...traceSpans.map(s => s.endMs || Date.now()));
   const sessionRange = Math.max(sessionEnd - sessionStart, 1);
 
   spansEl.innerHTML = '';
   traceSpans.forEach(s => {
-    const left  = ((s.startMs - sessionStart) / sessionRange) * 100;
+    const left = ((s.startMs - sessionStart) / sessionRange) * 100;
     const width = s.durationMs
       ? Math.max((s.durationMs / sessionRange) * 100, 1.5)
       : Math.max(((Date.now() - s.startMs) / sessionRange) * 100, 3);
 
-    const fillClass = s.status === 'ok'       ? 'fill-ok'
+    const fillClass = s.status === 'ok' ? 'fill-ok'
       : s.status === 'fallback' ? 'fill-fallback'
-      : s.status === 'error'   ? 'fill-error'
-      : 'fill-pending';
+        : s.status === 'error' ? 'fill-error'
+          : 'fill-pending';
 
-    const badgeClass = s.status === 'ok'       ? 'badge-ok'
+    const badgeClass = s.status === 'ok' ? 'badge-ok'
       : s.status === 'fallback' ? 'badge-fallback'
-      : s.status === 'error'   ? 'badge-error'
-      : 'badge-pending';
+        : s.status === 'error' ? 'badge-error'
+          : 'badge-pending';
 
-    const badgeText = s.status === 'ok'       ? 'OK'
+    const badgeText = s.status === 'ok' ? 'OK'
       : s.status === 'fallback' ? '↩ FALLBACK'
-      : s.status === 'error'   ? 'ERROR'
-      : '…';
+        : s.status === 'error' ? 'ERROR'
+          : '…';
 
     const durText = s.durationMs
-      ? s.durationMs >= 1000 ? `${(s.durationMs/1000).toFixed(1)}s` : `${s.durationMs}ms`
+      ? s.durationMs >= 1000 ? `${(s.durationMs / 1000).toFixed(1)}s` : `${s.durationMs}ms`
       : '…';
 
     const tokenText = s.tokens ? s.tokens.toLocaleString() : '–';
@@ -2352,23 +1732,23 @@ function renderTraceLive() {
     // ── Improved label parsing (#9) ───────────────────────
     const rawLabel = s.label || 'API Call';
     let phase = rawLabel, detail = '';
-    const dotSep   = rawLabel.indexOf(' · ');
+    const dotSep = rawLabel.indexOf(' · ');
     const colonSep = rawLabel.indexOf(': ');
     if (dotSep !== -1) {
-      phase  = rawLabel.slice(0, dotSep);
+      phase = rawLabel.slice(0, dotSep);
       detail = rawLabel.slice(dotSep + 3);
     } else if (colonSep !== -1) {
-      phase  = rawLabel.slice(0, colonSep);
+      phase = rawLabel.slice(0, colonSep);
       detail = rawLabel.slice(colonSep + 2);
     }
 
     // Shorten model name if too long
     const modelDisplay = s.model || '';
-    const modelShort   = modelDisplay.length > 22 ? modelDisplay.slice(0, 20) + '…' : modelDisplay;
+    const modelShort = modelDisplay.length > 22 ? modelDisplay.slice(0, 20) + '…' : modelDisplay;
 
     // Relative start time for tooltip
-    const relSec  = ((s.startMs - sessionStart) / 1000).toFixed(2);
-    const absTime = new Date(s.startMs).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+    const relSec = ((s.startMs - sessionStart) / 1000).toFixed(2);
+    const absTime = new Date(s.startMs).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
     // Tooltip
     const tooltipLines = [
@@ -2376,15 +1756,15 @@ function renderTraceLive() {
       `Model: ${modelDisplay}`,
       `Started: ${absTime} (+${relSec}s into session)`,
       s.durationMs ? `Duration: ${durText}` : 'Duration: pending…',
-      s.tokens     ? `Tokens: ${s.tokens.toLocaleString()}` : '',
+      s.tokens ? `Tokens: ${s.tokens.toLocaleString()}` : '',
       s.cost !== null && s.cost !== undefined ? `Est. cost: ${_formatCost(s.cost)}` : '',
       s.isFallback ? `↩ Fell back from primary model` : '',
-      s.error      ? `Error: ${s.error}` : '',
+      s.error ? `Error: ${s.error}` : '',
     ].filter(Boolean).join('\n');
 
     const row = document.createElement('div');
     row.className = 'trace-span';
-    row.title     = tooltipLines;
+    row.title = tooltipLines;
     row.innerHTML = `
       <div class="span-name">
         <div class="span-label" title="${phase}">${phase}</div>
@@ -2405,25 +1785,25 @@ function renderTraceLive() {
 
   // Footer stats — improved (#9)
   const footerEl = document.getElementById('trace-footer');
-  const calls     = traceSpans.length;
-  const errors    = traceSpans.filter(s => s.status === 'error').length;
+  const calls = traceSpans.length;
+  const errors = traceSpans.filter(s => s.status === 'error').length;
   const fallbacks = traceSpans.filter(s => s.isFallback).length;
-  const phases    = [...new Set(traceSpans.map(s => {
+  const phases = [...new Set(traceSpans.map(s => {
     const raw = s.label || '';
     const dot = raw.indexOf(' · ');
     return dot !== -1 ? raw.slice(0, dot) : raw.split(':')[0];
   }))];
   const avgDur = calls ? Math.round(totalMs / calls) : 0;
   footerEl.innerHTML = `
-    <span><strong>${calls}</strong> ${lang==='en' ? (calls===1 ? 'call' : 'calls') : 'wywołań'}</span>
-    <span><strong>${(totalMs/1000).toFixed(1)}s</strong> ${lang==='en'?'total':'łącznie'}</span>
-    ${totalTok ? `<span title="${lang==='en'?'Total tokens consumed':'Łączna liczba tokenów'}"><strong>${totalTok.toLocaleString()}</strong> tok</span>` : ''}
-    ${hasCostData && totalCost > 0 ? `<span style="color:var(--success);font-weight:700;" title="${lang==='en'?'Estimated total API cost for this session (based on public pricing)':'Szacowany koszt API sesji'}">~${_formatCost(totalCost)}</span>` : ''}
+    <span><strong>${calls}</strong> ${lang === 'en' ? (calls === 1 ? 'call' : 'calls') : 'wywołań'}</span>
+    <span><strong>${(totalMs / 1000).toFixed(1)}s</strong> ${lang === 'en' ? 'total' : 'łącznie'}</span>
+    ${totalTok ? `<span title="${lang === 'en' ? 'Total tokens consumed' : 'Łączna liczba tokenów'}"><strong>${totalTok.toLocaleString()}</strong> tok</span>` : ''}
+    ${hasCostData && totalCost > 0 ? `<span style="color:var(--success);font-weight:700;" title="${lang === 'en' ? 'Estimated total API cost for this session (based on public pricing)' : 'Szacowany koszt API sesji'}">~${_formatCost(totalCost)}</span>` : ''}
     ${hasCostData && totalCost === 0 ? `<span style="color:var(--success);" title="Free tier model">free</span>` : ''}
-    ${calls > 1 ? `<span style="color:var(--muted)">~${avgDur >= 1000 ? (avgDur/1000).toFixed(1)+'s' : avgDur+'ms'} ${lang==='en'?'avg/call':'śr/call'}</span>` : ''}
-    ${fallbacks ? `<span title="${lang==='en'?'Model fallbacks used':'Użyte fallbacki modelu'}">↩ <strong>${fallbacks}</strong> ${lang==='en'?'fallback':'fallback'}</span>` : ''}
-    ${errors ? `<span style="color:var(--accent2)" title="${lang==='en'?'Failed calls':'Nieudane wywołania'}">⚠ <strong>${errors}</strong> ${lang==='en'?'error':'błąd'}</span>` : ''}
-    <span style="margin-left:auto;color:var(--muted);font-size:0.68rem;" title="${lang==='en'?'Session start time':'Czas startu sesji'}">${new Date(sessionStart).toLocaleTimeString()}</span>
+    ${calls > 1 ? `<span style="color:var(--muted)">~${avgDur >= 1000 ? (avgDur / 1000).toFixed(1) + 's' : avgDur + 'ms'} ${lang === 'en' ? 'avg/call' : 'śr/call'}</span>` : ''}
+    ${fallbacks ? `<span title="${lang === 'en' ? 'Model fallbacks used' : 'Użyte fallbacki modelu'}">↩ <strong>${fallbacks}</strong> ${lang === 'en' ? 'fallback' : 'fallback'}</span>` : ''}
+    ${errors ? `<span style="color:var(--accent2)" title="${lang === 'en' ? 'Failed calls' : 'Nieudane wywołania'}">⚠ <strong>${errors}</strong> ${lang === 'en' ? 'error' : 'błąd'}</span>` : ''}
+    <span style="margin-left:auto;color:var(--muted);font-size:0.68rem;" title="${lang === 'en' ? 'Session start time' : 'Czas startu sesji'}">${new Date(sessionStart).toLocaleTimeString()}</span>
   `;
 }
 
@@ -2436,7 +1816,7 @@ function renderVersionPanel() {
   const icon = document.getElementById('version-toggle-icon');
 
   const total = versionHistory.length;
-  if(total === 0) { panel.style.display = 'none'; return; }
+  if (total === 0) { panel.style.display = 'none'; return; }
 
   panel.style.display = 'block';
   badge.textContent = total;
@@ -2473,11 +1853,11 @@ function renderVersionPanel() {
 
     // Actions: can't restore current, can't diff origin
     const restoreBtn = !isCurrentIdx
-      ? `<button class="version-btn restore-btn" onclick="restoreVersion(${origIdx})">↩ ${lang==='en'?'Restore':'Przywróć'}</button>`
+      ? `<button class="version-btn restore-btn" onclick="restoreVersion(${origIdx})">↩ ${lang === 'en' ? 'Restore' : 'Przywróć'}</button>`
       : `<span class="version-current-tag">CURRENT</span>`;
 
     const diffBtn = origIdx > 0
-      ? `<button class="version-btn diff-btn" onclick="showDiffModal(${origIdx})">🔍 ${lang==='en'?'Diff':'Porównaj'}</button>`
+      ? `<button class="version-btn diff-btn" onclick="showDiffModal(${origIdx})">🔍 ${lang === 'en' ? 'Diff' : 'Porównaj'}</button>`
       : '';
 
     const downloadBtn = `<button class="version-btn" onclick="downloadVersionZip(${origIdx})">⬇ ZIP</button>`;
@@ -2510,29 +1890,29 @@ function toggleVersionPanel() {
 }
 
 function formatVersionTime(ts) {
-  if(!ts) return '';
+  if (!ts) return '';
   const d = ts instanceof Date ? ts : new Date(ts);
   const now = new Date();
   const diffMs = now - d;
   const diffM = Math.floor(diffMs / 60000);
-  if(diffM < 1)  return lang==='en' ? 'just now' : 'przed chwilą';
-  if(diffM < 60) return `${diffM}m ${lang==='en'?'ago':'temu'}`;
+  if (diffM < 1) return lang === 'en' ? 'just now' : 'przed chwilą';
+  if (diffM < 60) return `${diffM}m ${lang === 'en' ? 'ago' : 'temu'}`;
   const diffH = Math.floor(diffM / 60);
-  if(diffH < 24) return `${diffH}h ${lang==='en'?'ago':'temu'}`;
+  if (diffH < 24) return `${diffH}h ${lang === 'en' ? 'ago' : 'temu'}`;
   return d.toLocaleDateString();
 }
 
 function restoreVersion(idx) {
-  if(idx < 0 || idx >= versionHistory.length) return;
+  if (idx < 0 || idx >= versionHistory.length) return;
   const v = versionHistory[idx];
 
   // Save current state as new version before restoring
   const alreadySaved = versionHistory[versionHistory.length - 1];
   // Don't double-save if idx is already last
-  if(idx !== versionHistory.length - 1) {
+  if (idx !== versionHistory.length - 1) {
     versionHistory.push({
       id: Date.now(),
-      label: lang==='en' ? `Restored v${v.vNum}` : `Przywrócono v${v.vNum}`,
+      label: lang === 'en' ? `Restored v${v.vNum}` : `Przywrócono v${v.vNum}`,
       ts: new Date(),
       agents: JSON.parse(JSON.stringify(v.agents)),
       files: JSON.parse(JSON.stringify(v.files)),
@@ -2544,41 +1924,41 @@ function restoreVersion(idx) {
   }
 
   generatedAgents = JSON.parse(JSON.stringify(v.agents));
-  generatedFiles  = JSON.parse(JSON.stringify(v.files));
+  generatedFiles = JSON.parse(JSON.stringify(v.files));
 
   showResults(true);
   buildGraphFromAgents();
   renderVersionPanel();
 
-  showNotif(lang==='en'
+  showNotif(lang === 'en'
     ? `↩ Restored to v${v.vNum}: "${v.label}"`
     : `↩ Przywrócono v${v.vNum}: "${v.label}"`);
 }
 
 async function downloadVersionZip(idx) {
-  if(typeof JSZip === 'undefined') { showNotif('JSZip not loaded', true); return; }
+  if (typeof JSZip === 'undefined') { showNotif('JSZip not loaded', true); return; }
   const v = versionHistory[idx];
-  if(!v) return;
+  if (!v) return;
   const zip = new JSZip();
   Object.entries(v.files).forEach(([name, content]) => zip.file(name, content));
   const blob = await zip.generateAsync({ type: 'blob' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `agentspark-v${v.vNum}-${currentTopic.toLowerCase().replace(/\s+/g,'-')}.zip`;
+  a.download = `agentspark-v${v.vNum}-${currentTopic.toLowerCase().replace(/\s+/g, '-')}.zip`;
   a.click();
   showNotif(`✓ v${v.vNum} ZIP downloaded`);
 }
 
 function showDiffModal(idx) {
-  if(idx < 1 || idx >= versionHistory.length) return;
+  if (idx < 1 || idx >= versionHistory.length) return;
   const vNew = versionHistory[idx];
   const vOld = versionHistory[idx - 1];
 
   const modal = document.getElementById('diff-modal');
   const title = document.getElementById('diff-modal-title');
-  const body  = document.getElementById('diff-modal-body');
+  const body = document.getElementById('diff-modal-body');
 
-  title.textContent = lang==='en'
+  title.textContent = lang === 'en'
     ? `🔍 v${vOld.vNum} → v${vNew.vNum}: "${vNew.label}"`
     : `🔍 v${vOld.vNum} → v${vNew.vNum}: "${vNew.label}"`;
 
@@ -2586,67 +1966,67 @@ function showDiffModal(idx) {
 
   let html = '';
 
-  if(added.length) {
+  if (added.length) {
     html += `<div class="diff-section">
-      <div class="diff-section-title" style="color:var(--success)">➕ ${lang==='en'?'Added Agents':'Dodani Agenci'} (${added.length})</div>
+      <div class="diff-section-title" style="color:var(--success)">➕ ${lang === 'en' ? 'Added Agents' : 'Dodani Agenci'} (${added.length})</div>
       ${added.map(id => {
-        const a = vNew.agents.find(ag => ag.id === id);
-        if(!a) return '';
-        return `<div class="diff-agent-row row-added">
-          <span class="row-icon">${a.emoji||'🤖'}</span>
-          <div><div class="diff-agent-name">${a.name}</div><div class="diff-agent-role">${a.role||''}</div></div>
+      const a = vNew.agents.find(ag => ag.id === id);
+      if (!a) return '';
+      return `<div class="diff-agent-row row-added">
+          <span class="row-icon">${a.emoji || '🤖'}</span>
+          <div><div class="diff-agent-name">${a.name}</div><div class="diff-agent-role">${a.role || ''}</div></div>
         </div>`;
-      }).join('')}
+    }).join('')}
     </div>`;
   }
 
-  if(removed.length) {
+  if (removed.length) {
     html += `<div class="diff-section">
-      <div class="diff-section-title" style="color:var(--accent2)">🗑 ${lang==='en'?'Removed Agents':'Usunięci Agenci'} (${removed.length})</div>
+      <div class="diff-section-title" style="color:var(--accent2)">🗑 ${lang === 'en' ? 'Removed Agents' : 'Usunięci Agenci'} (${removed.length})</div>
       ${removed.map(id => {
-        const a = vOld.agents.find(ag => ag.id === id);
-        if(!a) return '';
-        return `<div class="diff-agent-row row-removed">
-          <span class="row-icon">${a.emoji||'🤖'}</span>
-          <div><div class="diff-agent-name">${a.name}</div><div class="diff-agent-role">${a.role||''}</div></div>
+      const a = vOld.agents.find(ag => ag.id === id);
+      if (!a) return '';
+      return `<div class="diff-agent-row row-removed">
+          <span class="row-icon">${a.emoji || '🤖'}</span>
+          <div><div class="diff-agent-name">${a.name}</div><div class="diff-agent-role">${a.role || ''}</div></div>
         </div>`;
-      }).join('')}
+    }).join('')}
     </div>`;
   }
 
-  if(changed.length) {
+  if (changed.length) {
     html += `<div class="diff-section">
-      <div class="diff-section-title" style="color:#ffd580">✏ ${lang==='en'?'Modified Agents':'Zmodyfikowani Agenci'} (${changed.length})</div>
+      <div class="diff-section-title" style="color:#ffd580">✏ ${lang === 'en' ? 'Modified Agents' : 'Zmodyfikowani Agenci'} (${changed.length})</div>
       ${changed.map(id => {
-        const aNew = vNew.agents.find(ag => ag.id === id);
-        const aOld = vOld.agents.find(ag => ag.id === id);
-        if(!aNew) return '';
-        const descChanged = aOld && aOld.description !== aNew.description;
-        const roleChanged = aOld && aOld.role !== aNew.role;
-        return `<div class="diff-agent-row row-changed">
-          <span class="row-icon">${aNew.emoji||'🤖'}</span>
+      const aNew = vNew.agents.find(ag => ag.id === id);
+      const aOld = vOld.agents.find(ag => ag.id === id);
+      if (!aNew) return '';
+      const descChanged = aOld && aOld.description !== aNew.description;
+      const roleChanged = aOld && aOld.role !== aNew.role;
+      return `<div class="diff-agent-row row-changed">
+          <span class="row-icon">${aNew.emoji || '🤖'}</span>
           <div style="flex:1">
             <div class="diff-agent-name">${aNew.name}</div>
             ${roleChanged ? `<div class="diff-agent-role" style="color:#ffd580">Role: ${aOld.role} → ${aNew.role}</div>` : ''}
-            ${descChanged ? `<div style="font-size:0.7rem;color:var(--muted);margin-top:0.25rem;line-height:1.4;">${aNew.description.slice(0,120)}${aNew.description.length>120?'…':''}</div>` : ''}
+            ${descChanged ? `<div style="font-size:0.7rem;color:var(--muted);margin-top:0.25rem;line-height:1.4;">${aNew.description.slice(0, 120)}${aNew.description.length > 120 ? '…' : ''}</div>` : ''}
           </div>
         </div>`;
-      }).join('')}
+    }).join('')}
     </div>`;
   }
 
-  if(!added.length && !removed.length && !changed.length) {
+  if (!added.length && !removed.length && !changed.length) {
     html = `<div style="padding:2rem;text-align:center;color:var(--muted);font-family:'Space Mono',monospace;font-size:0.82rem;">
-      ${lang==='en'?'No structural changes — metadata or descriptions updated.':'Brak zmian strukturalnych — zaktualizowano metadane lub opisy.'}
+      ${lang === 'en' ? 'No structural changes — metadata or descriptions updated.' : 'Brak zmian strukturalnych — zaktualizowano metadane lub opisy.'}
     </div>`;
   }
 
   // Agent count summary
   html = `<div style="display:flex;gap:1.5rem;padding:0 0 1.25rem;font-family:'Space Mono',monospace;font-size:0.72rem;color:var(--muted);border-bottom:1px solid var(--border);margin-bottom:1.25rem;">
-    <span>${lang==='en'?'Before':'Przed'}: <strong style="color:var(--text)">${vOld.agents.length} ${lang==='en'?'agents':'agentów'}</strong></span>
+    <span>${lang === 'en' ? 'Before' : 'Przed'}: <strong style="color:var(--text)">${vOld.agents.length} ${lang === 'en' ? 'agents' : 'agentów'}</strong></span>
     <span>→</span>
-    <span>${lang==='en'?'After':'Po'}: <strong style="color:var(--text)">${vNew.agents.length} ${lang==='en'?'agents':'agentów'}</strong></span>
-    <span style="margin-left:auto;">${lang==='en'?'Change':'Zmiana'}: ${vNew.agents.length - vOld.agents.length > 0 ? '+' : ''}${vNew.agents.length - vOld.agents.length}</span>
+    <span>${lang === 'en' ? 'After' : 'Po'}: <strong style="color:var(--text)">${vNew.agents.length} ${lang === 'en' ? 'agents' : 'agentów'}</strong></span>
+    <span style="margin-left:auto;">${lang === 'en' ? 'Change' : 'Zmiana'}: ${vNew.agents.length - vOld.agents.length > 0 ? '+' : ''}${vNew.agents.length - vOld.agents.length}</span>
   </div>` + html;
 
   body.innerHTML = html;
@@ -2660,21 +2040,31 @@ function closeDiffModal() {
 // ─── FRAMEWORK EXPORT ─────────────────────────────────────
 
 const FRAMEWORKS = [
-  { id: 'claude',   label: 'Claude Projects', badge: 'No-code', logo: '🟠', pip: null,
+  {
+    id: 'claude', label: 'Claude Projects', badge: 'No-code', logo: '🟠', pip: null,
     desc: 'One-click system prompts for Claude.ai Projects. No coding required — paste and go.',
-    url: 'https://claude.ai/projects' },
-  { id: 'crewai',   label: 'CrewAI',    badge: 'Python',   logo: '🤝', pip: 'pip install crewai crewai-tools',
+    url: 'https://claude.ai/projects'
+  },
+  {
+    id: 'crewai', label: 'CrewAI', badge: 'Python', logo: '🤝', pip: 'pip install crewai crewai-tools',
     desc: 'Role-based agents with tasks and tools. Best for sequential and hierarchical workflows.',
-    url: 'https://docs.crewai.com' },
-  { id: 'langgraph', label: 'LangGraph', badge: 'Python',  logo: '🔗', pip: 'pip install langgraph langchain-openai',
+    url: 'https://docs.crewai.com'
+  },
+  {
+    id: 'langgraph', label: 'LangGraph', badge: 'Python', logo: '🔗', pip: 'pip install langgraph langchain-openai',
     desc: 'Stateful multi-agent graphs with cycles and branching. Best for complex conditional flows.',
-    url: 'https://langchain-ai.github.io/langgraph' },
-  { id: 'autogen',  label: 'AutoGen',   badge: 'Python',   logo: '🔄', pip: 'pip install pyautogen',
+    url: 'https://langchain-ai.github.io/langgraph'
+  },
+  {
+    id: 'autogen', label: 'AutoGen', badge: 'Python', logo: '🔄', pip: 'pip install pyautogen',
     desc: 'Conversational multi-agent framework with human-in-the-loop support. Best for agentic chat.',
-    url: 'https://microsoft.github.io/autogen' },
-  { id: 'swarm',    label: 'Swarm',     badge: 'Python',   logo: '🐝', pip: 'pip install git+https://github.com/openai/swarm.git',
+    url: 'https://microsoft.github.io/autogen'
+  },
+  {
+    id: 'swarm', label: 'Swarm', badge: 'Python', logo: '🐝', pip: 'pip install git+https://github.com/openai/swarm.git',
     desc: 'Lightweight OpenAI Swarm with handoffs between agents. Best for simple agent routing.',
-    url: 'https://github.com/openai/swarm' },
+    url: 'https://github.com/openai/swarm'
+  },
 ];
 
 let activeFwTab = 'claude';
@@ -2731,7 +2121,7 @@ async function _processImportFile(file) {
         `Nieobslugiwany typ pliku ".${ext}". Uzyj .json lub .zip`
       ));
     }
-  } catch(e) {
+  } catch (e) {
     _showImportError(tr('Failed to read file: ', 'Nie udalo sie odczytac pliku: ') + e.message);
   }
 }
@@ -2739,7 +2129,7 @@ async function _processImportFile(file) {
 async function _parseImportJson(text, filename) {
   let data;
   try { data = JSON.parse(text); }
-  catch(e) { _showImportError(tr('Invalid JSON: ', 'Nieprawidlowy JSON: ') + e.message); return; }
+  catch (e) { _showImportError(tr('Invalid JSON: ', 'Nieprawidlowy JSON: ') + e.message); return; }
 
   // Support multiple JSON shapes:
   // 1) AgentSpark share payload  { v, agents, files, topic, level, lang }
@@ -2769,7 +2159,7 @@ async function _parseImportZip(file) {
   let zip;
   try {
     zip = await JSZip.loadAsync(file);
-  } catch(e) {
+  } catch (e) {
     _showImportError(tr('Cannot open ZIP: ', 'Nie mozna otworzyc ZIP: ') + e.message); return;
   }
 
@@ -2792,7 +2182,7 @@ async function _parseImportZip(file) {
         _showImportPreview(data, file.name);
         return;
       }
-    } catch(e) { /* try next */ }
+    } catch (e) { /* try next */ }
   }
 
   // Strategy 3: reconstruct from .md files (generic zip without manifest)
@@ -2815,7 +2205,7 @@ async function _parseImportZip(file) {
 // Reconstruct minimal agent list from agent-*.md files
 function _reconstructFromMdFiles(mdFiles, zipName) {
   const agents = [];
-  const files  = { ...mdFiles };
+  const files = { ...mdFiles };
   let topic = tr('Imported from ZIP', 'Zaimportowano z ZIP');
 
   // Try to get topic from README.md
@@ -2828,19 +2218,19 @@ function _reconstructFromMdFiles(mdFiles, zipName) {
   Object.entries(mdFiles).forEach(([name, content]) => {
     if (!name.startsWith('agent-') || !name.endsWith('.md')) return;
     const idSlug = name.replace(/^agent-/, '').replace(/\.md$/, '');
-    const nameMatch    = content.match(/^#\s+Agent:\s+(.+)/m);
-    const roleMatch    = content.match(/\*\*Role:\*\*\s*(.+)/m);
-    const emojiMatch   = content.match(/^##\s+Identity[\s\S]*?([^\w\s])/m);
-    const descMatch    = content.match(/^##\s+Goal\s*\n+([\s\S]+?)(?:\n##|$)/m);
+    const nameMatch = content.match(/^#\s+Agent:\s+(.+)/m);
+    const roleMatch = content.match(/\*\*Role:\*\*\s*(.+)/m);
+    const emojiMatch = content.match(/^##\s+Identity[\s\S]*?([^\w\s])/m);
+    const descMatch = content.match(/^##\s+Goal\s*\n+([\s\S]+?)(?:\n##|$)/m);
     agents.push({
-      id:          idSlug,
-      name:        nameMatch?.[1]?.trim()  || idSlug,
-      emoji:       emojiMatch?.[1]         || '🤖',
-      type:        'technical',
-      role:        roleMatch?.[1]?.trim()  || 'Agent',
+      id: idSlug,
+      name: nameMatch?.[1]?.trim() || idSlug,
+      emoji: emojiMatch?.[1] || '🤖',
+      type: 'technical',
+      role: roleMatch?.[1]?.trim() || 'Agent',
       description: descMatch?.[1]?.trim().slice(0, 200) || '',
-      agentMd:     content,
-      skillMd:     mdFiles[`skill-${idSlug}.md`] || '',
+      agentMd: content,
+      skillMd: mdFiles[`skill-${idSlug}.md`] || '',
     });
   });
 
@@ -2850,8 +2240,8 @@ function _reconstructFromMdFiles(mdFiles, zipName) {
 // ── Preview ───────────────────────────────────────────────
 function _showImportPreview(payload, filename) {
   const agents = payload.agents || [];
-  const tech   = agents.filter(a => a.type === 'technical');
-  const biz    = agents.filter(a => a.type !== 'technical');
+  const tech = agents.filter(a => a.type === 'technical');
+  const biz = agents.filter(a => a.type !== 'technical');
   const fileCount = Object.keys(payload.files || {}).length;
 
   const preview = document.getElementById('import-preview');
@@ -2868,9 +2258,9 @@ function _showImportPreview(payload, filename) {
     <div style="font-size:0.72rem;color:var(--muted);margin-bottom:0.4rem;">${tr('AGENTS', 'AGENCI')} (${agents.length})</div>
     <div style="display:flex;flex-wrap:wrap;gap:0.4rem;">
       ${agents.map(a => `<span style="font-size:0.75rem;padding:0.2rem 0.55rem;border-radius:5px;
-        background:${a.type==='technical'?'rgba(124,58,255,0.12)':'rgba(255,107,53,0.12)'};
-        border:1px solid ${a.type==='technical'?'rgba(196,147,10,0.3)':'rgba(255,107,53,0.3)'};
-        color:${a.type==='technical'?'var(--accent3)':'var(--accent2)'}">${a.emoji||'🤖'} ${_escHtml(a.name)}</span>`).join('')}
+        background:${a.type === 'technical' ? 'rgba(124,58,255,0.12)' : 'rgba(255,107,53,0.12)'};
+        border:1px solid ${a.type === 'technical' ? 'rgba(196,147,10,0.3)' : 'rgba(255,107,53,0.3)'};
+        color:${a.type === 'technical' ? 'var(--accent3)' : 'var(--accent2)'}">${a.emoji || '🤖'} ${_escHtml(a.name)}</span>`).join('')}
     </div>
     ${!agents.length ? `<div style="color:var(--accent2);">⚠ ${tr('No agents detected', 'Nie wykryto agentow')}</div>` : ''}
   `;
@@ -2887,11 +2277,11 @@ async function confirmImport() {
   const saveToDb = document.getElementById('import-save-checkbox')?.checked !== false;
 
   // Restore state — same pattern as loadProject / share restore
-  currentTopic    = p.topic   || tr('Imported Project', 'Zaimportowany projekt');
-  currentLevel    = p.level   || 'iskra';
+  currentTopic = p.topic || tr('Imported Project', 'Zaimportowany projekt');
+  currentLevel = p.level || 'iskra';
   if (p.lang) { lang = p.lang; setLang(lang); }
   generatedAgents = JSON.parse(JSON.stringify(p.agents || []));
-  generatedFiles  = JSON.parse(JSON.stringify(p.files  || {}));
+  generatedFiles = JSON.parse(JSON.stringify(p.files || {}));
 
   // Regenerate missing files
   if (!generatedFiles['README.md'] && generatedAgents.length) {
@@ -2907,10 +2297,10 @@ async function confirmImport() {
   // Bootstrap version history
   versionHistory = [{
     id: Date.now(),
-    label: lang==='en' ? `Imported: ${currentTopic}` : `Zaimportowany: ${currentTopic}`,
+    label: lang === 'en' ? `Imported: ${currentTopic}` : `Zaimportowany: ${currentTopic}`,
     ts: new Date(),
     agents: JSON.parse(JSON.stringify(generatedAgents)),
-    files:  JSON.parse(JSON.stringify(generatedFiles)),
+    files: JSON.parse(JSON.stringify(generatedFiles)),
     diff: { added: [], removed: [], changed: [] },
     removedNames: {},
     agentNames: Object.fromEntries(generatedAgents.map(a => [a.id, a.name])),
@@ -2931,7 +2321,7 @@ async function confirmImport() {
     await saveCurrentProject(true);
   }
 
-  showNotif(lang==='en'
+  showNotif(lang === 'en'
     ? `✓ Imported "${currentTopic}" — ${generatedAgents.length} agents`
     : `✓ Zaimportowano "${currentTopic}" — ${generatedAgents.length} agentów`
   );
@@ -2940,11 +2330,11 @@ async function confirmImport() {
 // ── Reset modal ───────────────────────────────────────────
 function resetImportModal() {
   _importParsed = null;
-  const preview  = document.getElementById('import-preview');
-  const error    = document.getElementById('import-error');
+  const preview = document.getElementById('import-preview');
+  const error = document.getElementById('import-error');
   const dropzone = document.getElementById('import-dropzone');
-  if (preview)  preview.style.display  = 'none';
-  if (error)    error.style.display    = 'none';
+  if (preview) preview.style.display = 'none';
+  if (error) error.style.display = 'none';
   if (dropzone) { dropzone.style.opacity = ''; dropzone.style.pointerEvents = ''; }
 }
 
@@ -2964,8 +2354,8 @@ let _activePromptTab = 'interview';
 
 const PROMPT_TAB_DESCS = {
   interview: 'System prompt used during the AI interview phase — guides question format, depth calibration, and IMPACT notes.',
-  generate:  'System prompt used to generate your agent team JSON from interview answers.',
-  refine:    'System prompt used when refining / editing an existing team.'
+  generate: 'System prompt used to generate your agent team JSON from interview answers.',
+  refine: 'System prompt used when refining / editing an existing team.'
 };
 
 function openPromptExport() {
@@ -2987,8 +2377,8 @@ function switchPromptTab(tab) {
 
 function _getPromptForTab(tab) {
   if (tab === 'interview') return getSystemPrompt();
-  if (tab === 'generate')  return getSystemPrompt() + '\n\n--- GENERATION PHASE TRIGGER ---\nWhen user sends [GENERATE], respond with the JSON agent team.';
-  if (tab === 'refine')    return getRefineSystemPrompt();
+  if (tab === 'generate') return getSystemPrompt() + '\n\n--- GENERATION PHASE TRIGGER ---\nWhen user sends [GENERATE], respond with the JSON agent team.';
+  if (tab === 'refine') return getRefineSystemPrompt();
   return '';
 }
 
@@ -3011,7 +2401,7 @@ async function copyPromptToClipboard() {
     await navigator.clipboard.writeText(ta.value);
     if (fb) { fb.textContent = tr('✓ Copied!', '✓ Skopiowano!'); fb.style.opacity = '1'; setTimeout(() => { fb.style.opacity = '0'; }, 2000); }
     if (btn) { const orig = btn.textContent; btn.textContent = tr('✓ Copied!', '✓ Skopiowano!'); setTimeout(() => { btn.textContent = orig; }, 1500); }
-  } catch(e) {
+  } catch (e) {
     ta.select();
     document.execCommand('copy');
     if (fb) { fb.textContent = tr('✓ Copied!', '✓ Skopiowano!'); fb.style.opacity = '1'; setTimeout(() => { fb.style.opacity = '0'; }, 2000); }
@@ -3031,8 +2421,8 @@ function downloadPromptTxt() {
 }
 
 function openFrameworkExport() {
-  if(!generatedAgents.length) {
-    showNotif(lang==='en' ? '⚠ Generate a team first' : '⚠ Najpierw wygeneruj zespół', true);
+  if (!generatedAgents.length) {
+    showNotif(lang === 'en' ? '⚠ Generate a team first' : '⚠ Najpierw wygeneruj zespół', true);
     return;
   }
   renderFwModal();
@@ -3077,8 +2467,8 @@ function renderFwModal() {
         </div>
         <div class="fw-footer-row">
           <div class="fw-pip">$ ${fw.pip}</div>
-          <button class="modal-download-btn" onclick="copyFwCode('${fw.id}')">📋 ${lang==='en'?'Copy':'Kopiuj'}</button>
-          <button class="modal-download-btn" onclick="downloadFwCode('${fw.id}')">⬇ ${lang==='en'?'Download .py':'Pobierz .py'}</button>
+          <button class="modal-download-btn" onclick="copyFwCode('${fw.id}')">📋 ${lang === 'en' ? 'Copy' : 'Kopiuj'}</button>
+          <button class="modal-download-btn" onclick="downloadFwCode('${fw.id}')">⬇ ${lang === 'en' ? 'Download .py' : 'Pobierz .py'}</button>
         </div>
       `;
     }
@@ -3087,15 +2477,15 @@ function renderFwModal() {
 }
 
 function escapeHtml(s) {
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 function copyFwCode(fwId) {
   const code = generateFrameworkCode(fwId);
   navigator.clipboard.writeText(code).then(() => {
-    showNotif(lang==='en' ? '✓ Code copied to clipboard!' : '✓ Kod skopiowany!');
+    showNotif(lang === 'en' ? '✓ Code copied to clipboard!' : '✓ Kod skopiowany!');
   }).catch(() => {
-    showNotif(lang==='en' ? '⚠ Copy failed — select manually' : '⚠ Kopiowanie nieudane', true);
+    showNotif(lang === 'en' ? '⚠ Copy failed — select manually' : '⚠ Kopiowanie nieudane', true);
   });
 }
 
@@ -3115,13 +2505,13 @@ function downloadFwCode(fwId) {
 // ── Code generators ────────────────────────────────────────
 
 function generateFrameworkCode(fwId) {
-  switch(fwId) {
-    case 'claude':    return genClaudeProjects();
-    case 'crewai':   return genCrewAI();
+  switch (fwId) {
+    case 'claude': return genClaudeProjects();
+    case 'crewai': return genCrewAI();
     case 'langgraph': return genLangGraph();
-    case 'autogen':  return genAutoGen();
-    case 'swarm':    return genSwarm();
-    default:         return '# Unknown framework';
+    case 'autogen': return genAutoGen();
+    case 'swarm': return genSwarm();
+    default: return '# Unknown framework';
   }
 }
 
@@ -3142,14 +2532,14 @@ function renderClaudeProjectsPane() {
     return `
     <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:0.75rem;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;gap:0.5rem;flex-wrap:wrap;">
-        <div style="font-weight:700;font-size:0.95rem;">${a.emoji||'🤖'} ${a.name}</div>
+        <div style="font-weight:700;font-size:0.95rem;">${a.emoji || '🤖'} ${a.name}</div>
         <div style="display:flex;gap:0.4rem;">
           <button class="modal-download-btn" onclick="copyClaudePrompt(${i})" style="font-size:0.72rem;padding:0.25rem 0.6rem;">📋 Copy prompt</button>
           <button class="modal-download-btn" onclick="downloadClaudePrompt(${i})" style="font-size:0.72rem;padding:0.25rem 0.6rem;">⬇ .md</button>
           <a href="https://claude.ai/projects" target="_blank" class="modal-download-btn" style="font-size:0.72rem;padding:0.25rem 0.6rem;text-decoration:none;">🟠 Open Claude</a>
         </div>
       </div>
-      <div style="font-size:0.78rem;color:var(--muted);margin-bottom:0.6rem;">${a.role || a.type || ''} · ${a.description ? a.description.slice(0,90)+'…' : ''}</div>
+      <div style="font-size:0.78rem;color:var(--muted);margin-bottom:0.6rem;">${a.role || a.type || ''} · ${a.description ? a.description.slice(0, 90) + '…' : ''}</div>
       <details style="margin-top:0.25rem;">
         <summary style="cursor:pointer;font-size:0.75rem;color:var(--accent);font-family:'Space Mono',monospace;letter-spacing:0.05em;user-select:none;">VIEW PROMPT</summary>
         <pre id="${safeId}" style="margin-top:0.6rem;font-size:0.7rem;line-height:1.5;max-height:200px;overflow-y:auto;white-space:pre-wrap;word-break:break-word;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:0.75rem;">${escapeHtml(prompt)}</pre>
@@ -3162,7 +2552,7 @@ function renderClaudeProjectsPane() {
       <div style="font-size:0.72rem;font-family:'Space Mono',monospace;color:var(--accent);letter-spacing:0.08em;margin-bottom:0.6rem;">HOW TO USE</div>
       <ol style="margin:0;padding-left:1.25rem;display:flex;flex-direction:column;gap:0.35rem;">
         <li style="font-size:0.82rem;color:var(--muted);">Go to <a href="https://claude.ai/projects" target="_blank" style="color:var(--accent);">claude.ai/projects</a> and click <strong>New Project</strong></li>
-        <li style="font-size:0.82rem;color:var(--muted);">Give the project the agent's name (e.g. "<strong>${agents[0]?.name||'Agent'}</strong>")</li>
+        <li style="font-size:0.82rem;color:var(--muted);">Give the project the agent's name (e.g. "<strong>${agents[0]?.name || 'Agent'}</strong>")</li>
         <li style="font-size:0.82rem;color:var(--muted);">Open <strong>Project Instructions</strong> and paste the copied prompt</li>
         <li style="font-size:0.82rem;color:var(--muted);">Repeat for each agent — one Project per agent</li>
         <li style="font-size:0.82rem;color:var(--muted);">Start chatting — each Project is your dedicated specialist</li>
@@ -3179,7 +2569,7 @@ function renderClaudeProjectsPane() {
 }
 
 function genClaudeAgentPrompt(agent) {
-  return `# ${agent.emoji||'🤖'} ${agent.name}
+  return `# ${agent.emoji || '🤖'} ${agent.name}
 
 ## Role
 ${agent.role || agent.type || 'Specialist'}
@@ -3188,14 +2578,14 @@ ${agent.role || agent.type || 'Specialist'}
 ${agent.description || ''}
 
 ## Your Expertise
-${agent.skillMd ? agent.skillMd.replace(/^# Skill:.*\n/,'').trim() : (agent.skills ? agent.skills.join(', ') : 'See description above')}
+${agent.skillMd ? agent.skillMd.replace(/^# Skill:.*\n/, '').trim() : (agent.skills ? agent.skills.join(', ') : 'See description above')}
 
 ## Personality & Communication Style
 Be concise, professional, and focused. Stay within your area of expertise. When a question falls outside your scope, say so clearly and suggest which team member is better suited.
 
 ## Team Context
 You are part of a ${generatedAgents.length}-agent team working on: **${currentTopic}**
-${generatedAgents.filter(a => a.id !== agent.id).map(a => `- ${a.emoji||'🤖'} **${a.name}** — ${a.role || a.type}`).join('\n')}
+${generatedAgents.filter(a => a.id !== agent.id).map(a => `- ${a.emoji || '🤖'} **${a.name}** — ${a.role || a.type}`).join('\n')}
 
 Always keep your team context in mind. If the user needs help from a colleague, recommend them by name.`;
 }
@@ -3203,7 +2593,7 @@ Always keep your team context in mind. If the user needs help from a colleague, 
 function genClaudeProjects() {
   // Returns combined text for copy/download all
   return generatedAgents.map(a =>
-    `${'='.repeat(60)}\n# ${a.emoji||'🤖'} ${a.name}\n${'='.repeat(60)}\n\n${genClaudeAgentPrompt(a)}\n`
+    `${'='.repeat(60)}\n# ${a.emoji || '🤖'} ${a.name}\n${'='.repeat(60)}\n\n${genClaudeAgentPrompt(a)}\n`
   ).join('\n\n');
 }
 
@@ -3235,7 +2625,7 @@ async function downloadAllClaudePrompts() {
     const blob = new Blob([content], { type: 'text/plain' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `claude-projects-${currentTopic.toLowerCase().replace(/\s+/g,'-')}.md`;
+    a.download = `claude-projects-${currentTopic.toLowerCase().replace(/\s+/g, '-')}.md`;
     a.click();
     showNotif('✓ All prompts downloaded as single file');
     return;
@@ -3250,7 +2640,7 @@ async function downloadAllClaudePrompts() {
   const blob = await zip.generateAsync({ type: 'blob' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `claude-projects-${currentTopic.toLowerCase().replace(/\s+/g,'-')}.zip`;
+  a.download = `claude-projects-${currentTopic.toLowerCase().replace(/\s+/g, '-')}.zip`;
   a.click();
   showNotif(`✓ ${generatedAgents.length} Claude Project prompts downloaded`);
 }
@@ -3260,10 +2650,10 @@ function genClaudeTeamSummaryText() {
 
 ## Your AI Team (${generatedAgents.length} agents)
 
-${generatedAgents.map(a => `### ${a.emoji||'🤖'} ${a.name}
+${generatedAgents.map(a => `### ${a.emoji || '🤖'} ${a.name}
 - **Role:** ${a.role || a.type || 'Specialist'}
 - **Description:** ${a.description || ''}
-- **Claude Project file:** claude-project-${a.name.toLowerCase().replace(/\s+/g,'-')}.md`).join('\n\n')}
+- **Claude Project file:** claude-project-${a.name.toLowerCase().replace(/\s+/g, '-')}.md`).join('\n\n')}
 
 ## Setup Instructions
 
@@ -3315,12 +2705,12 @@ ${taskVarName(a)} = Task(
   }).join('\n');
 
   const agentList = agents.map(a => `    ${agentVarName(a)},`).join('\n');
-  const taskList  = agents.map(a => `    ${taskVarName(a)},`).join('\n');
+  const taskList = agents.map(a => `    ${taskVarName(a)},`).join('\n');
 
   return `"""
 AgentSpark → CrewAI Export
 Topic: ${topic}
-Generated: ${new Date().toISOString().slice(0,10)}
+Generated: ${new Date().toISOString().slice(0, 10)}
 Docs: https://docs.crewai.com
 """
 
@@ -3358,11 +2748,11 @@ function genLangGraph() {
   const agents = generatedAgents;
 
   const stateFields = agents.map(a =>
-    `    ${a.id.replace(/-/g,'_')}_output: str`
+    `    ${a.id.replace(/-/g, '_')}_output: str`
   ).join('\n');
 
   const nodeDefs = agents.map(a => {
-    const varName = a.id.replace(/-/g,'_');
+    const varName = a.id.replace(/-/g, '_');
     return `
 def ${varName}_node(state: AgentState) -> AgentState:
     """${a.name}: ${a.description.split('.')[0]}."""
@@ -3378,20 +2768,20 @@ Task: ${a.description}"""),
   }).join('\n');
 
   const addNodes = agents.map(a =>
-    `workflow.add_node("${a.id}", ${a.id.replace(/-/g,'_')}_node)`
+    `workflow.add_node("${a.id}", ${a.id.replace(/-/g, '_')}_node)`
   ).join('\n');
 
   const addEdges = agents.map((a, i) => {
-    if(i === 0) return `workflow.set_entry_point("${a.id}")`;
-    return `workflow.add_edge("${agents[i-1].id}", "${a.id}")`;
+    if (i === 0) return `workflow.set_entry_point("${a.id}")`;
+    return `workflow.add_edge("${agents[i - 1].id}", "${a.id}")`;
   }).join('\n');
 
-  const lastId = agents[agents.length-1]?.id || 'end';
+  const lastId = agents[agents.length - 1]?.id || 'end';
 
   return `"""
 AgentSpark → LangGraph Export
 Topic: ${topic}
-Generated: ${new Date().toISOString().slice(0,10)}
+Generated: ${new Date().toISOString().slice(0, 10)}
 Docs: https://langchain-ai.github.io/langgraph
 """
 
@@ -3428,7 +2818,7 @@ if __name__ == "__main__":
     result = app.invoke({
         "messages": [],
         "user_input": "Build the ${topic} application.",
-${agents.map(a => `        "${a.id.replace(/-/g,'_')}_output": ""`).join(',\n')}
+${agents.map(a => `        "${a.id.replace(/-/g, '_')}_output": ""`).join(',\n')}
     })
     print("\\n=== FINAL STATE ===")
     for key, val in result.items():
@@ -3442,8 +2832,8 @@ function genAutoGen() {
   const agents = generatedAgents;
 
   const agentDefs = agents.map(a => `
-${a.id.replace(/-/g,'_')} = AssistantAgent(
-    name="${a.name.replace(/\s+/g,'_')}",
+${a.id.replace(/-/g, '_')} = AssistantAgent(
+    name="${a.name.replace(/\s+/g, '_')}",
     system_message="""You are ${a.name}.
 Role: ${a.role || a.name}
 Responsibilities: ${a.description}
@@ -3453,12 +2843,12 @@ When you complete your part, summarize your output clearly and pass to the next 
     llm_config=llm_config,
 )`).join('\n');
 
-  const groupChatAgents = agents.map(a => `    ${a.id.replace(/-/g,'_')},`).join('\n');
+  const groupChatAgents = agents.map(a => `    ${a.id.replace(/-/g, '_')},`).join('\n');
 
   return `"""
 AgentSpark → AutoGen Export
 Topic: ${topic}
-Generated: ${new Date().toISOString().slice(0,10)}
+Generated: ${new Date().toISOString().slice(0, 10)}
 Docs: https://microsoft.github.io/autogen
 """
 
@@ -3519,37 +2909,37 @@ function genSwarm() {
   const agentDefs = agents.map((a, i) => {
     const nextAgent = agents[i + 1];
     const handoff = nextAgent
-      ? `\n    handoff_to_${nextAgent.id.replace(/-/g,'_')} = transfer_to_${nextAgent.id.replace(/-/g,'_')}()`
+      ? `\n    handoff_to_${nextAgent.id.replace(/-/g, '_')} = transfer_to_${nextAgent.id.replace(/-/g, '_')}()`
       : '';
     return `
-def ${a.id.replace(/-/g,'_')}_instructions(context_variables):
+def ${a.id.replace(/-/g, '_')}_instructions(context_variables):
     return f"""You are ${a.name}.
 Role: ${a.role || a.name}
 Topic: ${topic}
 Task: ${a.description}
-${nextAgent ? `When done, call transfer_to_${nextAgent.id.replace(/-/g,'_')} to pass to the next agent.` : 'This is the final step. Summarize all work done.'}"""
+${nextAgent ? `When done, call transfer_to_${nextAgent.id.replace(/-/g, '_')} to pass to the next agent.` : 'This is the final step. Summarize all work done.'}"""
 
-${a.id.replace(/-/g,'_')} = Agent(
+${a.id.replace(/-/g, '_')} = Agent(
     name="${a.name}",
-    instructions=${a.id.replace(/-/g,'_')}_instructions,
-    functions=[${nextAgent ? `transfer_to_${nextAgent.id.replace(/-/g,'_')}` : ''}],
+    instructions=${a.id.replace(/-/g, '_')}_instructions,
+    functions=[${nextAgent ? `transfer_to_${nextAgent.id.replace(/-/g, '_')}` : ''}],
 )`;
   }).join('\n');
 
   const transferFns = agents.slice(0, -1).map((a, i) => {
     const next = agents[i + 1];
     return `
-def transfer_to_${next.id.replace(/-/g,'_')}():
+def transfer_to_${next.id.replace(/-/g, '_')}():
     """Transfer to ${next.name} — ${next.description.split('.')[0]}."""
-    return ${next.id.replace(/-/g,'_')}`;
+    return ${next.id.replace(/-/g, '_')}`;
   }).join('\n');
 
-  const firstAgent = agents[0]?.id.replace(/-/g,'_') || 'agent';
+  const firstAgent = agents[0]?.id.replace(/-/g, '_') || 'agent';
 
   return `"""
 AgentSpark → OpenAI Swarm Export
 Topic: ${topic}
-Generated: ${new Date().toISOString().slice(0,10)}
+Generated: ${new Date().toISOString().slice(0, 10)}
 Docs: https://github.com/openai/swarm
 Install: pip install git+https://github.com/openai/swarm.git
 """
@@ -3559,7 +2949,7 @@ from swarm import Swarm, Agent
 client = Swarm()
 
 # ── Transfer Functions (forward declarations) ──────────────
-${agents.slice(1).map(a => `${a.id.replace(/-/g,'_')} = None  # defined below`).join('\n')}
+${agents.slice(1).map(a => `${a.id.replace(/-/g, '_')} = None  # defined below`).join('\n')}
 
 # ── Agents ────────────────────────────────────────────────
 ${agentDefs}
@@ -3568,9 +2958,9 @@ ${agentDefs}
 ${transferFns}
 
 # ── Fix forward references ────────────────────────────────
-${agents.slice(0,-1).map((a,i) => {
-    const next = agents[i+1];
-    return `${a.id.replace(/-/g,'_')}.functions = [transfer_to_${next.id.replace(/-/g,'_')}]`;
+${agents.slice(0, -1).map((a, i) => {
+    const next = agents[i + 1];
+    return `${a.id.replace(/-/g, '_')}.functions = [transfer_to_${next.id.replace(/-/g, '_')}]`;
   }).join('\n')}
 
 # ── Run ───────────────────────────────────────────────────
@@ -3586,17 +2976,17 @@ if __name__ == "__main__":
 `;
 }
 
-document.getElementById('fw-modal').addEventListener('click', function(e) {
-  if(e.target === this) closeFwModal();
+document.getElementById('fw-modal').addEventListener('click', function (e) {
+  if (e.target === this) closeFwModal();
 });
-document.getElementById('diff-modal').addEventListener('click', function(e) {
-  if(e.target === this) closeDiffModal();
+document.getElementById('diff-modal').addEventListener('click', function (e) {
+  if (e.target === this) closeDiffModal();
 });
-document.getElementById('prompt-export-modal').addEventListener('click', function(e) {
-  if(e.target === this) closePromptExport();
+document.getElementById('prompt-export-modal').addEventListener('click', function (e) {
+  if (e.target === this) closePromptExport();
 });
-document.getElementById('import-modal').addEventListener('click', function(e) {
-  if(e.target === this) closeImportModal();
+document.getElementById('import-modal').addEventListener('click', function (e) {
+  if (e.target === this) closeImportModal();
 });
 
 // ─── SHARING VIA URL ──────────────────────────────────────
@@ -3610,15 +3000,15 @@ async function compress(str) {
   writer.close();
   const chunks = [];
   const reader = stream.readable.getReader();
-  while(true) {
+  while (true) {
     const { done, value } = await reader.read();
-    if(done) break;
+    if (done) break;
     chunks.push(value);
   }
   const total = chunks.reduce((n, c) => n + c.length, 0);
   const out = new Uint8Array(total);
   let offset = 0;
-  for(const c of chunks) { out.set(c, offset); offset += c.length; }
+  for (const c of chunks) { out.set(c, offset); offset += c.length; }
   return out;
 }
 
@@ -3630,22 +3020,22 @@ async function decompress(bytes) {
   writer.close();
   const chunks = [];
   const reader = stream.readable.getReader();
-  while(true) {
+  while (true) {
     const { done, value } = await reader.read();
-    if(done) break;
+    if (done) break;
     chunks.push(value);
   }
   const total = chunks.reduce((n, c) => n + c.length, 0);
   const out = new Uint8Array(total);
   let offset = 0;
-  for(const c of chunks) { out.set(c, offset); offset += c.length; }
+  for (const c of chunks) { out.set(c, offset); offset += c.length; }
   return new TextDecoder().decode(out);
 }
 
 // Uint8Array → URL-safe base64
 function uint8ToBase64url(bytes) {
   let bin = '';
-  for(let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+  for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
   return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 }
 
@@ -3655,7 +3045,7 @@ function base64urlToUint8(str) {
   const b64 = (str + '='.repeat(padLen)).replace(/-/g, '+').replace(/_/g, '/');
   const bin = atob(b64);
   const out = new Uint8Array(bin.length);
-  for(let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
   return out;
 }
 
@@ -3724,11 +3114,11 @@ async function _aesKeyFromPassword(password, saltBytes) {
 }
 
 async function aesGcmEncrypt(plaintext, password) {
-  const enc      = new TextEncoder();
-  const iv       = crypto.getRandomValues(new Uint8Array(12));  // 96-bit IV
-  const salt     = crypto.getRandomValues(new Uint8Array(16));  // 128-bit PBKDF2 salt
-  const key      = await _aesKeyFromPassword(password, salt);
-  const ctBuf    = await crypto.subtle.encrypt(
+  const enc = new TextEncoder();
+  const iv = crypto.getRandomValues(new Uint8Array(12));  // 96-bit IV
+  const salt = crypto.getRandomValues(new Uint8Array(16));  // 128-bit PBKDF2 salt
+  const key = await _aesKeyFromPassword(password, salt);
+  const ctBuf = await crypto.subtle.encrypt(
     { name: 'AES-GCM', iv },
     key,
     enc.encode(plaintext)
@@ -3737,16 +3127,16 @@ async function aesGcmEncrypt(plaintext, password) {
   const ct = new Uint8Array(ctBuf);
   const packed = new Uint8Array(salt.length + iv.length + ct.length);
   packed.set(salt, 0);
-  packed.set(iv,   salt.length);
-  packed.set(ct,   salt.length + iv.length);
+  packed.set(iv, salt.length);
+  packed.set(ct, salt.length + iv.length);
   return packed;
 }
 
 async function aesGcmDecrypt(packedBytes, password) {
   const salt = packedBytes.slice(0, 16);
-  const iv   = packedBytes.slice(16, 28);
-  const ct   = packedBytes.slice(28);
-  const key  = await _aesKeyFromPassword(password, salt);
+  const iv = packedBytes.slice(16, 28);
+  const ct = packedBytes.slice(28);
+  const key = await _aesKeyFromPassword(password, salt);
   const ptBuf = await crypto.subtle.decrypt(
     { name: 'AES-GCM', iv },
     key,
@@ -3766,7 +3156,7 @@ function _unlockReject() {
 
 function _promptPassword(descText) {
   return new Promise((resolve, reject) => {
-    _unlockResolve  = resolve;
+    _unlockResolve = resolve;
     _unlockRejectCb = reject;
     const descEl = document.getElementById('unlock-modal-desc');
     if (descEl && descText) descEl.textContent = descText;
@@ -3803,15 +3193,15 @@ async function _compressBytes(bytes) {
   writer.close();
   const chunks = [];
   const reader = stream.readable.getReader();
-  while(true) {
+  while (true) {
     const { done, value } = await reader.read();
-    if(done) break;
+    if (done) break;
     chunks.push(value);
   }
-  const total = chunks.reduce((n,c) => n + c.length, 0);
-  const out   = new Uint8Array(total);
-  let offset  = 0;
-  for(const c of chunks) { out.set(c, offset); offset += c.length; }
+  const total = chunks.reduce((n, c) => n + c.length, 0);
+  const out = new Uint8Array(total);
+  let offset = 0;
+  for (const c of chunks) { out.set(c, offset); offset += c.length; }
   return out;
 }
 
@@ -3822,15 +3212,15 @@ async function _decompressBytes(bytes) {
   writer.close();
   const chunks = [];
   const reader = stream.readable.getReader();
-  while(true) {
+  while (true) {
     const { done, value } = await reader.read();
-    if(done) break;
+    if (done) break;
     chunks.push(value);
   }
-  const total = chunks.reduce((n,c) => n + c.length, 0);
-  const out   = new Uint8Array(total);
-  let offset  = 0;
-  for(const c of chunks) { out.set(c, offset); offset += c.length; }
+  const total = chunks.reduce((n, c) => n + c.length, 0);
+  const out = new Uint8Array(total);
+  let offset = 0;
+  for (const c of chunks) { out.set(c, offset); offset += c.length; }
   return out;
 }
 
@@ -3842,15 +3232,15 @@ let _obStep = 0;
 let _obProvider = null;
 
 const OB_PROVIDER_CONFIG = {
-  gemini:    { label: 'Gemini API Key', placeholder: 'AIza…', prefix: 'AIza', keyLink: 'https://aistudio.google.com/apikey', modelValue: 'gemini|gemini-2.5-flash-preview-05-20|https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}|gemini' },
-  groq:      { label: 'Groq API Key', placeholder: 'gsk_…', prefix: 'gsk_', keyLink: 'https://console.groq.com/keys', modelValue: 'openai|llama-3.3-70b-versatile|https://api.groq.com/openai/v1/chat/completions|groq' },
+  gemini: { label: 'Gemini API Key', placeholder: 'AIza…', prefix: 'AIza', keyLink: 'https://aistudio.google.com/apikey', modelValue: 'gemini|gemini-2.5-flash-preview-05-20|https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}|gemini' },
+  groq: { label: 'Groq API Key', placeholder: 'gsk_…', prefix: 'gsk_', keyLink: 'https://console.groq.com/keys', modelValue: 'openai|llama-3.3-70b-versatile|https://api.groq.com/openai/v1/chat/completions|groq' },
   anthropic: { label: 'Anthropic API Key', placeholder: 'sk-ant-…', prefix: 'sk-ant-', keyLink: 'https://console.anthropic.com/settings/keys', modelValue: 'anthropic|claude-sonnet-4-5|https://api.anthropic.com/v1/messages|anthropic' },
-  openai:    { label: 'OpenAI API Key', placeholder: 'sk-…', prefix: 'sk-', keyLink: 'https://platform.openai.com/api-keys', modelValue: 'openai|gpt-4o|https://api.openai.com/v1/chat/completions|openai' },
+  openai: { label: 'OpenAI API Key', placeholder: 'sk-…', prefix: 'sk-', keyLink: 'https://platform.openai.com/api-keys', modelValue: 'openai|gpt-4o|https://api.openai.com/v1/chat/completions|openai' },
 };
 
 function maybeShowOnboarding() {
-  const hasKey   = !!sessionStorage.getItem('agentspark-api-key');
-  const hasSeen  = !!localStorage.getItem('agentspark-onboarding-done');
+  const hasKey = !!sessionStorage.getItem('agentspark-api-key');
+  const hasSeen = !!localStorage.getItem('agentspark-onboarding-done');
   const isShared = window.location.hash.startsWith('#share=');
   if (!hasKey && !hasSeen && !isShared) {
     setTimeout(() => {
@@ -3876,7 +3266,7 @@ function obNext() {
     const cfg = OB_PROVIDER_CONFIG[_obProvider];
     document.getElementById('ob-step2-title').textContent = `Paste your ${cfg.label}`;
     document.getElementById('ob-key-link').href = cfg.keyLink;
-    document.getElementById('ob-key-link').textContent = cfg.keyLink.replace('https://','');
+    document.getElementById('ob-key-link').textContent = cfg.keyLink.replace('https://', '');
     document.getElementById('ob-key-input').placeholder = cfg.placeholder;
     document.getElementById('ob-key-input').value = '';
     document.getElementById('ob-key-feedback').textContent = '';
@@ -4001,20 +3391,20 @@ const DEMO_TEAM = {
 
 function loadDemo() {
   localStorage.setItem('agentspark-onboarding-done', '1');
-  currentTopic   = DEMO_TEAM.topic;
-  currentLevel   = DEMO_TEAM.level;
+  currentTopic = DEMO_TEAM.topic;
+  currentLevel = DEMO_TEAM.level;
   generatedAgents = JSON.parse(JSON.stringify(DEMO_TEAM.agents));
-  generatedFiles  = JSON.parse(JSON.stringify(DEMO_TEAM.files));
-  versionHistory  = [];
-  traceSpans      = [];
+  generatedFiles = JSON.parse(JSON.stringify(DEMO_TEAM.files));
+  versionHistory = [];
+  traceSpans = [];
 
   // Show demo banner on results screen
   const banner = document.getElementById('shared-banner');
   const bannerTitle = document.getElementById('shared-banner-title');
-  const bannerSub   = document.getElementById('shared-banner-sub');
+  const bannerSub = document.getElementById('shared-banner-sub');
   if (banner) {
     bannerTitle.textContent = '🎮 Demo Mode — E-commerce Support Team';
-    bannerSub.textContent   = 'This is a sample team. Add your API key and generate your own!';
+    bannerSub.textContent = 'This is a sample team. Add your API key and generate your own!';
     banner.style.display = 'flex';
   }
 
@@ -4026,329 +3416,11 @@ function loadDemo() {
 
 // ─── LOAD FROM GIST URL ───────────────────────────────────
 
-async function loadFromGistUrl() {
-  const raw = document.getElementById('gist-import-input')?.value?.trim();
-  if (!raw) {
-    _showGistImportError(tr('⚠ Paste a Gist URL or ID first.', '⚠ Najpierw wklej URL lub ID Gist.'));
-    return;
-  }
-
-  // Extract Gist ID from URL or use as-is
-  let gistId = raw;
-  const urlMatch = raw.match(/gist\.github\.com\/(?:[^/]+\/)?([a-f0-9]+)/i);
-  if (urlMatch) gistId = urlMatch[1];
-  // Also handle raw gist.githubusercontent.com URLs
-  const rawMatch = raw.match(/gist\.githubusercontent\.com\/[^/]+\/([a-f0-9]+)/i);
-  if (rawMatch) gistId = rawMatch[1];
-
-  if (!/^[a-f0-9]{20,}$/i.test(gistId)) {
-    _showGistImportError(tr('⚠ Could not extract a valid Gist ID from that input.', '⚠ Nie udalo sie wyodrebnic poprawnego ID Gist z podanych danych.'));
-    return;
-  }
-
-  const btn = document.getElementById('gist-import-btn');
-  const label = document.getElementById('gist-import-label');
-  label.textContent = tr('⏳ Loading…', '⏳ Wczytywanie…');
-  btn.disabled = true;
-  _clearGistImportError();
-
-  try {
-    const res = await fetch(`https://api.github.com/gists/${gistId}`, {
-      headers: { 'Accept': 'application/vnd.github.v3+json' }
-    });
-    if (!res.ok) {
-      throw new Error(res.status === 404
-        ? tr('Gist not found — check the URL or ID.', 'Nie znaleziono Gist — sprawdz URL lub ID.')
-        : tr(`GitHub error ${res.status}`, `Blad GitHub ${res.status}`));
-    }
-    const data = await res.json();
-
-    // Find agentspark-project.json in files
-    const files = data.files || {};
-    const asFile = files['agentspark-project.json'] || Object.values(files).find(f => f.filename?.includes('agentspark'));
-    if (!asFile) throw new Error(tr('This Gist does not contain an AgentSpark project file.', 'Ten Gist nie zawiera pliku projektu AgentSpark.'));
-
-    // Fetch raw content (may be truncated in API response)
-    let content = asFile.content;
-    if (asFile.truncated) {
-      const rawRes = await fetch(asFile.raw_url);
-      content = await rawRes.text();
-    }
-
-    let payload;
-    try { payload = JSON.parse(content); }
-    catch (e) { throw new Error(tr('Invalid JSON in Gist file.', 'Nieprawidlowy JSON w pliku Gist.')); }
-
-    if (!payload.agents?.length) throw new Error(tr('No agents found in this Gist.', 'W tym Gist nie znaleziono agentow.'));
-
-    // Show in import preview
-    _importParsed = { ...payload, _sourceFile: `Gist: ${gistId.slice(0,8)}…` };
-    _showImportPreview(payload, `Gist from ${data.owner?.login || 'unknown'}: ${data.description || gistId}`);
-
-    label.textContent = tr('✓ Loaded', '✓ Wczytano');
-    _clearGistImportError();
-  } catch (e) {
-    _showGistImportError(`⚠ ${e.message}`);
-    label.textContent = tr('Load ->', 'Wczytaj ->');
-    btn.disabled = false;
-  }
-}
-
-function _showGistImportError(msg) {
-  const el = document.getElementById('gist-import-error');
-  if (el) { el.textContent = msg; el.style.display = 'block'; }
-}
-function _clearGistImportError() {
-  const el = document.getElementById('gist-import-error');
-  if (el) { el.textContent = ''; el.style.display = 'none'; }
-  // Also reset button if needed
-  const btn = document.getElementById('gist-import-btn');
-  const label = document.getElementById('gist-import-label');
-  if (btn) btn.disabled = false;
-  if (label && label.textContent !== tr('✓ Loaded', '✓ Wczytano')) {
-    label.textContent = tr('Load ->', 'Wczytaj ->');
-  }
-}
-
-// ─── GITHUB GIST PUBLISH ─────────────────────────────────
-async function publishToGist() {
-  const token = document.getElementById('gist-token-input').value.trim();
-  if(!token) {
-    showNotif(tr('⚠ Enter your GitHub token first', '⚠ Najpierw podaj token GitHub'), true); return;
-  }
-  if(!generatedAgents.length) {
-    showNotif(tr('⚠ No agents to publish', '⚠ Brak agentow do publikacji'), true); return;
-  }
-
-  const btn = document.getElementById('gist-publish-btn');
-  const label = document.getElementById('gist-publish-label');
-  label.textContent = tr('⏳ Publishing…', '⏳ Publikowanie…');
-  btn.disabled = true;
-
-  const payload = {
-    v: 3, source: 'agentspark',
-    topic: currentTopic, level: currentLevel, lang,
-    agents: generatedAgents, files: generatedFiles,
-    ts: Date.now()
-  };
-
-  try {
-    const res = await fetch('https://api.github.com/gists', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `token ${token}`,
-        'Accept': 'application/vnd.github.v3+json'
-      },
-      body: JSON.stringify({
-        description: `AgentSpark: ${currentTopic}`,
-        public: true,
-        files: {
-          'agentspark-project.json': { content: JSON.stringify(payload, null, 2) },
-          'README.md': { content: `# AgentSpark Team: ${currentTopic}\n\nGenerated with [AgentSpark](${window.location.href.split('#')[0]})\n\n## Agents\n${generatedAgents.map(a => `- ${a.emoji || ''} **${a.name}** — ${a.description || ''}`).join('\n')}\n\n## Import\n1. Open AgentSpark\n2. Go to Results → Import\n3. Paste this Gist ID: \`{{GIST_ID}}\`` }
-        }
-      })
-    });
-
-    if(!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.message || `GitHub error ${res.status}`);
-    }
-
-    const data = await res.json();
-    const gistUrl = data.html_url;
-    const gistId = data.id;
-
-    // Update README with actual gist ID
-    await fetch(`https://api.github.com/gists/${gistId}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `token ${token}`
-      },
-      body: JSON.stringify({
-        files: {
-          'README.md': { content: `# AgentSpark Team: ${currentTopic}\n\nGenerated with [AgentSpark](${window.location.href.split('#')[0]})\n\n## Agents\n${generatedAgents.map(a => `- ${a.emoji || ''} **${a.name}** — ${a.description || ''}`).join('\n')}\n\n## Import\n1. Open AgentSpark\n2. Go to Results → Import\n3. Paste this Gist URL or ID: \`${gistId}\`` }
-        }
-      })
-    });
-
-    const resultEl = document.getElementById('gist-result');
-    resultEl.style.display = 'block';
-    resultEl.innerHTML = `
-      <div style="background:rgba(124,196,42,0.1);border:1px solid rgba(124,196,42,0.3);border-radius:8px;padding:0.75rem 1rem;font-size:0.82rem;">
-        <div style="color:var(--success);font-weight:700;margin-bottom:0.4rem;">${tr('✓ Published to GitHub Gist!', '✓ Opublikowano w GitHub Gist!')}</div>
-        <a href="${gistUrl}" target="_blank" style="color:var(--accent);word-break:break-all;">${gistUrl}</a>
-        <div style="margin-top:0.5rem;display:flex;gap:0.5rem;">
-          <button onclick="navigator.clipboard.writeText('${gistUrl}').then(()=>showNotif('${tr('✓ URL copied!', '✓ URL skopiowany!')}'))"
-            style="background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:0.3rem 0.7rem;font-size:0.75rem;cursor:pointer;">${tr('📋 Copy URL', '📋 Kopiuj URL')}</button>
-          <button onclick="navigator.clipboard.writeText('${gistId}').then(()=>showNotif('${tr('✓ ID copied!', '✓ ID skopiowane!')}'))"
-            style="background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:0.3rem 0.7rem;font-size:0.75rem;cursor:pointer;">${tr('📋 Copy ID', '📋 Kopiuj ID')}</button>
-        </div>
-      </div>`;
-    label.textContent = tr('✓ Published', '✓ Opublikowano');
-    showNotif(tr('✓ Gist published!', '✓ Gist opublikowany!'));
-  } catch(e) {
-    label.textContent = tr('⬆ Publish Gist', '⬆ Publikuj Gist');
-    btn.disabled = false;
-    showNotif(tr(`⚠ Gist error: ${e.message}`, `⚠ Blad Gist: ${e.message}`), true);
-  }
-}
-
-// ─── PLAYGROUND ──────────────────────────────────────────
-// moved to js/features/playground.js
-
-// ── Load from URL hash on startup ──────────────────────────
-async function loadFromHash() {
-  const hash = window.location.hash;
-  if(!hash.startsWith('#share=')) return false;
-  if (hash.length > SHARE_LIMITS.maxHashChars) return false;
-
-  const encoded = hash.slice('#share='.length);
-  if(!encoded) return false;
-  if (encoded.length > SHARE_LIMITS.maxEncodedChars) return false;
-  if (!/^[A-Za-z0-9_-]+$/.test(encoded)) return false;
-
-  try {
-    const bytes = base64urlToUint8(encoded);
-    if (bytes.length > SHARE_LIMITS.maxDecodedBytes) return false;
-
-    // Try 1: decompress as plain text (unencrypted, v1 or v2 open link)
-    let payload = null;
-    let jsonStr = null;
-    try {
-      jsonStr = await decompress(bytes);
-      if (jsonStr && jsonStr.length > SHARE_LIMITS.maxJsonChars) return false;
-      payload = JSON.parse(jsonStr);
-    } catch(e) {
-      // Not valid plain JSON after decompress — could be:
-      // (a) v3 AES-GCM encrypted binary, or
-      // (b) v2 XOR-obfuscated (legacy)
-      // In both cases, decompress gave us bytes or garbled text.
-      // We'll re-decompress the raw bytes and attempt AES-GCM first.
-    }
-
-    // If payload has pw:true it was flagged as password-protected
-    if (payload && payload.pw) {
-      // v2 legacy XOR path
-      let pw;
-      try {
-        pw = await _promptPassword(
-          lang === 'en'
-            ? '🔒 This team is password protected. Enter the password to unlock it.'
-            : '🔒 Ten zespół jest chroniony hasłem. Podaj hasło, aby go odblokować.'
-        );
-      } catch(e) { return false; } // user cancelled
-
-      while (true) {
-        const decrypted = xorObfuscate(jsonStr, pw);
-        try {
-          payload = JSON.parse(decrypted);
-          break; // success
-        } catch(e2) {
-          _unlockShowError();
-          try {
-            pw = await _promptPassword();
-          } catch(e3) { return false; }
-        }
-      }
-    }
-
-    // If no valid plain payload yet → treat as v3 AES-GCM encrypted binary
-    if (!payload) {
-      let decompressedBytes;
-      try {
-        decompressedBytes = await _decompressBytes(bytes);
-      } catch(e) {
-        decompressedBytes = bytes; // maybe not compressed
-      }
-
-      let pw;
-      try {
-        pw = await _promptPassword(
-          lang === 'en'
-            ? '🔒 This team is password protected (AES-256-GCM). Enter the password to unlock it.'
-            : '🔒 Ten zespół jest zaszyfrowany (AES-256-GCM). Podaj hasło, aby go odblokować.'
-        );
-      } catch(e) { return false; }
-
-      while (true) {
-        try {
-          const decrypted = await aesGcmDecrypt(decompressedBytes, pw);
-          if (decrypted.length > SHARE_LIMITS.maxJsonChars) return false;
-          payload = JSON.parse(decrypted);
-          break; // success
-        } catch(e) {
-          _unlockShowError();
-          try {
-            pw = await _promptPassword();
-          } catch(e2) { return false; }
-        }
-      }
-    }
-
-    const validated = validateSharePayload(payload);
-    if(!validated) {
-      trackEvent('share_loaded', { success: false, reason: 'invalid_schema' });
-      return false;
-    }
-
-    // Restore state
-    currentTopic = validated.topic || 'Shared Team';
-    currentLevel = validated.level || 'iskra';
-    if(validated.lang) lang = validated.lang;
-    generatedAgents = validated.agents;
-    generatedFiles  = validated.files || {};
-    versionHistory  = [{
-      id: Date.now(),
-      label: lang==='en' ? `Shared: ${currentTopic}` : `Udostępniony: ${currentTopic}`,
-      ts: new Date(validated.ts || Date.now()),
-      agents: JSON.parse(JSON.stringify(generatedAgents)),
-      files:  JSON.parse(JSON.stringify(generatedFiles)),
-      diff: { added: [], removed: [], changed: [] },
-      removedNames: {},
-      agentNames: Object.fromEntries(generatedAgents.map(a => [a.id, a.name])),
-      vNum: 1,
-      isOrigin: true,
-    }];
-
-    // Show results
-    showResults();
-
-    // Show shared banner
-    const banner = document.getElementById('shared-banner');
-    const bannerTitle = document.getElementById('shared-banner-title');
-    const bannerSub   = document.getElementById('shared-banner-sub');
-    if(banner) {
-      bannerTitle.textContent = lang==='en'
-        ? `🔗 Shared team: "${currentTopic}"`
-        : `🔗 Udostępniony zespół: "${currentTopic}"`;
-      bannerSub.textContent = lang==='en'
-        ? `${generatedAgents.length} agents · Read-only view · Start Over to create your own`
-        : `${generatedAgents.length} agentów · Widok tylko do odczytu · Zacznij od nowa, by stworzyć własny`;
-      banner.style.display = 'flex';
-    }
-
-    // Clean hash from URL (so refresh doesn't re-load)
-    history.replaceState(null, '', window.location.pathname + window.location.search);
-    trackEvent('share_loaded', { success: true, agents: generatedAgents.length });
-
-    return true;
-  } catch(e) {
-    console.warn('[AgentSpark] Failed to load shared URL:', e);
-    trackEvent('share_loaded', {
-      success: false,
-      reason: String(e?.message || 'exception').slice(0, 120)
-    });
-    return false;
-  }
-}
-
-document.getElementById('template-detail-overlay').addEventListener('click', function(e) {
-  if(e.target === this) closeTemplateDetail();
+document.getElementById('template-detail-overlay').addEventListener('click', function (e) {
+  if (e.target === this) closeTemplateDetail();
 });
-document.getElementById('unlock-modal').addEventListener('click', function(e) {
-  if(e.target === this) _unlockReject();
+document.getElementById('unlock-modal').addEventListener('click', function (e) {
+  if (e.target === this) _unlockReject();
 });
 
 // ─── THEME ────────────────────────────────────────────────
@@ -4361,7 +3433,7 @@ function _toggleThemeCore() {
   document.getElementById('theme-toggle-btn').textContent = next === 'light' ? '☀️' : '🌙';
   // Sync PWA theme-color meta
   const metaTC = document.getElementById('meta-theme-color');
-  if(metaTC) metaTC.content = next === 'light' ? '#faf7ee' : '#1a170d';
+  if (metaTC) metaTC.content = next === 'light' ? '#faf7ee' : '#1a170d';
 }
 
 // Global wrapper called by onclick="toggleTheme()"
@@ -4389,7 +3461,7 @@ function _themeHoldStart() {
 }
 
 // Init theme from localStorage or auto-detect from OS
-(function() {
+(function () {
   const saved = localStorage.getItem('agentspark-theme');
   // If user never manually picked → follow OS preference
   const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -4415,7 +3487,7 @@ function _themeHoldStart() {
 // ─── INIT ─────────────────────────────────────────────────
 (async () => {
   const loaded = await loadFromHash();
-  if(!loaded) renderTopicScreen();
+  if (!loaded) renderTopicScreen();
   refreshStaticI18n();
   maybeShowOnboarding();
   loadFeaturedTemplates();
@@ -4437,20 +3509,20 @@ function startQuickTeam(type) {
       roles: ['Research Analyst', 'Copywriter', 'Language Editor']
     }
   };
-  
+
   const config = configs[type];
-  if(!config) return;
-  
+  if (!config) return;
+
   currentTopic = config.topic;
   showScreen('chat');
   renderProgressSteps(3); // Show full progress
-  
+
   // Fake chat history for context
   chatHistory = [
     { role: 'user', text: `I need a ${config.topic}.` },
     { role: 'ai', text: `I'll create a team with: ${config.roles.join(', ')}.` }
   ];
-  
+
   // Trigger generation
   generateAgents();
 }
@@ -4507,9 +3579,9 @@ async function regenerateTeam() {
   };
 
   const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
-  const manifestURL  = URL.createObjectURL(manifestBlob);
+  const manifestURL = URL.createObjectURL(manifestBlob);
   const manifestLink = document.getElementById('pwa-manifest');
-  if(manifestLink) manifestLink.href = manifestURL;
+  if (manifestLink) manifestLink.href = manifestURL;
 
   // ── 2. Service Worker (inline as Blob) ────────────────
   const CACHE_NAME = 'agentspark-v1';
@@ -4595,9 +3667,9 @@ self.addEventListener('message', e => {
   let swRegistration = null;
   let newWorker = null;
 
-  if('serviceWorker' in navigator) {
+  if ('serviceWorker' in navigator) {
     const swBlob = new Blob([swCode], { type: 'text/javascript' });
-    const swURL  = URL.createObjectURL(swBlob);
+    const swURL = URL.createObjectURL(swBlob);
 
     navigator.serviceWorker.register(swURL)
       .then(reg => {
@@ -4607,7 +3679,7 @@ self.addEventListener('message', e => {
         reg.addEventListener('updatefound', () => {
           newWorker = reg.installing;
           newWorker.addEventListener('statechange', () => {
-            if(newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
               showUpdateToast();
             }
           });
@@ -4628,17 +3700,17 @@ self.addEventListener('message', e => {
   const offlineBar = document.getElementById('offline-bar');
 
   function updateOnlineStatus() {
-    if(!offlineBar) return;
+    if (!offlineBar) return;
     const isOffline = !navigator.onLine;
     if (isOffline) {
-        offlineBar.classList.add('visible');
-        setTimeout(() => offlineBar.classList.remove('visible'), 4000);
+      offlineBar.classList.add('visible');
+      setTimeout(() => offlineBar.classList.remove('visible'), 4000);
     } else {
-        offlineBar.classList.remove('visible');
+      offlineBar.classList.remove('visible');
     }
   }
 
-  window.addEventListener('online',  updateOnlineStatus);
+  window.addEventListener('online', updateOnlineStatus);
   window.addEventListener('offline', updateOnlineStatus);
   updateOnlineStatus(); // initial check
 
@@ -4652,7 +3724,7 @@ self.addEventListener('message', e => {
 
     // Don't show if previously dismissed (within 7 days)
     const dismissed = localStorage.getItem(DISMISSED_KEY);
-    if(dismissed && Date.now() - Number(dismissed) < 7 * 86400000) return;
+    if (dismissed && Date.now() - Number(dismissed) < 7 * 86400000) return;
 
     // Show install banner after a brief delay
     setTimeout(showInstallBanner, 3000);
@@ -4660,14 +3732,14 @@ self.addEventListener('message', e => {
 
   window.addEventListener('appinstalled', () => {
     hideInstallBanner();
-    if(typeof showNotif === 'function') {
+    if (typeof showNotif === 'function') {
       showNotif(tr('✓ AgentSpark installed!', '✓ AgentSpark zainstalowany!'));
     }
     deferredPrompt = null;
   });
 
   function showInstallBanner() {
-    if(document.getElementById('pwa-install-banner')) return;
+    if (document.getElementById('pwa-install-banner')) return;
 
     const banner = document.createElement('div');
     banner.id = 'pwa-install-banner';
@@ -4688,7 +3760,7 @@ self.addEventListener('message', e => {
 
   function hideInstallBanner() {
     const b = document.getElementById('pwa-install-banner');
-    if(b) {
+    if (b) {
       b.style.animation = 'none';
       b.style.opacity = '0';
       b.style.transform = 'translateY(20px)';
@@ -4698,12 +3770,12 @@ self.addEventListener('message', e => {
   }
 
   window._pwaInstall = async () => {
-    if(!deferredPrompt) return;
+    if (!deferredPrompt) return;
     hideInstallBanner();
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
     deferredPrompt = null;
-    if(outcome === 'dismissed') {
+    if (outcome === 'dismissed') {
       localStorage.setItem(DISMISSED_KEY, Date.now());
     }
   };
@@ -4715,7 +3787,7 @@ self.addEventListener('message', e => {
 
   // ── 5. Update toast ───────────────────────────────────
   function showUpdateToast() {
-    if(document.getElementById('pwa-update-toast')) return;
+    if (document.getElementById('pwa-update-toast')) return;
     const toast = document.createElement('div');
     toast.id = 'pwa-update-toast';
     toast.className = 'pwa-update-toast pwa-bottom-sheet';
@@ -4731,32 +3803,32 @@ self.addEventListener('message', e => {
 
   window._pwaUpdate = () => {
     document.getElementById('pwa-update-toast')?.remove();
-    if(newWorker) newWorker.postMessage('skipWaiting');
-    else if(swRegistration?.waiting) swRegistration.waiting.postMessage('skipWaiting');
+    if (newWorker) newWorker.postMessage('skipWaiting');
+    else if (swRegistration?.waiting) swRegistration.waiting.postMessage('skipWaiting');
   };
 
   // ── 6. Theme-color sync with dark/light toggle ────────
   // Handled directly inside toggleTheme() / _toggleThemeCore()
 
   // Initial sync of meta theme-color on PWA startup
-  (function() {
+  (function () {
     const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
     const metaTC = document.getElementById('meta-theme-color');
-    if(metaTC) metaTC.content = isDark ? '#1a170d' : '#faf7ee';
+    if (metaTC) metaTC.content = isDark ? '#1a170d' : '#faf7ee';
   })();
 
 })();
 
-document.getElementById('modal').addEventListener('click', function(e) {
-  if(e.target === this) closeModal();
+document.getElementById('modal').addEventListener('click', function (e) {
+  if (e.target === this) closeModal();
 });
-document.getElementById('md-browser-modal').addEventListener('click', function(e) {
-  if(e.target === this) closeMdBrowser();
+document.getElementById('md-browser-modal').addEventListener('click', function (e) {
+  if (e.target === this) closeMdBrowser();
 });
 
 // ── iOS: tap backdrop to dismiss ALL modal-overlays ────────
 document.querySelectorAll('.modal-overlay').forEach(overlay => {
-  overlay.addEventListener('click', function(e) {
+  overlay.addEventListener('click', function (e) {
     if (e.target === this) {
       // Find and trigger the close button
       const closeBtn = this.querySelector('.modal-close');
@@ -4798,7 +3870,7 @@ function closeDrawer() {
 }
 
 function updateDrawerActive() {
-  const screens = ['home','projects','chat','results'];
+  const screens = ['home', 'projects', 'chat', 'results'];
   let active = 'home';
   screens.forEach(s => {
     const screen = document.getElementById('screen-' + (s === 'home' ? 'topic' : s));
@@ -4841,18 +3913,26 @@ window.addEventListener('scroll', _syncBackToTop, { passive: true });
 
 // ── CONTEXT BAR ────────────────────────────────────────────
 const _ctxBarConfigs = {
-  topic:    { btns: [
-    { label: '⚡ Generate', cls: 'primary', fn: 'startWithTopic()' }
-  ]},
-  chat:     { btns: [
-    { label: '↩ Cancel', cls: '', fn: 'restart()' },
-  ]},
-  results:  { btns: [
-    { label: '↩ Start Over', cls: '', fn: 'restart()' }
-  ]},
-  projects: { btns: [
-    { label: '+ New Project', cls: 'primary', fn: "showScreen('topic')" }
-  ]},
+  topic: {
+    btns: [
+      { label: '⚡ Generate', cls: 'primary', fn: 'startWithTopic()' }
+    ]
+  },
+  chat: {
+    btns: [
+      { label: '↩ Cancel', cls: '', fn: 'restart()' },
+    ]
+  },
+  results: {
+    btns: [
+      { label: '↩ Start Over', cls: '', fn: 'restart()' }
+    ]
+  },
+  projects: {
+    btns: [
+      { label: '+ New Project', cls: 'primary', fn: "showScreen('topic')" }
+    ]
+  },
 };
 
 function _updateContextBar(screenName) {
@@ -4872,7 +3952,7 @@ let _activeHomePanel = 'topics';
 
 function switchHomePanel(panel) {
   _activeHomePanel = panel;
-  ['topics','projects','custom'].forEach(p => {
+  ['topics', 'projects', 'custom'].forEach(p => {
     document.getElementById('hpanel-' + p)?.classList.toggle('active', p === panel);
     const btn = document.getElementById('hseg-' + p);
     if (btn) {
@@ -4884,14 +3964,14 @@ function switchHomePanel(panel) {
 }
 
 async function renderHomeProjectsList() {
-  const list  = document.getElementById('home-projects-list');
+  const list = document.getElementById('home-projects-list');
   const empty = document.getElementById('home-projects-empty');
   const search = (document.getElementById('home-projects-search')?.value || '').toLowerCase();
   if (!list) return;
   let projects = [];
-  try { projects = await dbGetAll(); } catch(e) {}
+  try { projects = await dbGetAll(); } catch (e) { }
   const filtered = search
-    ? projects.filter(p => p.name.toLowerCase().includes(search) || (p.topic||'').toLowerCase().includes(search))
+    ? projects.filter(p => p.name.toLowerCase().includes(search) || (p.topic || '').toLowerCase().includes(search))
     : projects;
   if (!filtered.length) {
     list.innerHTML = '';
@@ -4906,12 +3986,12 @@ async function renderHomeProjectsList() {
       onclick="loadProject('${p.id}')"
       onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();loadProject('${p.id}')}">
       <div class="project-card-name">${_escHtml(p.name)}</div>
-      <div class="project-card-topic">📌 ${_escHtml(p.topic||tr('No topic','Brak tematu'))}</div>
+      <div class="project-card-topic">📌 ${_escHtml(p.topic || tr('No topic', 'Brak tematu'))}</div>
       <div class="project-card-meta">
-        ${(p.agents||[]).length ? `<span class="project-card-tag">👥 ${(p.agents||[]).length}</span>` : ''}
+        ${(p.agents || []).length ? `<span class="project-card-tag">👥 ${(p.agents || []).length}</span>` : ''}
         ${p.level ? `<span class="project-card-tag">${p.level}</span>` : ''}
       </div>
-      <div class="project-card-date">${tr('Updated','Zaktualizowano')} ${_formatDate(p.updatedAt)}</div>
+      <div class="project-card-date">${tr('Updated', 'Zaktualizowano')} ${_formatDate(p.updatedAt)}</div>
     </div>
   `).join('');
 }
@@ -4983,7 +4063,7 @@ function _renderAccordionInstructions(steps) {
     item.innerHTML = `
       <div class="accordion-header" onclick="_toggleAccordion(this.parentElement)" role="button" tabindex="0"
            onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();_toggleAccordion(this.parentElement)}">
-        <div class="accordion-num">0${i+1}</div>
+        <div class="accordion-num">0${i + 1}</div>
         <div class="accordion-title">${step.title}</div>
         <span class="accordion-chevron">▾</span>
       </div>
@@ -5010,7 +4090,7 @@ function _toggleAccordion(item) {
 
 // ── PATCH showInstructions to use accordion ────────────────
 const _origShowInstructions = window.showInstructions;
-window.showInstructions = function() {
+window.showInstructions = function () {
   const section = document.getElementById('instructions-section');
   const isHidden = getComputedStyle(section).display === 'none';
   section.style.display = isHidden ? 'block' : 'none';
@@ -5023,7 +4103,7 @@ window.showInstructions = function() {
 
 // ── PATCH showScreen to update context bar + drawer ────────
 const _origShowScreen = window.showScreen;
-window.showScreen = function(name) {
+window.showScreen = function (name) {
   _origShowScreen(name);
   _updateContextBar(name);
   updateDrawerActive();
@@ -5048,11 +4128,11 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ── iOS: swipe-down to dismiss sheets ─────────────────────
-(function() {
+(function () {
   let startY = 0, startScrollTop = 0, sheetEl = null, overlayEl = null;
   let isDragging = false;
 
-  document.addEventListener('touchstart', function(e) {
+  document.addEventListener('touchstart', function (e) {
     const overlay = e.target.closest('.modal-overlay.open, .ios-sheet-overlay.open');
     if (!overlay) return;
     const sheet = overlay.querySelector('.modal, .share-modal, .fw-modal, .ios-sheet');
@@ -5073,17 +4153,17 @@ document.addEventListener('DOMContentLoaded', () => {
     isDragging = true;
   }, { passive: true });
 
-  document.addEventListener('touchmove', function(e) {
+  document.addEventListener('touchmove', function (e) {
     if (!isDragging || !sheetEl) return;
     const delta = e.touches[0].clientY - startY;
     if (delta > 0) {
       sheetEl.style.transform = `translateY(${Math.pow(delta, 0.8)}px)`;
       sheetEl.style.transition = 'none';
-      overlayEl.style.background = `rgba(0,0,0,${Math.max(0, 0.55 - delta/400)})`;
+      overlayEl.style.background = `rgba(0,0,0,${Math.max(0, 0.55 - delta / 400)})`;
     }
   }, { passive: true });
 
-  document.addEventListener('touchend', function(e) {
+  document.addEventListener('touchend', function (e) {
     if (!isDragging || !sheetEl) return;
     const delta = e.changedTouches[0].clientY - startY;
     sheetEl.style.transition = '';
@@ -5106,7 +4186,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ── iOS: spring on tab icons via JS for better feel ───────
 document.querySelectorAll('.ios-tab-btn').forEach(btn => {
-  btn.addEventListener('click', function() {
+  btn.addEventListener('click', function () {
     this.querySelectorAll('.tab-icon').forEach(icon => {
       icon.style.transition = 'none';
       icon.style.transform = 'scale(0.78)';
@@ -5132,12 +4212,12 @@ function showSwToast(msg, isError = true) {
     <button class="sw-toast-close" onclick="this.parentElement.remove()">✕</button>
   `;
   document.body.appendChild(el);
-  setTimeout(() => { el.style.transition='opacity 0.3s'; el.style.opacity='0'; setTimeout(()=>el.remove(),320); }, 6000);
+  setTimeout(() => { el.style.transition = 'opacity 0.3s'; el.style.opacity = '0'; setTimeout(() => el.remove(), 320); }, 6000);
 }
 
 
 // ── Bottom nav hide-on-scroll-down (mobile only) ──────────
-(function() {
+(function () {
   let _lastScroll = 0;
   let _tabHidden = false;
   const THRESHOLD = 6;        // px delta to trigger
@@ -5179,7 +4259,7 @@ function showSwToast(msg, isError = true) {
 
   // Reset on screen change
   const _origShowScreenP7 = window.showScreen;
-  window.showScreen = function(name) {
+  window.showScreen = function (name) {
     _origShowScreenP7(name);
     _tabHidden = false;
     document.getElementById('ios-tab-bar')?.classList.remove('hidden-by-scroll');

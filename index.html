@@ -1,679 +1,762 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8"/>
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
-<meta http-equiv="Pragma" content="no-cache"/>
-<meta http-equiv="Expires" content="0"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
-<title>AgentSpark — Build Your AI Team</title>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>AgentSpark — Build Your AI Team</title>
 
-<!-- PWA meta -->
-<meta name="theme-color" content="#1a170d" id="meta-theme-color"/>
-<meta name="description" content="Build your AI agent team in minutes. Choose a topic, answer questions, get production-ready agent files."/>
-  <meta property="og:type" content="website"/>
-  <meta property="og:url" content="https://agentspark.app/"/>
-  <meta property="og:title" content="AgentSpark — Build Your AI Agent Team"/>
-  <meta property="og:description" content="Build your AI agent team in minutes. No code required. Supports Claude, GPT-4, Gemini, Mistral, and Groq."/>
-  <meta property="og:image" content="https://agentspark.app/og-image.png"/>
-  <meta name="twitter:card" content="summary_large_image"/>
-  <meta name="twitter:title" content="AgentSpark — Build Your AI Agent Team"/>
-  <meta name="twitter:description" content="No-code AI agent team generator. Interview → agent files in minutes."/>
-  <meta name="twitter:image" content="https://agentspark.app/og-image.png"/>
-<meta name="mobile-web-app-capable" content="yes"/>
-<meta name="apple-mobile-web-app-capable" content="yes"/>
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<meta name="apple-mobile-web-app-title" content="AgentSpark"/>
+  <!-- PWA meta -->
+  <meta name="theme-color" content="#1a170d" id="meta-theme-color" />
+  <meta name="description"
+    content="Build your AI agent team in minutes. Choose a topic, answer questions, get production-ready agent files." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://agentspark.app/" />
+  <meta property="og:title" content="AgentSpark — Build Your AI Agent Team" />
+  <meta property="og:description"
+    content="Build your AI agent team in minutes. No code required. Supports Claude, GPT-4, Gemini, Mistral, and Groq." />
+  <meta property="og:image" content="https://agentspark.app/og-image.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="AgentSpark — Build Your AI Agent Team" />
+  <meta name="twitter:description" content="No-code AI agent team generator. Interview → agent files in minutes." />
+  <meta name="twitter:image" content="https://agentspark.app/og-image.png" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="AgentSpark" />
 
-<!-- PWA manifest (inline data: URI) -->
-<link rel="manifest" href="./manifest.json" id="pwa-manifest"/>
+  <!-- PWA manifest (inline data: URI) -->
+  <link rel="manifest" href="./manifest.json" id="pwa-manifest" />
 
-<!-- PWA icons (inline SVG as data URI) -->
-<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='40' fill='%231a170d'/%3E%3Crect width='192' height='192' rx='40' fill='url(%23g)'/%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='192' y2='192' gradientUnits='userSpaceOnUse'%3E%3Cstop offset='0' stop-color='%23f2b90d' stop-opacity='.25'/%3E%3Cstop offset='1' stop-color='%23f2b90d' stop-opacity='.05'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ctext x='96' y='130' font-size='100' text-anchor='middle' fill='%23f2b90d'%3E⚡%3C/text%3E%3C/svg%3E"/>
+  <!-- PWA icons (inline SVG as data URI) -->
+  <link rel="apple-touch-icon"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='40' fill='%231a170d'/%3E%3Crect width='192' height='192' rx='40' fill='url(%23g)'/%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='192' y2='192' gradientUnits='userSpaceOnUse'%3E%3Cstop offset='0' stop-color='%23f2b90d' stop-opacity='.25'/%3E%3Cstop offset='1' stop-color='%23f2b90d' stop-opacity='.05'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ctext x='96' y='130' font-size='100' text-anchor='middle' fill='%23f2b90d'%3E⚡%3C/text%3E%3C/svg%3E" />
 
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@400,0..1&display=swap" rel="stylesheet"/>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap"
+    rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@400,0..1&display=swap"
+    rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body>
-<!-- ── AGENTSPARK CONFIG ── -->
-<script>
-window.__AGENTSPARK_CONFIG__ = {
-  BACKEND_API_BASE: window.location.hostname === 'localhost' 
-    ? 'http://localhost:5000/api/v1'
-    : '/api/v1',
-  REVENUECAT_API_KEY: null,
-  // Add more config keys as needed
-};
-console.log('[AgentSpark] Config initialized:', window.__AGENTSPARK_CONFIG__);
-</script>
+  <!-- ── AGENTSPARK CONFIG ── -->
+  <script>
+    window.__AGENTSPARK_CONFIG__ = {
+      BACKEND_API_BASE: window.location.hostname === 'localhost'
+        ? 'http://localhost:5000/api/v1'
+        : '/api/v1',
+      REVENUECAT_API_KEY: null,
+      // Add more config keys as needed
+    };
+    console.log('[AgentSpark] Config initialized:', window.__AGENTSPARK_CONFIG__);
+  </script>
 
-<div class="offline-bar" id="offline-bar">Działa offline ✓ Załadowano z pamięci podręcznej</div>
+  <div class="offline-bar" id="offline-bar">Działa offline ✓ Załadowano z pamięci podręcznej</div>
 
-<!-- ── NAV DRAWER ── -->
-<div id="nav-drawer-overlay" onclick="closeDrawer()"></div>
-<div id="nav-drawer" role="navigation" aria-label="Main navigation">
-  <div class="drawer-header">
-    <span class="drawer-logo">⚡ AgentSpark</span>
-    <button class="drawer-close" onclick="closeDrawer()" aria-label="Close menu">✕</button>
-  </div>
-  <nav class="drawer-nav">
-    <span class="drawer-section-label">Navigate</span>
-    <button class="drawer-nav-item" onclick="closeDrawer();iosTabNav('home')" id="dnav-home">
-      <span class="dnav-icon">🏠</span>
-      <span class="dnav-label">Home / Topics</span>
-    </button>
-    <button class="drawer-nav-item" onclick="closeDrawer();iosTabNav('gallery')" id="dnav-gallery">
-      <span class="dnav-icon">✨</span>
-      <span class="dnav-label">Gallery</span>
-    </button>
-    <button class="drawer-nav-item" onclick="closeDrawer();iosTabNav('projects')" id="dnav-projects">
-      <span class="dnav-icon">📁</span>
-      <span class="dnav-label">My Projects</span>
-      <span class="dnav-badge" id="dnav-badge" style="display:none;"></span>
-    </button>
-    <button class="drawer-nav-item" onclick="closeDrawer();iosTabNav('chat')" id="dnav-chat">
-      <span class="dnav-icon">💬</span>
-      <span class="dnav-label">Chat / Interview</span>
-    </button>
-    <button class="drawer-nav-item" onclick="closeDrawer();iosTabNav('results')" id="dnav-results">
-      <span class="dnav-icon">⚡</span>
-      <span class="dnav-label">Results / Agents</span>
-    </button>
-    <div class="drawer-divider"></div>
-    <span class="drawer-section-label">Actions</span>
-    <button class="drawer-nav-item" onclick="closeDrawer();showInstructions()">
-      <span class="dnav-icon">📖</span>
-      <span class="dnav-label">Instructions</span>
-    </button>
-    <button class="drawer-nav-item" onclick="closeDrawer();openShareModal()">
-      <span class="dnav-icon">🔗</span>
-      <span class="dnav-label">Share / Export</span>
-    </button>
-    <button class="drawer-nav-item" onclick="closeDrawer();openImportModal()">
-      <span class="dnav-icon">📥</span>
-          <span class="dnav-label" id="drawer-import-label">Import Project</span>
-    </button>
-    <div class="drawer-divider"></div>
-    <span class="drawer-section-label">Preferences</span>
-    <button class="drawer-nav-item" onclick="closeDrawer();toggleTheme()">
-      <span class="dnav-icon" id="dnav-theme-icon">🌙</span>
-      <span class="dnav-label">Toggle Theme</span>
-    </button>
-  </nav>
-  <div class="drawer-footer">
-    <div style="display:flex;gap:0.5rem;width:100%;">
-      <button class="lang-btn" onclick="setLang('en');updateDrawerActive()" style="flex:1;padding:0.6rem;">EN</button>
-      <button class="lang-btn" onclick="setLang('pl');updateDrawerActive()" style="flex:1;padding:0.6rem;">PL</button>
+  <!-- ── NAV DRAWER ── -->
+  <div id="nav-drawer-overlay" onclick="closeDrawer()"></div>
+  <div id="nav-drawer" role="navigation" aria-label="Main navigation">
+    <div class="drawer-header">
+      <span class="drawer-logo">⚡ AgentSpark</span>
+      <button class="drawer-close" onclick="closeDrawer()" aria-label="Close menu">✕</button>
     </div>
-  </div>
-</div>
-
-
-<!-- ── iOS Bottom Tab Bar ── -->
-<div id="ios-tab-bar">
-  <button class="ios-tab-btn active" id="tab-home" onclick="iosTabNav('home')">
-    <span class="tab-icon">🏠</span>
-    <span>Home</span>
-  </button>
-  <button class="ios-tab-btn" id="tab-gallery" onclick="iosTabNav('gallery')">
-    <span class="tab-icon">✨</span>
-    <span>Gallery</span>
-  </button>
-  <button class="ios-tab-btn" id="tab-projects" onclick="iosTabNav('projects')">
-    <span class="tab-icon">📁</span>
-    <span id="tab-projects-label">Projects</span>
-    <span class="ios-tab-badge" id="tab-badge" style="display:none;"></span>
-  </button>
-  <button class="ios-tab-btn" id="tab-chat" onclick="iosTabNav('chat')" style="display:none;">
-    <span class="tab-icon">💬</span>
-    <span>Interview</span>
-  </button>
-  <button class="ios-tab-btn" id="tab-results" onclick="iosTabNav('results')" style="display:none;">
-    <span class="tab-icon">⚡</span>
-    <span>Team</span>
-  </button>
-  <button class="ios-tab-btn" id="tab-settings" onclick="iosTabNav('settings')">
-    <span class="tab-icon">⚙️</span>
-    <span>Settings</span>
-  </button>
-</div>
-
-<div id="app">
-
-  <header>
-    <div class="logo">
-      <div class="logo-icon">⚡</div>
-      Agent<span>Spark</span>
-    </div>
-    <div style="display:flex;align-items:center;gap:1rem;">
-      <span class="save-indicator" id="save-indicator">✓ saved</span>
-      <div id="apiKeyHeader" style="display:none;align-items:center;gap:0.5rem;">
-        <span id="headerModelBadge" style="font-family:'Space Mono',monospace;font-size:0.62rem;padding:0.2rem 0.55rem;border-radius:4px;background:rgba(242,185,13,0.1);border:1px solid rgba(242,185,13,0.25);color:var(--accent);white-space:nowrap;"></span>
-        <input type="password" class="input-field" id="apiKeyInput" placeholder="API Key" style="width:190px;padding:0.5rem 1rem;font-size:0.82rem;" oninput="checkApiKey()"/>
-        <span class="api-key-status" id="apiKeyStatus"></span>
-      </div>
-      <div class="lang-switch">
-        <button class="lang-btn active" onclick="setLang('en')" id="btn-en">EN</button>
-        <button class="lang-btn" onclick="setLang('pl')" id="btn-pl">PL</button>
-      </div>
-      <button class="btn-secondary" id="auth-btn" onclick="toggleAuth()" style="font-size:0.75rem;padding:0.4rem 0.8rem;border-radius:20px;display:flex;align-items:center;gap:0.4rem;">
-        <span class="auth-icon" style="font-size:1.1rem;">👤</span>
-        <span class="auth-label">Login</span>
+    <nav class="drawer-nav">
+      <span class="drawer-section-label">Navigate</span>
+      <button class="drawer-nav-item" onclick="closeDrawer();iosTabNav('home')" id="dnav-home">
+        <span class="dnav-icon">🏠</span>
+        <span class="dnav-label">Home / Topics</span>
       </button>
-      <button id="burger-btn" onclick="toggleDrawer()" aria-label="Menu" aria-expanded="false" aria-controls="nav-drawer">
-        <span class="burger-bar"></span>
-        <span class="burger-bar"></span>
-        <span class="burger-bar"></span>
+      <button class="drawer-nav-item" onclick="closeDrawer();iosTabNav('gallery')" id="dnav-gallery">
+        <span class="dnav-icon">✨</span>
+        <span class="dnav-label">Gallery</span>
       </button>
-      <button class="theme-toggle" id="theme-toggle-btn"
-        onmousedown="_themeHoldStart()" ontouchstart="_themeHoldStart()"
-        onmouseup="toggleTheme()" ontouchend="toggleTheme()"
-        onmouseleave="if(_themeHoldTimer){clearTimeout(_themeHoldTimer);_themeHoldTimer=null;}"
-        title="Click: toggle theme | Hold: follow OS">🌙</button>
-    </div>
-  </header>
-
-  <main>
-
-    <!-- SCREEN: GALLERY -->
-    <div class="screen" id="screen-gallery">
-      <div class="ios-screen-header">
-        <div class="ios-nav-bar">
-          <button class="ios-nav-back" onclick="iosTabNav('home')">Home</button>
-          <span class="ios-nav-title">Gallery</span>
-          <button class="ios-nav-action" onclick="openImportModal()">Import</button>
-        </div>
-      </div>
-      <div class="gallery-container">
-        <div class="gallery-hero" style="text-align:center;margin-bottom:2rem;">
-          <div class="hero-badge" style="margin-bottom:0.75rem;">COMMUNITY TEMPLATES</div>
-          <h2 style="font-size:2rem;margin-bottom:0.5rem;">✨ Agent Templates</h2>
-          <p style="color:var(--muted);max-width:500px;margin:0 auto;">Start from a proven team or fork and customize to your needs</p>
-          <div id="pro-badge" style="display:none;background:var(--accent);color:#1a170d;padding:0.25rem 0.6rem;border-radius:12px;font-size:0.75rem;font-weight:800;margin-top:0.75rem;">PRO SUBSCRIBER 🌟</div>
-        </div>
-        
-        <div class="gallery-controls">
-          <div class="gallery-search-wrap">
-            <span style="position:absolute;left:0.9rem;top:50%;transform:translateY(-50%);color:var(--muted);font-size:1rem;pointer-events:none;">🔍</span>
-            <input type="text" id="gallery-search" class="input-field"
-              style="padding-left:2.4rem;width:100%;box-sizing:border-box;"
-              placeholder="Search templates…" oninput="filterGallery()"/>
-          </div>
-          <div class="gallery-filters" id="gallery-filters">
-            <button class="gallery-filter-btn active" data-cat="all" onclick="filterByCategory(this,'all')">All</button>
-            <button class="gallery-filter-btn" data-cat="ecommerce" onclick="filterByCategory(this,'ecommerce')">🛍 E-commerce</button>
-            <button class="gallery-filter-btn" data-cat="data" onclick="filterByCategory(this,'data')">📊 Data</button>
-            <button class="gallery-filter-btn" data-cat="creative" onclick="filterByCategory(this,'creative')">✍️ Creative</button>
-            <button class="gallery-filter-btn" data-cat="technical" onclick="filterByCategory(this,'technical')">💻 Dev</button>
-            <button class="gallery-filter-btn" data-cat="hr" onclick="filterByCategory(this,'hr')">👥 HR</button>
-            <button class="gallery-filter-btn" data-cat="finance" onclick="filterByCategory(this,'finance')">💰 Finance</button>
-            <button class="gallery-filter-btn" data-cat="education" onclick="filterByCategory(this,'education')">📚 Education</button>
-            <button class="gallery-filter-btn" data-cat="hospitality" onclick="filterByCategory(this,'hospitality')">🍽️ Hospitality</button>
-          </div>
-        </div>
-        <div class="gallery-grid" id="gallery-grid"></div>
+      <button class="drawer-nav-item" onclick="closeDrawer();iosTabNav('projects')" id="dnav-projects">
+        <span class="dnav-icon">📁</span>
+        <span class="dnav-label">My Projects</span>
+        <span class="dnav-badge" id="dnav-badge" style="display:none;"></span>
+      </button>
+      <button class="drawer-nav-item" onclick="closeDrawer();iosTabNav('chat')" id="dnav-chat">
+        <span class="dnav-icon">💬</span>
+        <span class="dnav-label">Chat / Interview</span>
+      </button>
+      <button class="drawer-nav-item" onclick="closeDrawer();iosTabNav('results')" id="dnav-results">
+        <span class="dnav-icon">⚡</span>
+        <span class="dnav-label">Results / Agents</span>
+      </button>
+      <div class="drawer-divider"></div>
+      <span class="drawer-section-label">Actions</span>
+      <button class="drawer-nav-item" onclick="closeDrawer();showInstructions()">
+        <span class="dnav-icon">📖</span>
+        <span class="dnav-label">Instructions</span>
+      </button>
+      <button class="drawer-nav-item" onclick="closeDrawer();openShareModal()">
+        <span class="dnav-icon">🔗</span>
+        <span class="dnav-label">Share / Export</span>
+      </button>
+      <button class="drawer-nav-item" onclick="closeDrawer();openImportModal()">
+        <span class="dnav-icon">📥</span>
+        <span class="dnav-label" id="drawer-import-label">Import Project</span>
+      </button>
+      <div class="drawer-divider"></div>
+      <span class="drawer-section-label">Preferences</span>
+      <button class="drawer-nav-item" onclick="closeDrawer();toggleTheme()">
+        <span class="dnav-icon" id="dnav-theme-icon">🌙</span>
+        <span class="dnav-label">Toggle Theme</span>
+      </button>
+    </nav>
+    <div class="drawer-footer">
+      <div style="display:flex;gap:0.5rem;width:100%;">
+        <button class="lang-btn" onclick="setLang('en');updateDrawerActive()" style="flex:1;padding:0.6rem;">EN</button>
+        <button class="lang-btn" onclick="setLang('pl');updateDrawerActive()" style="flex:1;padding:0.6rem;">PL</button>
       </div>
     </div>
+  </div>
 
-    <!-- SCREEN 0: MY PROJECTS -->
-    <div class="screen" id="screen-projects">
-      <!-- iOS Nav Bar -->
-      <div class="ios-screen-header">
-        <div class="ios-nav-bar">
-          <button class="ios-nav-back" onclick="iosTabNav('home')"></button>
-          <span class="ios-nav-title">My Projects <span id="projects-count-badge" style="display:none;background:var(--accent);color:#1a170d;border-radius:10px;font-size:0.65rem;font-weight:700;padding:1px 6px;vertical-align:middle;"></span></span>
-          <button class="ios-nav-action" onclick="showScreen('topic')">+ New</button>
-        </div>
+
+  <!-- ── iOS Bottom Tab Bar ── -->
+  <div id="ios-tab-bar">
+    <button class="ios-tab-btn active" id="tab-home" onclick="iosTabNav('home')">
+      <span class="tab-icon">🏠</span>
+      <span>Home</span>
+    </button>
+    <button class="ios-tab-btn" id="tab-gallery" onclick="iosTabNav('gallery')">
+      <span class="tab-icon">✨</span>
+      <span>Gallery</span>
+    </button>
+    <button class="ios-tab-btn" id="tab-projects" onclick="iosTabNav('projects')">
+      <span class="tab-icon">📁</span>
+      <span id="tab-projects-label">Projects</span>
+      <span class="ios-tab-badge" id="tab-badge" style="display:none;"></span>
+    </button>
+    <button class="ios-tab-btn" id="tab-chat" onclick="iosTabNav('chat')" style="display:none;">
+      <span class="tab-icon">💬</span>
+      <span>Interview</span>
+    </button>
+    <button class="ios-tab-btn" id="tab-results" onclick="iosTabNav('results')" style="display:none;">
+      <span class="tab-icon">⚡</span>
+      <span>Team</span>
+    </button>
+    <button class="ios-tab-btn" id="tab-settings" onclick="iosTabNav('settings')">
+      <span class="tab-icon">⚙️</span>
+      <span>Settings</span>
+    </button>
+  </div>
+
+  <div id="app">
+
+    <header>
+      <div class="logo">
+        <div class="logo-icon">⚡</div>
+        Agent<span>Spark</span>
       </div>
-      <!-- No hero — compact header via iOS nav bar above -->
-      <div style="max-width:900px;margin:1.5rem auto 0;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;gap:1rem;flex-wrap:wrap;">
-          <div class="ios-search" style="flex:1;max-width:320px;">
-            <span class="ios-search-icon">🔍</span>
-            <input id="projects-search" type="text" placeholder="Search projects…" oninput="renderProjectsList()"/>
-          </div>
-          <button class="btn-primary" onclick="showScreen('topic')" style="flex-shrink:0;">+ New Project</button>
+      <div style="display:flex;align-items:center;gap:1rem;">
+        <span class="save-indicator" id="save-indicator">✓ saved</span>
+        <div id="apiKeyHeader" style="display:none;align-items:center;gap:0.5rem;">
+          <span id="headerModelBadge"
+            style="font-family:'Space Mono',monospace;font-size:0.62rem;padding:0.2rem 0.55rem;border-radius:4px;background:rgba(242,185,13,0.1);border:1px solid rgba(242,185,13,0.25);color:var(--accent);white-space:nowrap;"></span>
+          <input type="password" class="input-field" id="apiKeyInput" placeholder="API Key"
+            style="width:190px;padding:0.5rem 1rem;font-size:0.82rem;" oninput="checkApiKey()" />
+          <span class="api-key-status" id="apiKeyStatus"></span>
         </div>
-        <div id="projects-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1.25rem;"></div>
-        <div id="projects-empty" style="display:none;">
-          <div class="empty-state">
-            <div class="empty-state-icon">📂</div>
-            <div class="empty-state-title">No projects yet</div>
-            <div class="empty-state-sub">Build your first AI team and it will appear here automatically.</div>
-            <button class="btn-primary" onclick="showScreen('topic')" style="margin-top:0.5rem;">+ Start a project</button>
-          </div>
+        <div class="lang-switch">
+          <button class="lang-btn active" onclick="setLang('en')" id="btn-en">EN</button>
+          <button class="lang-btn" onclick="setLang('pl')" id="btn-pl">PL</button>
         </div>
+        <button class="btn-secondary" id="auth-btn" onclick="toggleAuth()"
+          style="font-size:0.75rem;padding:0.4rem 0.8rem;border-radius:20px;display:flex;align-items:center;gap:0.4rem;">
+          <span class="auth-icon" style="font-size:1.1rem;">👤</span>
+          <span class="auth-label">Login</span>
+        </button>
+        <button id="burger-btn" onclick="toggleDrawer()" aria-label="Menu" aria-expanded="false"
+          aria-controls="nav-drawer">
+          <span class="burger-bar"></span>
+          <span class="burger-bar"></span>
+          <span class="burger-bar"></span>
+        </button>
+        <button class="theme-toggle" id="theme-toggle-btn" onmousedown="_themeHoldStart()"
+          ontouchstart="_themeHoldStart()" onmouseup="toggleTheme()" ontouchend="toggleTheme()"
+          onmouseleave="if(_themeHoldTimer){clearTimeout(_themeHoldTimer);_themeHoldTimer=null;}"
+          title="Click: toggle theme | Hold: follow OS">🌙</button>
       </div>
-    </div>
+    </header>
 
-    <!-- SCREEN 1: TOPIC SELECTION -->
-    <div class="screen active" id="screen-topic">
-      <div class="hero">
-        <div class="hero-badge" id="badge-text">AI AGENT TEAM GENERATOR</div>
-        <h1 id="hero-title">Build Your<br/>AI Dream Team</h1>
-        <p id="hero-sub">Choose a topic. Answer a few questions. Get a complete AI agent team — ready to deploy to any platform.</p>
+    <main>
 
-        <div id="apiKeySetup" style="margin-bottom:2rem;">
-          <!-- Collapsible toggle row -->
-          <div class="api-setup-toggle" onclick="toggleApiSetup()" id="api-setup-toggle">
-            <div class="api-setup-toggle-left">
-              <span class="api-key-dot" id="api-key-dot"></span>
-              <span id="api-setup-toggle-label">AI Model & API Key</span>
+      <!-- SCREEN: GALLERY -->
+      <div class="screen" id="screen-gallery">
+        <div class="ios-screen-header">
+          <div class="ios-nav-bar">
+            <button class="ios-nav-back" onclick="iosTabNav('home')">Home</button>
+            <span class="ios-nav-title">Gallery</span>
+            <button class="ios-nav-action" onclick="openImportModal()">Import</button>
+          </div>
+        </div>
+        <div class="gallery-container">
+          <div class="gallery-hero" style="text-align:center;margin-bottom:2rem;">
+            <div class="hero-badge" style="margin-bottom:0.75rem;">COMMUNITY TEMPLATES</div>
+            <h2 style="font-size:2rem;margin-bottom:0.5rem;">✨ Agent Templates</h2>
+            <p style="color:var(--muted);max-width:500px;margin:0 auto;">Start from a proven team or fork and customize
+              to your needs</p>
+            <div id="pro-badge"
+              style="display:none;background:var(--accent);color:#1a170d;padding:0.25rem 0.6rem;border-radius:12px;font-size:0.75rem;font-weight:800;margin-top:0.75rem;">
+              PRO SUBSCRIBER 🌟</div>
+          </div>
+
+          <div class="gallery-controls">
+            <div class="gallery-search-wrap">
+              <span
+                style="position:absolute;left:0.9rem;top:50%;transform:translateY(-50%);color:var(--muted);font-size:1rem;pointer-events:none;">🔍</span>
+              <input type="text" id="gallery-search" class="input-field"
+                style="padding-left:2.4rem;width:100%;box-sizing:border-box;" placeholder="Search templates…"
+                oninput="filterGallery()" />
             </div>
-            <span class="api-setup-chevron" id="api-setup-chevron">▾</span>
-          </div>
-          <!-- Collapsible body -->
-          <div class="api-setup-body" id="api-setup-body">
-            <div class="api-setup-body-inner" id="api-setup-inner-old">
-              <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.1rem;max-width:480px;margin:0 auto;">
-          <div class="model-select-wrap">
-            <label class="api-label">AI Model</label>
-            <select class="model-select" id="modelSelect" onchange="onModelChange()">
-              <optgroup label="── Google Gemini ──">
-                <option value="gemini|gemini-2.5-flash-preview-05-20|https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}|gemini" selected>Gemini 2.5 Flash ⚡ recommended</option>
-                <option value="gemini|gemini-2.5-pro-preview-06-05|https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}|gemini">Gemini 2.5 Pro</option>
-                <option value="gemini|gemini-2.0-flash|https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}|gemini">Gemini 2.0 Flash</option>
-                <option value="gemini|gemini-1.5-flash|https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}|gemini">Gemini 1.5 Flash</option>
-                <option value="gemini|gemini-1.5-pro|https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}|gemini">Gemini 1.5 Pro</option>
-              </optgroup>
-              <optgroup label="── Anthropic Claude ──">
-                <option value="anthropic|claude-sonnet-4-5|https://api.anthropic.com/v1/messages|anthropic">Claude Sonnet 4.5</option>
-                <option value="anthropic|claude-opus-4-5|https://api.anthropic.com/v1/messages|anthropic">Claude Opus 4.5</option>
-                <option value="anthropic|claude-haiku-4-5-20251001|https://api.anthropic.com/v1/messages|anthropic">Claude Haiku 4.5</option>
-              </optgroup>
-              <optgroup label="── OpenAI GPT ──">
-                <option value="openai|gpt-4o|https://api.openai.com/v1/chat/completions|openai">GPT-4o</option>
-                <option value="openai|gpt-4o-mini|https://api.openai.com/v1/chat/completions|openai">GPT-4o mini</option>
-                <option value="openai|gpt-4-turbo|https://api.openai.com/v1/chat/completions|openai">GPT-4 Turbo</option>
-              </optgroup>
-              <optgroup label="── Mistral ──">
-                <option value="openai|mistral-large-latest|https://api.mistral.ai/v1/chat/completions|mistral">Mistral Large</option>
-                <option value="openai|mistral-small-latest|https://api.mistral.ai/v1/chat/completions|mistral">Mistral Small</option>
-                <option value="openai|open-mistral-nemo|https://api.mistral.ai/v1/chat/completions|mistral">Mistral Nemo</option>
-              </optgroup>
-              <optgroup label="── Groq (Free) ──">
-                <option value="openai|llama-3.3-70b-versatile|https://api.groq.com/openai/v1/chat/completions|groq">Llama 3.3 70B</option>
-                <option value="openai|llama-3.1-8b-instant|https://api.groq.com/openai/v1/chat/completions|groq">Llama 3.1 8B</option>
-                <option value="openai|gemma2-9b-it|https://api.groq.com/openai/v1/chat/completions|groq">Gemma2 9B</option>
-              </optgroup>
-</select>
-            <div class="model-hint" id="modelHint">Key: Google AI Studio → <strong>makersuite.google.com</strong></div>
-            
-            <!-- POPULAR MODELS 2026 -->
-            <div style="margin-top:0.8rem;border:1px solid var(--border);border-radius:8px;overflow:hidden;">
-              <div onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'" style="padding:0.5rem 0.8rem;background:var(--surface2);font-size:0.75rem;font-weight:700;cursor:pointer;display:flex;justify-content:space-between;">
-                <span>🔥 Popular Models 2026</span>
-                <span>▾</span>
-              </div>
-              <div style="display:none;padding:0.8rem;background:var(--bg);font-size:0.75rem;line-height:1.4;">
-                <div style="margin-bottom:0.5rem;"><strong>Claude 4 Sonnet</strong> — Najlepszy do rozumowania i długich promptów</div>
-                <div style="margin-bottom:0.5rem;"><strong>Gemini 2.5 Pro</strong> — Multimodalny, bardzo tani, świetny do obrazów</div>
-                <div style="margin-bottom:0.5rem;"><strong>Grok 4</strong> — Kreatywny, real-time wiedza z X, bez cenzury</div>
-                <div><strong>GPT-4.1 / o1-pro</strong> — Najmocniejszy w matematyce i kodowaniu</div>
-              </div>
+            <div class="gallery-filters" id="gallery-filters">
+              <button class="gallery-filter-btn active" data-cat="all"
+                onclick="filterByCategory(this,'all')">All</button>
+              <button class="gallery-filter-btn" data-cat="ecommerce" onclick="filterByCategory(this,'ecommerce')">🛍
+                E-commerce</button>
+              <button class="gallery-filter-btn" data-cat="data" onclick="filterByCategory(this,'data')">📊
+                Data</button>
+              <button class="gallery-filter-btn" data-cat="creative" onclick="filterByCategory(this,'creative')">✍️
+                Creative</button>
+              <button class="gallery-filter-btn" data-cat="technical" onclick="filterByCategory(this,'technical')">💻
+                Dev</button>
+              <button class="gallery-filter-btn" data-cat="hr" onclick="filterByCategory(this,'hr')">👥 HR</button>
+              <button class="gallery-filter-btn" data-cat="finance" onclick="filterByCategory(this,'finance')">💰
+                Finance</button>
+              <button class="gallery-filter-btn" data-cat="education" onclick="filterByCategory(this,'education')">📚
+                Education</button>
+              <button class="gallery-filter-btn" data-cat="hospitality"
+                onclick="filterByCategory(this,'hospitality')">🍽️ Hospitality</button>
             </div>
           </div>
-          <label class="api-label"><span id="apiKeyLabel">Gemini API Key</span> <span style="color:var(--muted);font-size:0.7rem;">(required)</span></label>
-          <div class="api-key-area">
-            <input type="password" class="input-field" id="apiKeySetupInput" placeholder="AIza..." oninput="syncApiKey(this.value)"/>
+          <div class="gallery-grid" id="gallery-grid"></div>
+        </div>
+      </div>
+
+      <!-- SCREEN 0: MY PROJECTS -->
+      <div class="screen" id="screen-projects">
+        <!-- iOS Nav Bar -->
+        <div class="ios-screen-header">
+          <div class="ios-nav-bar">
+            <button class="ios-nav-back" onclick="iosTabNav('home')"></button>
+            <span class="ios-nav-title">My Projects <span id="projects-count-badge"
+                style="display:none;background:var(--accent);color:#1a170d;border-radius:10px;font-size:0.65rem;font-weight:700;padding:1px 6px;vertical-align:middle;"></span></span>
+            <button class="ios-nav-action" onclick="showScreen('topic')">+ New</button>
           </div>
-          <div class="api-key-status" id="apiKeySetupStatus"></div>
-          <div id="demo-cta" style="margin-top:1rem;text-align:center;padding-top:0.75rem;border-top:1px solid var(--border);">
-            <p style="font-size:0.78rem;color:var(--muted);margin-bottom:0.6rem;">Don't have an API key yet?</p>
-            <button onclick="loadDemo()" style="
+        </div>
+        <!-- No hero — compact header via iOS nav bar above -->
+        <div style="max-width:900px;margin:1.5rem auto 0;">
+          <div
+            style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;gap:1rem;flex-wrap:wrap;">
+            <div class="ios-search" style="flex:1;max-width:320px;">
+              <span class="ios-search-icon">🔍</span>
+              <input id="projects-search" type="text" placeholder="Search projects…" oninput="renderProjectsList()" />
+            </div>
+            <button class="btn-primary" onclick="showScreen('topic')" style="flex-shrink:0;">+ New Project</button>
+          </div>
+          <div id="projects-list"
+            style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1.25rem;"></div>
+          <div id="projects-empty" style="display:none;">
+            <div class="empty-state">
+              <div class="empty-state-icon">📂</div>
+              <div class="empty-state-title">No projects yet</div>
+              <div class="empty-state-sub">Build your first AI team and it will appear here automatically.</div>
+              <button class="btn-primary" onclick="showScreen('topic')" style="margin-top:0.5rem;">+ Start a
+                project</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCREEN 1: TOPIC SELECTION -->
+      <div class="screen active" id="screen-topic">
+        <div class="hero">
+          <div class="hero-badge" id="badge-text">AI AGENT TEAM GENERATOR</div>
+          <h1 id="hero-title">Build Your<br />AI Dream Team</h1>
+          <p id="hero-sub">Choose a topic. Answer a few questions. Get a complete AI agent team — ready to deploy to any
+            platform.</p>
+
+          <div id="apiKeySetup" style="margin-bottom:2rem;">
+            <!-- Collapsible toggle row -->
+            <div class="api-setup-toggle" onclick="toggleApiSetup()" id="api-setup-toggle">
+              <div class="api-setup-toggle-left">
+                <span class="api-key-dot" id="api-key-dot"></span>
+                <span id="api-setup-toggle-label">AI Model & API Key</span>
+              </div>
+              <span class="api-setup-chevron" id="api-setup-chevron">▾</span>
+            </div>
+            <!-- Collapsible body -->
+            <div class="api-setup-body" id="api-setup-body">
+              <div class="api-setup-body-inner" id="api-setup-inner-old">
+                <div
+                  style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.1rem;max-width:480px;margin:0 auto;">
+                  <div class="model-select-wrap">
+                    <label class="api-label">AI Model</label>
+                    <select class="model-select" id="modelSelect" onchange="onModelChange()">
+                      <optgroup label="── Google Gemini ──">
+                        <option
+                          value="gemini|gemini-2.5-flash-preview-05-20|https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}|gemini"
+                          selected>Gemini 2.5 Flash ⚡ recommended</option>
+                        <option
+                          value="gemini|gemini-2.5-pro-preview-06-05|https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}|gemini">
+                          Gemini 2.5 Pro</option>
+                        <option
+                          value="gemini|gemini-2.0-flash|https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}|gemini">
+                          Gemini 2.0 Flash</option>
+                        <option
+                          value="gemini|gemini-1.5-flash|https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}|gemini">
+                          Gemini 1.5 Flash</option>
+                        <option
+                          value="gemini|gemini-1.5-pro|https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}|gemini">
+                          Gemini 1.5 Pro</option>
+                      </optgroup>
+                      <optgroup label="── Anthropic Claude ──">
+                        <option value="anthropic|claude-sonnet-4-5|https://api.anthropic.com/v1/messages|anthropic">
+                          Claude Sonnet 4.5</option>
+                        <option value="anthropic|claude-opus-4-5|https://api.anthropic.com/v1/messages|anthropic">Claude
+                          Opus 4.5</option>
+                        <option
+                          value="anthropic|claude-haiku-4-5-20251001|https://api.anthropic.com/v1/messages|anthropic">
+                          Claude Haiku 4.5</option>
+                      </optgroup>
+                      <optgroup label="── OpenAI GPT ──">
+                        <option value="openai|gpt-4o|https://api.openai.com/v1/chat/completions|openai">GPT-4o</option>
+                        <option value="openai|gpt-4o-mini|https://api.openai.com/v1/chat/completions|openai">GPT-4o mini
+                        </option>
+                        <option value="openai|gpt-4-turbo|https://api.openai.com/v1/chat/completions|openai">GPT-4 Turbo
+                        </option>
+                      </optgroup>
+                      <optgroup label="── Mistral ──">
+                        <option value="openai|mistral-large-latest|https://api.mistral.ai/v1/chat/completions|mistral">
+                          Mistral Large</option>
+                        <option value="openai|mistral-small-latest|https://api.mistral.ai/v1/chat/completions|mistral">
+                          Mistral Small</option>
+                        <option value="openai|open-mistral-nemo|https://api.mistral.ai/v1/chat/completions|mistral">
+                          Mistral Nemo</option>
+                      </optgroup>
+                      <optgroup label="── Groq (Free) ──">
+                        <option
+                          value="openai|llama-3.3-70b-versatile|https://api.groq.com/openai/v1/chat/completions|groq">
+                          Llama 3.3 70B</option>
+                        <option
+                          value="openai|llama-3.1-8b-instant|https://api.groq.com/openai/v1/chat/completions|groq">Llama
+                          3.1 8B</option>
+                        <option value="openai|gemma2-9b-it|https://api.groq.com/openai/v1/chat/completions|groq">Gemma2
+                          9B</option>
+                      </optgroup>
+                    </select>
+                    <div class="model-hint" id="modelHint">Key: Google AI Studio →
+                      <strong>makersuite.google.com</strong>
+                    </div>
+
+                    <!-- POPULAR MODELS 2026 -->
+                    <div style="margin-top:0.8rem;border:1px solid var(--border);border-radius:8px;overflow:hidden;">
+                      <div
+                        onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'"
+                        style="padding:0.5rem 0.8rem;background:var(--surface2);font-size:0.75rem;font-weight:700;cursor:pointer;display:flex;justify-content:space-between;">
+                        <span>🔥 Popular Models 2026</span>
+                        <span>▾</span>
+                      </div>
+                      <div style="display:none;padding:0.8rem;background:var(--bg);font-size:0.75rem;line-height:1.4;">
+                        <div style="margin-bottom:0.5rem;"><strong>Claude 4 Sonnet</strong> — Najlepszy do rozumowania i
+                          długich promptów</div>
+                        <div style="margin-bottom:0.5rem;"><strong>Gemini 2.5 Pro</strong> — Multimodalny, bardzo tani,
+                          świetny do obrazów</div>
+                        <div style="margin-bottom:0.5rem;"><strong>Grok 4</strong> — Kreatywny, real-time wiedza z X,
+                          bez cenzury</div>
+                        <div><strong>GPT-4.1 / o1-pro</strong> — Najmocniejszy w matematyce i kodowaniu</div>
+                      </div>
+                    </div>
+                  </div>
+                  <label class="api-label"><span id="apiKeyLabel">Gemini API Key</span> <span
+                      style="color:var(--muted);font-size:0.7rem;">(required)</span></label>
+                  <div class="api-key-area">
+                    <input type="password" class="input-field" id="apiKeySetupInput" placeholder="AIza..."
+                      oninput="syncApiKey(this.value)" />
+                  </div>
+                  <div class="api-key-status" id="apiKeySetupStatus"></div>
+                  <div id="demo-cta"
+                    style="margin-top:1rem;text-align:center;padding-top:0.75rem;border-top:1px solid var(--border);">
+                    <p style="font-size:0.78rem;color:var(--muted);margin-bottom:0.6rem;">Don't have an API key yet?</p>
+                    <button onclick="loadDemo()" style="
               background:transparent;border:1px dashed var(--border);color:var(--muted);
               border-radius:10px;padding:0.5rem 1.25rem;font-family:'Manrope',sans-serif;
               font-size:0.82rem;font-weight:600;cursor:pointer;transition:all 0.2s;
             " onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
-               onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
-              🎮 Try Demo (no key needed)
-            </button>
-          </div>
+                      onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+                      🎮 Try Demo (no key needed)
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- Home segmented nav -->
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:0.75rem;margin-bottom:0;flex-wrap:wrap;">
-          <div class="home-seg-nav" role="tablist" aria-label="Home sections" style="margin-bottom:0;">
-            <button class="home-seg-btn active" id="hseg-topics" role="tab" aria-selected="true" onclick="switchHomePanel('topics')">🔥 Topics</button>
-            <button class="home-seg-btn" id="hseg-custom" role="tab" aria-selected="false" onclick="switchHomePanel('custom')">✏️ Custom</button>
-          </div>
-          <button onclick="iosTabNav('gallery')" style="
+          <!-- Home segmented nav -->
+          <div
+            style="display:flex;align-items:center;justify-content:space-between;gap:0.75rem;margin-bottom:0;flex-wrap:wrap;">
+            <div class="home-seg-nav" role="tablist" aria-label="Home sections" style="margin-bottom:0;">
+              <button class="home-seg-btn active" id="hseg-topics" role="tab" aria-selected="true"
+                onclick="switchHomePanel('topics')">🔥 Topics</button>
+              <button class="home-seg-btn" id="hseg-custom" role="tab" aria-selected="false"
+                onclick="switchHomePanel('custom')">✏️ Custom</button>
+            </div>
+            <button onclick="iosTabNav('gallery')" style="
             background:rgba(242,185,13,0.08);border:1px solid rgba(242,185,13,0.25);
             color:var(--accent);border-radius:20px;padding:0.35rem 0.9rem;
             font-family:'Manrope',sans-serif;font-size:0.8rem;font-weight:600;
             cursor:pointer;white-space:nowrap;transition:all 0.15s;
-          " onmouseover="this.style.background='rgba(242,185,13,0.15)'" onmouseout="this.style.background='rgba(242,185,13,0.08)'">
-            ✨ Browse Gallery
-          </button>
-        </div>
-
-        <!-- Panel: Topics -->
-        <div class="home-panel active" id="hpanel-topics">
-          <div class="level-section">
-            <span class="level-section-label" id="level-section-label">COMPLEXITY LEVEL</span>
-            <div class="level-grid" id="level-grid"></div>
+          " onmouseover="this.style.background='rgba(242,185,13,0.15)'"
+              onmouseout="this.style.background='rgba(242,185,13,0.08)'">
+              ✨ Browse Gallery
+            </button>
           </div>
-          <div class="template-filters" id="template-filters"></div>
-          <div class="topic-grid" id="topic-grid"></div>
-        </div>
 
-        <!-- Panel: Projects (mini) -->
-        <div class="home-panel" id="hpanel-projects">
-          <div style="max-width:900px;margin:0 auto;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;gap:1rem;flex-wrap:wrap;">
-              <div class="ios-search" style="flex:1;max-width:320px;">
-                <span class="ios-search-icon">🔍</span>
-                <input id="home-projects-search" type="text" placeholder="Search projects…" oninput="renderHomeProjectsList()"/>
-              </div>
-              <button class="btn-primary" onclick="switchHomePanel('topics')">+ New →</button>
+          <!-- Panel: Topics -->
+          <div class="home-panel active" id="hpanel-topics">
+            <div class="level-section">
+              <span class="level-section-label" id="level-section-label">COMPLEXITY LEVEL</span>
+              <div class="level-grid" id="level-grid"></div>
             </div>
-            <div id="home-projects-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1rem;"></div>
-            <div id="home-projects-empty" style="display:none;">
-              <div class="empty-state" style="padding:3rem 2rem;">
-                <div class="empty-state-icon">📂</div>
-                <div class="empty-state-title">No projects yet</div>
-                <div class="empty-state-sub">Start a project and it will appear here.</div>
+            <div class="template-filters" id="template-filters"></div>
+            <div class="topic-grid" id="topic-grid"></div>
+          </div>
+
+          <!-- Panel: Projects (mini) -->
+          <div class="home-panel" id="hpanel-projects">
+            <div style="max-width:900px;margin:0 auto;">
+              <div
+                style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;gap:1rem;flex-wrap:wrap;">
+                <div class="ios-search" style="flex:1;max-width:320px;">
+                  <span class="ios-search-icon">🔍</span>
+                  <input id="home-projects-search" type="text" placeholder="Search projects…"
+                    oninput="renderHomeProjectsList()" />
+                </div>
+                <button class="btn-primary" onclick="switchHomePanel('topics')">+ New →</button>
+              </div>
+              <div id="home-projects-list"
+                style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1rem;"></div>
+              <div id="home-projects-empty" style="display:none;">
+                <div class="empty-state" style="padding:3rem 2rem;">
+                  <div class="empty-state-icon">📂</div>
+                  <div class="empty-state-title">No projects yet</div>
+                  <div class="empty-state-sub">Start a project and it will appear here.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Panel: Custom -->
+          <div class="home-panel" id="hpanel-custom">
+            <div style="max-width:560px;margin:0 auto;padding:1rem 0 2rem;">
+              <div class="or-divider" id="or-text" style="margin-bottom:1.5rem;">Describe your project</div>
+              <div class="custom-topic">
+                <input type="text" class="input-field" id="customTopic" list="project-ideas"
+                  placeholder="e.g. AI-powered recipe recommender..." />
+                <datalist id="project-ideas">
+                  <option value="Agencja marketingowa AI">
+                  <option value="System obsługi klienta e-commerce">
+                  <option value="Generator treści na bloga">
+                  <option value="Asystent do nauki języków">
+                  <option value="Analiza sentymentu w social media">
+                  <option value="Planer podróży i budżetu">
+                  <option value="Twórca kursów online">
+                  <option value="System rekrutacji HR">
+                  <option value="Doradca finansowy osobisty">
+                  <option value="Optymalizator SEO stron www">
+                </datalist>
+                <button class="btn-primary" onclick="startWithTopic()" id="start-btn">Start →</button>
+              </div>
+              <div style="text-align:center;margin-top:1.5rem;">
+                <button class="btn-secondary" onclick="openImportModal()"
+                  style="font-size:0.82rem;padding:0.55rem 1.25rem;">
+                  📥 Import existing project (.json / .zip)
+                </button>
               </div>
             </div>
           </div>
         </div>
+      </div>
 
-        <!-- Panel: Custom -->
-        <div class="home-panel" id="hpanel-custom">
-          <div style="max-width:560px;margin:0 auto;padding:1rem 0 2rem;">
-            <div class="or-divider" id="or-text" style="margin-bottom:1.5rem;">Describe your project</div>
-            <div class="custom-topic">
-              <input type="text" class="input-field" id="customTopic" list="project-ideas" placeholder="e.g. AI-powered recipe recommender..."/>
-              <datalist id="project-ideas">
-                <option value="Agencja marketingowa AI">
-                <option value="System obsługi klienta e-commerce">
-                <option value="Generator treści na bloga">
-                <option value="Asystent do nauki języków">
-                <option value="Analiza sentymentu w social media">
-                <option value="Planer podróży i budżetu">
-                <option value="Twórca kursów online">
-                <option value="System rekrutacji HR">
-                <option value="Doradca finansowy osobisty">
-                <option value="Optymalizator SEO stron www">
-              </datalist>
-              <button class="btn-primary" onclick="startWithTopic()" id="start-btn">Start →</button>
+      <!-- SCREEN 2: CHAT INTERVIEW -->
+      <div class="screen" id="screen-chat">
+        <!-- iOS Nav Bar -->
+        <div class="ios-screen-header">
+          <div class="ios-nav-bar">
+            <button class="ios-nav-back" onclick="restart()">Cancel</button>
+            <span class="ios-nav-title" id="ios-chat-nav-title">AI Interview</span>
+            <span class="ios-nav-action" id="ios-chat-step-label" style="color:var(--muted);font-size:0.8rem;"></span>
+          </div>
+          <!-- iOS Progress bar -->
+          <div class="ios-progress-bar-wrap" id="ios-progress-bar" style="padding: 0 1.25rem 0.6rem;"></div>
+        </div>
+        <div class="chat-layout">
+          <div class="chat-main">
+            <div class="chat-header">
+              <div class="status-dot"></div>
+              <div>
+                <div class="title" id="chat-title">AI Interview</div>
+                <div class="subtitle" id="chat-subtitle">Building your agent profile...</div>
+              </div>
+              <button class="sidebar-toggle-btn" onclick="toggleChatSidebar()" id="sidebar-toggle-btn"
+                title="Toggle sidebar">▶</button>
             </div>
-            <div style="text-align:center;margin-top:1.5rem;">
-              <button class="btn-secondary" onclick="openImportModal()" style="font-size:0.82rem;padding:0.55rem 1.25rem;">
-                📥 Import existing project (.json / .zip)
+            <div class="chat-messages" id="chat-messages"></div>
+            <div id="options-container" style="display:none;"></div>
+            <!-- Fixed question + choices panel -->
+            <div class="question-panel" id="question-panel" style="display:none;">
+              <div class="question-panel-text" id="question-panel-text"></div>
+              <div class="question-panel-choices" id="question-panel-choices"></div>
+            </div>
+          </div>
+          <div class="chat-sidebar">
+            <div class="sidebar-card">
+              <h3>PROGRESS</h3>
+              <div class="progress-steps" id="progress-steps"></div>
+            </div>
+            <div class="sidebar-card">
+              <h3>TOPIC</h3>
+              <div id="sidebar-topic" style="font-size:0.9rem;font-weight:600;"></div>
+              <div id="sidebar-topic-sub" style="font-size:0.75rem;color:var(--muted);margin-top:0.25rem;"></div>
+            </div>
+            <div class="sidebar-card">
+              <h3>LEVEL</h3>
+              <div id="sidebar-level" style="font-size:1.3rem;"></div>
+              <div id="sidebar-level-name" style="font-size:0.9rem;font-weight:700;margin-top:0.2rem;"></div>
+              <div id="sidebar-level-desc"
+                style="font-size:0.72rem;color:var(--muted);margin-top:0.2rem;line-height:1.4;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCREEN 3: RESULTS -->
+      <div class="screen" id="screen-results">
+        <!-- iOS Nav Bar -->
+        <div class="ios-screen-header">
+          <div class="ios-nav-bar">
+            <button class="ios-nav-back" onclick="restart()">Start Over</button>
+            <span class="ios-nav-title">Your Team</span>
+            <button class="ios-nav-action" onclick="downloadZip()">Export</button>
+          </div>
+        </div>
+        <!-- Shared view banner (shown when loaded via shared URL) -->
+        <div id="shared-banner" class="shared-banner" style="display:none;">
+          <div class="shared-banner-icon">🔗</div>
+          <div class="shared-banner-text">
+            <div class="shared-banner-title" id="shared-banner-title">Shared team</div>
+            <div class="shared-banner-sub" id="shared-banner-sub">This is a read-only shared view. Start Over to create
+              your own.</div>
+          </div>
+          <button class="shared-banner-close"
+            onclick="document.getElementById('shared-banner').style.display='none'">✕</button>
+        </div>
+
+        <div class="results-header">
+          <div class="hero-badge" id="result-badge">MISSION COMPLETE</div>
+          <h2 id="result-title">Your AI Team is Ready</h2>
+          <p id="result-sub" style="color:var(--muted);">Your AI team is ready — download and deploy</p>
+          <button onclick="regenerateTeam()"
+            style="margin-top:1rem;background:transparent;border:1px solid var(--border);color:var(--accent);padding:0.4rem 0.8rem;border-radius:8px;cursor:pointer;font-family:'Space Mono',monospace;font-size:0.8rem;">↺
+            Regenerate Team</button>
+        </div>
+
+        <!-- REFINE PANEL — simplified 2-step UX -->
+        <div id="refine-panel" class="refine-panel" style="display:none;">
+          <div class="refine-header">
+            <div>
+              <h3 id="refine-title">Refine Your Team</h3>
+              <p id="refine-sub">Tell the AI what you want to change.</p>
+            </div>
+            <button class="refine-close-btn" onclick="closeRefine()">✕</button>
+          </div>
+
+          <!-- STEP 1: Input + chips -->
+          <div id="refine-step1">
+            <div class="refine-chips-label" id="refine-chips-label">Quick suggestions:</div>
+            <div class="refine-action-chips" id="refine-action-chips"></div>
+            <div class="refine-input-row">
+              <textarea class="refine-textarea" id="refine-input" placeholder="e.g. Add a Security Agent..." rows="3"
+                onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();submitRefine();}"></textarea>
+            </div>
+            <div class="refine-step1-footer">
+              <span id="refine-counter"
+                style="font-size:0.7rem;color:var(--muted);font-family:'Space Mono',monospace;"></span>
+              <button class="btn-primary refine-send-btn" id="refine-submit-btn" onclick="submitRefine()">
+                <span id="refine-submit-label">Send →</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- STEP 2: AI response + Apply -->
+          <div id="refine-step2" style="display:none;">
+            <div class="refine-history" id="refine-history"></div>
+            <div class="refine-step2-footer">
+              <button class="refine-revert-btn" id="refine-revert-btn" onclick="revertLastRefine()"
+                style="display:none;">
+                ↩ Revert
+              </button>
+              <button class="refine-edit-btn" onclick="backToRefineStep1()">
+                ✏ Edit
+              </button>
+              <button class="btn-primary refine-apply-btn" id="refine-apply-btn" onclick="applyRefinement()"
+                style="display:none;">
+                ✓ <span id="refine-apply-label">Apply Changes</span>
               </button>
             </div>
           </div>
         </div>
-      </div>
-    </div>
 
-    <!-- SCREEN 2: CHAT INTERVIEW -->
-    <div class="screen" id="screen-chat">
-      <!-- iOS Nav Bar -->
-      <div class="ios-screen-header">
-        <div class="ios-nav-bar">
-          <button class="ios-nav-back" onclick="restart()">Cancel</button>
-          <span class="ios-nav-title" id="ios-chat-nav-title">AI Interview</span>
-          <span class="ios-nav-action" id="ios-chat-step-label" style="color:var(--muted);font-size:0.8rem;"></span>
-        </div>
-        <!-- iOS Progress bar -->
-        <div class="ios-progress-bar-wrap" id="ios-progress-bar" style="padding: 0 1.25rem 0.6rem;"></div>
-      </div>
-      <div class="chat-layout">
-        <div class="chat-main">
-          <div class="chat-header">
-            <div class="status-dot"></div>
-            <div>
-              <div class="title" id="chat-title">AI Interview</div>
-              <div class="subtitle" id="chat-subtitle">Building your agent profile...</div>
-            </div>
-            <button class="sidebar-toggle-btn" onclick="toggleChatSidebar()" id="sidebar-toggle-btn" title="Toggle sidebar">▶</button>
-          </div>
-          <div class="chat-messages" id="chat-messages"></div>
-          <div id="options-container" style="display:none;"></div>
-          <!-- Fixed question + choices panel -->
-          <div class="question-panel" id="question-panel" style="display:none;">
-            <div class="question-panel-text" id="question-panel-text"></div>
-            <div class="question-panel-choices" id="question-panel-choices"></div>
-          </div>
-        </div>
-        <div class="chat-sidebar">
-          <div class="sidebar-card">
-            <h3>PROGRESS</h3>
-            <div class="progress-steps" id="progress-steps"></div>
-          </div>
-          <div class="sidebar-card">
-            <h3>TOPIC</h3>
-            <div id="sidebar-topic" style="font-size:0.9rem;font-weight:600;"></div>
-            <div id="sidebar-topic-sub" style="font-size:0.75rem;color:var(--muted);margin-top:0.25rem;"></div>
-          </div>
-          <div class="sidebar-card">
-            <h3>LEVEL</h3>
-            <div id="sidebar-level" style="font-size:1.3rem;"></div>
-            <div id="sidebar-level-name" style="font-size:0.9rem;font-weight:700;margin-top:0.2rem;"></div>
-            <div id="sidebar-level-desc" style="font-size:0.72rem;color:var(--muted);margin-top:0.2rem;line-height:1.4;"></div>
-          </div>
-        </div>
-      </div>
-    </div>
+        <!-- SCORING PANEL -->
+        <div id="scoring-panel" class="scoring-panel" style="display:none;"></div>
 
-    <!-- SCREEN 3: RESULTS -->
-    <div class="screen" id="screen-results">
-      <!-- iOS Nav Bar -->
-      <div class="ios-screen-header">
-        <div class="ios-nav-bar">
-          <button class="ios-nav-back" onclick="restart()">Start Over</button>
-          <span class="ios-nav-title">Your Team</span>
-          <button class="ios-nav-action" onclick="downloadZip()">Export</button>
-        </div>
-      </div>
-      <!-- Shared view banner (shown when loaded via shared URL) -->
-      <div id="shared-banner" class="shared-banner" style="display:none;">
-        <div class="shared-banner-icon">🔗</div>
-        <div class="shared-banner-text">
-          <div class="shared-banner-title" id="shared-banner-title">Shared team</div>
-          <div class="shared-banner-sub" id="shared-banner-sub">This is a read-only shared view. Start Over to create your own.</div>
-        </div>
-        <button class="shared-banner-close" onclick="document.getElementById('shared-banner').style.display='none'">✕</button>
-      </div>
-
-      <div class="results-header">
-        <div class="hero-badge" id="result-badge">MISSION COMPLETE</div>
-        <h2 id="result-title">Your AI Team is Ready</h2>
-        <p id="result-sub" style="color:var(--muted);">Your AI team is ready — download and deploy</p>
-        <button onclick="regenerateTeam()" style="margin-top:1rem;background:transparent;border:1px solid var(--border);color:var(--accent);padding:0.4rem 0.8rem;border-radius:8px;cursor:pointer;font-family:'Space Mono',monospace;font-size:0.8rem;">↺ Regenerate Team</button>
-      </div>
-
-      <!-- REFINE PANEL — simplified 2-step UX -->
-      <div id="refine-panel" class="refine-panel" style="display:none;">
-        <div class="refine-header">
-          <div>
-            <h3 id="refine-title">Refine Your Team</h3>
-            <p id="refine-sub">Tell the AI what you want to change.</p>
+        <!-- DEPENDENCY GRAPH -->
+        <div id="graph-section" class="graph-section" style="display:none;">
+          <div class="section-header-bar">
+            <span>🕸</span>
+            <span id="graph-title">Agent Dependency Graph</span>
           </div>
-          <button class="refine-close-btn" onclick="closeRefine()">✕</button>
-        </div>
-
-        <!-- STEP 1: Input + chips -->
-        <div id="refine-step1">
-          <div class="refine-chips-label" id="refine-chips-label">Quick suggestions:</div>
-          <div class="refine-action-chips" id="refine-action-chips"></div>
-          <div class="refine-input-row">
-            <textarea class="refine-textarea" id="refine-input"
-              placeholder="e.g. Add a Security Agent..."
-              rows="3"
-              onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();submitRefine();}"></textarea>
-          </div>
-          <div class="refine-step1-footer">
-            <span id="refine-counter" style="font-size:0.7rem;color:var(--muted);font-family:'Space Mono',monospace;"></span>
-            <button class="btn-primary refine-send-btn" id="refine-submit-btn" onclick="submitRefine()">
-              <span id="refine-submit-label">Send →</span>
-            </button>
+          <div class="graph-container">
+            <canvas id="agent-graph" width="800" height="400" aria-label="Agent dependency graph" role="img"
+              style="will-change:transform;"></canvas>
           </div>
         </div>
 
-        <!-- STEP 2: AI response + Apply -->
-        <div id="refine-step2" style="display:none;">
-          <div class="refine-history" id="refine-history"></div>
-          <div class="refine-step2-footer">
-            <button class="refine-revert-btn" id="refine-revert-btn" onclick="revertLastRefine()" style="display:none;">
-              ↩ Revert
-            </button>
-            <button class="refine-edit-btn" onclick="backToRefineStep1()">
-              ✏ Edit
-            </button>
-            <button class="btn-primary refine-apply-btn" id="refine-apply-btn" onclick="applyRefinement()" style="display:none;">
-              ✓ <span id="refine-apply-label">Apply Changes</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- SCORING PANEL -->
-      <div id="scoring-panel" class="scoring-panel" style="display:none;"></div>
-
-      <!-- DEPENDENCY GRAPH -->
-      <div id="graph-section" class="graph-section" style="display:none;">
-        <div class="section-header-bar">
-          <span>🕸</span>
-          <span id="graph-title">Agent Dependency Graph</span>
-        </div>
-        <div class="graph-container">
-          <canvas id="agent-graph" width="800" height="400" aria-label="Agent dependency graph" role="img" style="will-change:transform;"></canvas>
-        </div>
-      </div>
-
-      <!-- AGENTS GRID — primary content -->
-      <div id="agents-grid" class="agents-grid"></div>
-      <button id="results-fab" style="display:none;position:fixed;bottom:5.5rem;right:1.25rem;
+        <!-- AGENTS GRID — primary content -->
+        <div id="agents-grid" class="agents-grid"></div>
+        <button id="results-fab" style="display:none;position:fixed;bottom:5.5rem;right:1.25rem;
         width:44px;height:44px;border-radius:50%;background:var(--accent);border:none;
         color:#1a170d;font-size:1.1rem;cursor:pointer;z-index:200;
         box-shadow:0 4px 16px rgba(0,0,0,0.3);transition:opacity 0.2s;"
-        onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+          onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
 
-      <!-- INSTRUCTIONS -->
-      <div id="instructions-section" class="instructions" style="display:none;">
-        <h3 id="instr-title" style="margin-bottom:1rem;">How to use your AI team</h3>
-        <div class="instruction-steps" id="instr-steps"></div>
-      </div>
+        <!-- INSTRUCTIONS -->
+        <div id="instructions-section" class="instructions" style="display:none;">
+          <h3 id="instr-title" style="margin-bottom:1rem;">How to use your AI team</h3>
+          <div class="instruction-steps" id="instr-steps"></div>
+        </div>
 
-      <!-- TRACE VIEWER PANEL -->
-      <div id="trace-panel" class="trace-panel" style="display:none;">
-        <div class="trace-panel-header" onclick="toggleTracePanel()">
-          <h3>⚡ API TRACE <span id="trace-span-count" class="version-count-badge">0</span></h3>
-          <div style="display:flex;align-items:center;gap:0.75rem;">
-            <div class="trace-summary-pills" id="trace-summary-pills"></div>
-            <span class="version-toggle-icon" id="trace-toggle-icon">▼</span>
+        <!-- TRACE VIEWER PANEL -->
+        <div id="trace-panel" class="trace-panel" style="display:none;">
+          <div class="trace-panel-header" onclick="toggleTracePanel()">
+            <h3>⚡ API TRACE <span id="trace-span-count" class="version-count-badge">0</span></h3>
+            <div style="display:flex;align-items:center;gap:0.75rem;">
+              <div class="trace-summary-pills" id="trace-summary-pills"></div>
+              <span class="version-toggle-icon" id="trace-toggle-icon">▼</span>
+            </div>
+          </div>
+          <div class="trace-body" id="trace-body">
+            <div class="trace-gantt-header">
+              <div>OPERATION</div>
+              <div>TIMELINE</div>
+              <div style="text-align:right">DURATION</div>
+              <div class="th-tokens" style="text-align:right">TOKENS</div>
+              <div class="th-status" style="text-align:right">STATUS</div>
+            </div>
+            <div id="trace-spans"></div>
+            <div class="trace-footer" id="trace-footer"></div>
           </div>
         </div>
-        <div class="trace-body" id="trace-body">
-          <div class="trace-gantt-header">
-            <div>OPERATION</div>
-            <div>TIMELINE</div>
-            <div style="text-align:right">DURATION</div>
-            <div class="th-tokens" style="text-align:right">TOKENS</div>
-            <div class="th-status" style="text-align:right">STATUS</div>
+
+        <!-- VERSION HISTORY PANEL -->
+        <div id="version-panel" class="version-panel" style="display:none;">
+          <div class="version-panel-header" onclick="toggleVersionPanel()">
+            <h3>🕓 VERSION HISTORY <span class="version-count-badge" id="version-count-badge">0</span></h3>
+            <span class="version-toggle-icon" id="version-toggle-icon">▼</span>
           </div>
-          <div id="trace-spans"></div>
-          <div class="trace-footer" id="trace-footer"></div>
+          <div class="version-timeline" id="version-timeline"></div>
         </div>
-      </div>
 
-      <!-- VERSION HISTORY PANEL -->
-      <div id="version-panel" class="version-panel" style="display:none;">
-        <div class="version-panel-header" onclick="toggleVersionPanel()">
-          <h3>🕓 VERSION HISTORY <span class="version-count-badge" id="version-count-badge">0</span></h3>
-          <span class="version-toggle-icon" id="version-toggle-icon">▼</span>
-        </div>
-        <div class="version-timeline" id="version-timeline"></div>
-      </div>
-
-      <!-- ACTIONS — secondary, below the content -->
-      <div class="results-actions results-actions-secondary">
-        <h3 style="font-size:0.72rem;font-family:'Space Mono',monospace;letter-spacing:0.12em;color:var(--accent);margin-bottom:1rem;">ACTIONS</h3>
-        <div class="ios-action-group">
-          <button class="ios-action-btn primary-action" onclick="downloadZip()" id="download-btn">
-            <span class="ios-action-icon">⬇</span>
-            <span id="download-btn-label">Download ZIP</span>
-          </button>
-          <button class="btn-secondary" onclick="openExportCodeModal()">🐍 Code</button>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;">
-            <button class="ios-action-btn" onclick="openShareModal()" id="share-btn">
-              <span class="ios-action-icon">🔗</span><span>Share</span>
+        <!-- ACTIONS — secondary, below the content -->
+        <div class="results-actions results-actions-secondary">
+          <h3
+            style="font-size:0.72rem;font-family:'Space Mono',monospace;letter-spacing:0.12em;color:var(--accent);margin-bottom:1rem;">
+            ACTIONS</h3>
+          <div class="ios-action-group">
+            <button class="ios-action-btn primary-action" onclick="downloadZip()" id="download-btn">
+              <span class="ios-action-icon">⬇</span>
+              <span id="download-btn-label">Download ZIP</span>
             </button>
-            <button class="ios-action-btn" onclick="openPlayground()" id="playground-btn">
-              <span class="ios-action-icon">🧪</span><span>Playground</span>
-            </button>
-            <button class="ios-action-btn" onclick="openRefine()" id="refine-btn">
-              <span class="ios-action-icon">✏️</span><span>Refine</span>
-            </button>
-            <button class="ios-action-btn" onclick="openMarkdownPreview()" id="md-preview-btn">
-              <span class="ios-action-icon">📄</span><span>Docs</span>
-            </button>
-            <button class="ios-action-btn" onclick="openFrameworkExport()" id="fw-export-btn">
-              <span class="ios-action-icon">🚀</span><span>Export</span>
-            </button>
-            <button class="ios-action-btn" onclick="openImportModal()" id="import-btn">
-              <span class="ios-action-icon">📥</span><span>Import</span>
-            </button>
-            <button class="ios-action-btn" onclick="openPromptExport()">
-              <span class="ios-action-icon">📋</span><span>Prompts</span>
-            </button>
-            <button class="ios-action-btn" onclick="showInstructions()" id="instr-btn">
-              <span class="ios-action-icon">📖</span><span>Guide</span>
-            </button>
+            <button class="btn-secondary" onclick="openExportCodeModal()">🐍 Code</button>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;">
+              <button class="ios-action-btn" onclick="openShareModal()" id="share-btn">
+                <span class="ios-action-icon">🔗</span><span>Share</span>
+              </button>
+              <button class="ios-action-btn" onclick="openPlayground()" id="playground-btn">
+                <span class="ios-action-icon">🧪</span><span>Playground</span>
+              </button>
+              <button class="ios-action-btn" onclick="openRefine()" id="refine-btn">
+                <span class="ios-action-icon">✏️</span><span>Refine</span>
+              </button>
+              <button class="ios-action-btn" onclick="openMarkdownPreview()" id="md-preview-btn">
+                <span class="ios-action-icon">📄</span><span>Docs</span>
+              </button>
+              <button class="ios-action-btn" onclick="openFrameworkExport()" id="fw-export-btn">
+                <span class="ios-action-icon">🚀</span><span>Export</span>
+              </button>
+              <button class="ios-action-btn" onclick="openImportModal()" id="import-btn">
+                <span class="ios-action-icon">📥</span><span>Import</span>
+              </button>
+              <button class="ios-action-btn" onclick="openPromptExport()">
+                <span class="ios-action-icon">📋</span><span>Prompts</span>
+              </button>
+              <button class="ios-action-btn" onclick="showInstructions()" id="instr-btn">
+                <span class="ios-action-icon">📖</span><span>Guide</span>
+              </button>
+            </div>
+            <button class="ios-action-cancel" onclick="restart()">↩ Start Over</button>
           </div>
-          <button class="ios-action-cancel" onclick="restart()">↩ Start Over</button>
         </div>
       </div>
-    </div>
 
-  </main>
-</div>
+    </main>
+  </div>
 
-<!-- ── FLOATING ACTION BUTTON (mobile results) ── -->
+  <!-- ── FLOATING ACTION BUTTON (mobile results) ── -->
 
 
-<!-- ── FILE PREVIEW MODAL (iOS Sheet) ── -->
-<div class="ios-sheet-overlay" id="modal">
-  <div class="ios-sheet">
-    <div class="ios-sheet-handle"></div>
-    <div class="ios-sheet-header">
-      <div class="ios-sheet-title" id="modal-title"></div>
-      <div class="modal-tabs">
-        <button class="modal-tab active" id="tab-preview" onclick="switchModalTab('preview')">👁 Preview</button>
-        <button class="modal-tab" id="tab-raw" onclick="switchModalTab('raw')">&lt;/&gt; Raw</button>
+  <!-- ── FILE PREVIEW MODAL (iOS Sheet) ── -->
+  <div class="ios-sheet-overlay" id="modal">
+    <div class="ios-sheet">
+      <div class="ios-sheet-handle"></div>
+      <div class="ios-sheet-header">
+        <div class="ios-sheet-title" id="modal-title"></div>
+        <div class="modal-tabs">
+          <button class="modal-tab active" id="tab-preview" onclick="switchModalTab('preview')">👁 Preview</button>
+          <button class="modal-tab" id="tab-raw" onclick="switchModalTab('raw')">&lt;/&gt; Raw</button>
+        </div>
+        <button class="ios-sheet-close" onclick="closeModal()">✕</button>
       </div>
-      <button class="ios-sheet-close" onclick="closeModal()">✕</button>
-    </div>
-    <div class="ios-sheet-body" id="modal-body">
-      <div id="modal-preview-pane" class="md-preview"></div>
-      <pre id="modal-raw-pane" style="display:none;"></pre>
-    </div>
-    <div class="modal-footer" style="border-radius:0;">
-      <span style="font-size:0.7rem;color:var(--muted);font-family:'Space Mono',monospace;" id="modal-filesize"></span>
-      <button class="modal-download-btn" onclick="downloadCurrentFile()">⬇ Download</button>
+      <div class="ios-sheet-body" id="modal-body">
+        <div id="modal-preview-pane" class="md-preview"></div>
+        <pre id="modal-raw-pane" style="display:none;"></pre>
+      </div>
+      <div class="modal-footer" style="border-radius:0;">
+        <span style="font-size:0.7rem;color:var(--muted);font-family:'Space Mono',monospace;"
+          id="modal-filesize"></span>
+        <button class="modal-download-btn" onclick="downloadCurrentFile()">⬇ Download</button>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- ── MARKDOWN PREVIEW BROWSER MODAL ── -->
-<div class="modal-overlay" id="md-browser-modal">
-  <div class="modal" style="max-width:960px;">
-    <div class="modal-header">
-      <div class="modal-title" id="md-browser-title">📄 Documentation Preview</div>
-      <button class="modal-close" onclick="closeMdBrowser()">✕</button>
-    </div>
-    <div style="display:flex;height:calc(85vh - 120px);">
-      <!-- Sidebar file list -->
-      <div id="md-browser-sidebar" style="
+  <!-- ── MARKDOWN PREVIEW BROWSER MODAL ── -->
+  <div class="modal-overlay" id="md-browser-modal">
+    <div class="modal" style="max-width:960px;">
+      <div class="modal-header">
+        <div class="modal-title" id="md-browser-title">📄 Documentation Preview</div>
+        <button class="modal-close" onclick="closeMdBrowser()">✕</button>
+      </div>
+      <div style="display:flex;height:calc(85vh - 120px);">
+        <!-- Sidebar file list -->
+        <div id="md-browser-sidebar" style="
         width:220px;
         flex-shrink:0;
         border-right:1px solid var(--border);
@@ -681,488 +764,567 @@ console.log('[AgentSpark] Config initialized:', window.__AGENTSPARK_CONFIG__);
         padding:0.75rem 0;
         background:var(--surface2);
       "></div>
-      <!-- Content pane -->
-      <div style="flex:1;overflow-y:auto;padding:1.5rem;" id="md-browser-content">
-        <div class="md-preview" id="md-browser-rendered"></div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <span style="font-size:0.7rem;color:var(--muted);font-family:'Space Mono',monospace;" id="md-browser-active-file"></span>
-      <button class="modal-download-btn" onclick="downloadAllMd()">⬇ Download all .md</button>
-    </div>
-  </div>
-</div>
-
-<!-- ── ONBOARDING WIZARD ── -->
-<div class="modal-overlay" id="onboarding-modal" style="z-index:1100;">
-  <div class="modal" style="max-width:520px;overflow:hidden;">
-    <!-- Step indicators -->
-    <div style="display:flex;gap:0.4rem;padding:1.25rem 1.5rem 0;justify-content:center;">
-      <div class="ob-dot active" id="ob-dot-0"></div>
-      <div class="ob-dot" id="ob-dot-1"></div>
-      <div class="ob-dot" id="ob-dot-2"></div>
-    </div>
-
-    <!-- Step 0: Welcome -->
-    <div class="ob-step" id="ob-step-0" style="padding:1.5rem;">
-      <div style="text-align:center;margin-bottom:1.5rem;">
-        <div style="font-size:3rem;margin-bottom:0.75rem;">⚡</div>
-        <h2 style="font-size:1.4rem;font-weight:800;margin:0 0 0.5rem;">Welcome to AgentSpark</h2>
-        <p style="color:var(--muted);font-size:0.88rem;line-height:1.6;">Build a complete AI agent team in minutes — just pick a topic, answer a few questions, and get production-ready agent files.</p>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:0.6rem;margin-bottom:1.5rem;">
-        <div style="display:flex;align-items:center;gap:0.75rem;padding:0.65rem 0.85rem;background:var(--surface2);border-radius:10px;border:1px solid var(--border);">
-          <span style="font-size:1.2rem;">🎯</span>
-          <div><div style="font-weight:600;font-size:0.85rem;">Choose a topic or describe your idea</div><div style="color:var(--muted);font-size:0.75rem;">From e-commerce to data analysis and more</div></div>
-        </div>
-        <div style="display:flex;align-items:center;gap:0.75rem;padding:0.65rem 0.85rem;background:var(--surface2);border-radius:10px;border:1px solid var(--border);">
-          <span style="font-size:1.2rem;">💬</span>
-          <div><div style="font-weight:600;font-size:0.85rem;">Answer a short AI interview</div><div style="color:var(--muted);font-size:0.75rem;">~5 questions to understand your needs</div></div>
-        </div>
-        <div style="display:flex;align-items:center;gap:0.75rem;padding:0.65rem 0.85rem;background:var(--surface2);border-radius:10px;border:1px solid var(--border);">
-          <span style="font-size:1.2rem;">📦</span>
-          <div><div style="font-weight:600;font-size:0.85rem;">Download your AI team</div><div style="color:var(--muted);font-size:0.75rem;">Ready-to-use prompts for Claude, GPT, or any LLM</div></div>
+        <!-- Content pane -->
+        <div style="flex:1;overflow-y:auto;padding:1.5rem;" id="md-browser-content">
+          <div class="md-preview" id="md-browser-rendered"></div>
         </div>
       </div>
-      <div style="display:flex;gap:0.75rem;">
-        <button class="btn-primary" style="flex:1;" onclick="obNext()">Get Started →</button>
-        <button class="btn-secondary" onclick="obSkip()">Skip</button>
-      </div>
-    </div>
-
-    <!-- Step 1: Choose provider -->
-    <div class="ob-step" id="ob-step-1" style="padding:1.5rem;display:none;">
-      <h3 style="font-size:1.1rem;font-weight:800;margin:0 0 0.35rem;">Which AI provider do you have?</h3>
-      <p style="color:var(--muted);font-size:0.82rem;margin-bottom:1.1rem;">Pick one — you'll get a direct link to get your free API key.</p>
-      <div style="display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.25rem;" id="ob-provider-list">
-        <label class="ob-provider-opt" data-provider="gemini">
-          <input type="radio" name="ob-provider" value="gemini" style="display:none;">
-          <span style="font-size:1.1rem;">🔵</span>
-          <div style="flex:1;">
-            <div style="font-weight:700;font-size:0.88rem;">Google Gemini <span style="background:rgba(124,196,42,0.15);color:var(--success);font-size:0.65rem;padding:0.1rem 0.4rem;border-radius:4px;font-weight:700;margin-left:0.3rem;">FREE</span></div>
-            <div style="color:var(--muted);font-size:0.75rem;">Free tier available — great starting point</div>
-          </div>
-          <a id="ob-link-gemini" href="https://aistudio.google.com/apikey" target="_blank" class="ob-get-key-btn" onclick="event.stopPropagation()">Get key ↗</a>
-        </label>
-        <label class="ob-provider-opt" data-provider="groq">
-          <input type="radio" name="ob-provider" value="groq" style="display:none;">
-          <span style="font-size:1.1rem;">🟣</span>
-          <div style="flex:1;">
-            <div style="font-weight:700;font-size:0.88rem;">Groq <span style="background:rgba(124,196,42,0.15);color:var(--success);font-size:0.65rem;padding:0.1rem 0.4rem;border-radius:4px;font-weight:700;margin-left:0.3rem;">FREE</span></div>
-            <div style="color:var(--muted);font-size:0.75rem;">Fast Llama models — completely free</div>
-          </div>
-          <a href="https://console.groq.com/keys" target="_blank" class="ob-get-key-btn" onclick="event.stopPropagation()">Get key ↗</a>
-        </label>
-        <label class="ob-provider-opt" data-provider="anthropic">
-          <input type="radio" name="ob-provider" value="anthropic" style="display:none;">
-          <span style="font-size:1.1rem;">🟠</span>
-          <div style="flex:1;">
-            <div style="font-weight:700;font-size:0.88rem;">Anthropic Claude</div>
-            <div style="color:var(--muted);font-size:0.75rem;">Best quality — pay-as-you-go</div>
-          </div>
-          <a href="https://console.anthropic.com/settings/keys" target="_blank" class="ob-get-key-btn" onclick="event.stopPropagation()">Get key ↗</a>
-        </label>
-        <label class="ob-provider-opt" data-provider="openai">
-          <input type="radio" name="ob-provider" value="openai" style="display:none;">
-          <span style="font-size:1.1rem;">🟢</span>
-          <div style="flex:1;">
-            <div style="font-weight:700;font-size:0.88rem;">OpenAI GPT</div>
-            <div style="color:var(--muted);font-size:0.75rem;">GPT-4o — industry standard</div>
-          </div>
-          <a href="https://platform.openai.com/api-keys" target="_blank" class="ob-get-key-btn" onclick="event.stopPropagation()">Get key ↗</a>
-        </label>
-      </div>
-      <div style="display:flex;gap:0.75rem;">
-        <button class="btn-secondary" onclick="obBack()">← Back</button>
-        <button class="btn-primary" style="flex:1;" onclick="obNext()" id="ob-next-1">Continue →</button>
-      </div>
-    </div>
-
-    <!-- Step 2: Paste key -->
-    <div class="ob-step" id="ob-step-2" style="padding:1.5rem;display:none;">
-      <h3 style="font-size:1.1rem;font-weight:800;margin:0 0 0.35rem;" id="ob-step2-title">Paste your API key</h3>
-      <p style="color:var(--muted);font-size:0.82rem;margin-bottom:0.75rem;" id="ob-step2-hint">Get your free key at <a id="ob-key-link" href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--accent);">aistudio.google.com</a></p>
-      <input type="password" class="input-field" id="ob-key-input"
-        placeholder="Paste your key here…"
-        style="width:100%;box-sizing:border-box;margin-bottom:0.5rem;font-size:0.9rem;"
-        oninput="obCheckKey(this.value)"/>
-      <div id="ob-key-feedback" style="font-size:0.75rem;color:var(--muted);min-height:1.2em;margin-bottom:1rem;"></div>
-      <div style="display:flex;gap:0.75rem;">
-        <button class="btn-secondary" onclick="obBack()">← Back</button>
-        <button class="btn-primary" style="flex:1;" onclick="obFinish()" id="ob-finish-btn" disabled>Start Building →</button>
-      </div>
-      <div style="margin-top:1rem;text-align:center;">
-        <button onclick="obSkip()" style="background:none;border:none;color:var(--muted);font-size:0.75rem;cursor:pointer;text-decoration:underline;">Skip for now — I'll add it later</button>
+      <div class="modal-footer">
+        <span style="font-size:0.7rem;color:var(--muted);font-family:'Space Mono',monospace;"
+          id="md-browser-active-file"></span>
+        <button class="modal-download-btn" onclick="downloadAllMd()">⬇ Download all .md</button>
       </div>
     </div>
   </div>
-</div>
 
-<!-- ── SHARE MODAL ── -->
-<div class="modal-overlay" id="playground-modal">
-  <div class="modal" style="max-width:720px;max-height:90vh;display:flex;flex-direction:column;">
-    <div class="modal-header">
-      <div class="modal-title">🧪 Agent Playground</div>
-      <button class="modal-close" onclick="closePlayground()">✕</button>
-    </div>
-    <!-- Agent selector -->
-    <div style="padding:0.75rem 1.5rem 0;flex-shrink:0;">
-      <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;">
-        <span style="font-size:0.72rem;font-family:'Space Mono',monospace;color:var(--muted);letter-spacing:0.08em;">AGENT:</span>
-        <div id="playground-agent-tabs" style="display:flex;gap:0.4rem;flex-wrap:wrap;"></div>
+  <!-- ── ONBOARDING WIZARD ── -->
+  <div class="modal-overlay" id="onboarding-modal" style="z-index:1100;">
+    <div class="modal" style="max-width:520px;overflow:hidden;">
+      <!-- Step indicators -->
+      <div style="display:flex;gap:0.4rem;padding:1.25rem 1.5rem 0;justify-content:center;">
+        <div class="ob-dot active" id="ob-dot-0"></div>
+        <div class="ob-dot" id="ob-dot-1"></div>
+        <div class="ob-dot" id="ob-dot-2"></div>
+      </div>
+
+      <!-- Step 0: Welcome -->
+      <div class="ob-step" id="ob-step-0" style="padding:1.5rem;">
+        <div style="text-align:center;margin-bottom:1.5rem;">
+          <div style="font-size:3rem;margin-bottom:0.75rem;">⚡</div>
+          <h2 style="font-size:1.4rem;font-weight:800;margin:0 0 0.5rem;">Welcome to AgentSpark</h2>
+          <p style="color:var(--muted);font-size:0.88rem;line-height:1.6;">Build a complete AI agent team in minutes —
+            just pick a topic, answer a few questions, and get production-ready agent files.</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:0.6rem;margin-bottom:1.5rem;">
+          <div
+            style="display:flex;align-items:center;gap:0.75rem;padding:0.65rem 0.85rem;background:var(--surface2);border-radius:10px;border:1px solid var(--border);">
+            <span style="font-size:1.2rem;">🎯</span>
+            <div>
+              <div style="font-weight:600;font-size:0.85rem;">Choose a topic or describe your idea</div>
+              <div style="color:var(--muted);font-size:0.75rem;">From e-commerce to data analysis and more</div>
+            </div>
+          </div>
+          <div
+            style="display:flex;align-items:center;gap:0.75rem;padding:0.65rem 0.85rem;background:var(--surface2);border-radius:10px;border:1px solid var(--border);">
+            <span style="font-size:1.2rem;">💬</span>
+            <div>
+              <div style="font-weight:600;font-size:0.85rem;">Answer a short AI interview</div>
+              <div style="color:var(--muted);font-size:0.75rem;">~5 questions to understand your needs</div>
+            </div>
+          </div>
+          <div
+            style="display:flex;align-items:center;gap:0.75rem;padding:0.65rem 0.85rem;background:var(--surface2);border-radius:10px;border:1px solid var(--border);">
+            <span style="font-size:1.2rem;">📦</span>
+            <div>
+              <div style="font-weight:600;font-size:0.85rem;">Download your AI team</div>
+              <div style="color:var(--muted);font-size:0.75rem;">Ready-to-use prompts for Claude, GPT, or any LLM</div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:0.75rem;">
+          <button class="btn-primary" style="flex:1;" onclick="obNext()">Get Started →</button>
+          <button class="btn-secondary" onclick="obSkip()">Skip</button>
+        </div>
+      </div>
+
+      <!-- Step 1: Choose provider -->
+      <div class="ob-step" id="ob-step-1" style="padding:1.5rem;display:none;">
+        <h3 style="font-size:1.1rem;font-weight:800;margin:0 0 0.35rem;">Which AI provider do you have?</h3>
+        <p style="color:var(--muted);font-size:0.82rem;margin-bottom:1.1rem;">Pick one — you'll get a direct link to get
+          your free API key.</p>
+        <div style="display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.25rem;" id="ob-provider-list">
+          <label class="ob-provider-opt" data-provider="gemini">
+            <input type="radio" name="ob-provider" value="gemini" style="display:none;">
+            <span style="font-size:1.1rem;">🔵</span>
+            <div style="flex:1;">
+              <div style="font-weight:700;font-size:0.88rem;">Google Gemini <span
+                  style="background:rgba(124,196,42,0.15);color:var(--success);font-size:0.65rem;padding:0.1rem 0.4rem;border-radius:4px;font-weight:700;margin-left:0.3rem;">FREE</span>
+              </div>
+              <div style="color:var(--muted);font-size:0.75rem;">Free tier available — great starting point</div>
+            </div>
+            <a id="ob-link-gemini" href="https://aistudio.google.com/apikey" target="_blank" class="ob-get-key-btn"
+              onclick="event.stopPropagation()">Get key ↗</a>
+          </label>
+          <label class="ob-provider-opt" data-provider="groq">
+            <input type="radio" name="ob-provider" value="groq" style="display:none;">
+            <span style="font-size:1.1rem;">🟣</span>
+            <div style="flex:1;">
+              <div style="font-weight:700;font-size:0.88rem;">Groq <span
+                  style="background:rgba(124,196,42,0.15);color:var(--success);font-size:0.65rem;padding:0.1rem 0.4rem;border-radius:4px;font-weight:700;margin-left:0.3rem;">FREE</span>
+              </div>
+              <div style="color:var(--muted);font-size:0.75rem;">Fast Llama models — completely free</div>
+            </div>
+            <a href="https://console.groq.com/keys" target="_blank" class="ob-get-key-btn"
+              onclick="event.stopPropagation()">Get key ↗</a>
+          </label>
+          <label class="ob-provider-opt" data-provider="anthropic">
+            <input type="radio" name="ob-provider" value="anthropic" style="display:none;">
+            <span style="font-size:1.1rem;">🟠</span>
+            <div style="flex:1;">
+              <div style="font-weight:700;font-size:0.88rem;">Anthropic Claude</div>
+              <div style="color:var(--muted);font-size:0.75rem;">Best quality — pay-as-you-go</div>
+            </div>
+            <a href="https://console.anthropic.com/settings/keys" target="_blank" class="ob-get-key-btn"
+              onclick="event.stopPropagation()">Get key ↗</a>
+          </label>
+          <label class="ob-provider-opt" data-provider="openai">
+            <input type="radio" name="ob-provider" value="openai" style="display:none;">
+            <span style="font-size:1.1rem;">🟢</span>
+            <div style="flex:1;">
+              <div style="font-weight:700;font-size:0.88rem;">OpenAI GPT</div>
+              <div style="color:var(--muted);font-size:0.75rem;">GPT-4o — industry standard</div>
+            </div>
+            <a href="https://platform.openai.com/api-keys" target="_blank" class="ob-get-key-btn"
+              onclick="event.stopPropagation()">Get key ↗</a>
+          </label>
+        </div>
+        <div style="display:flex;gap:0.75rem;">
+          <button class="btn-secondary" onclick="obBack()">← Back</button>
+          <button class="btn-primary" style="flex:1;" onclick="obNext()" id="ob-next-1">Continue →</button>
+        </div>
+      </div>
+
+      <!-- Step 2: Paste key -->
+      <div class="ob-step" id="ob-step-2" style="padding:1.5rem;display:none;">
+        <h3 style="font-size:1.1rem;font-weight:800;margin:0 0 0.35rem;" id="ob-step2-title">Paste your API key</h3>
+        <p style="color:var(--muted);font-size:0.82rem;margin-bottom:0.75rem;" id="ob-step2-hint">Get your free key at
+          <a id="ob-key-link" href="https://aistudio.google.com/apikey" target="_blank"
+            style="color:var(--accent);">aistudio.google.com</a>
+        </p>
+        <input type="password" class="input-field" id="ob-key-input" placeholder="Paste your key here…"
+          style="width:100%;box-sizing:border-box;margin-bottom:0.5rem;font-size:0.9rem;"
+          oninput="obCheckKey(this.value)" />
+        <div id="ob-key-feedback" style="font-size:0.75rem;color:var(--muted);min-height:1.2em;margin-bottom:1rem;">
+        </div>
+        <div style="display:flex;gap:0.75rem;">
+          <button class="btn-secondary" onclick="obBack()">← Back</button>
+          <button class="btn-primary" style="flex:1;" onclick="obFinish()" id="ob-finish-btn" disabled>Start Building
+            →</button>
+        </div>
+        <div style="margin-top:1rem;text-align:center;">
+          <button onclick="obSkip()"
+            style="background:none;border:none;color:var(--muted);font-size:0.75rem;cursor:pointer;text-decoration:underline;">Skip
+            for now — I'll add it later</button>
+        </div>
       </div>
     </div>
+  </div>
 
-    <!-- EXAMPLE CONVERSATIONS -->
-    <div style="padding:0.5rem 1.5rem;">
-      <div style="font-size:0.75rem;color:var(--muted);cursor:pointer;border-bottom:1px dashed var(--border);display:inline-block;" onclick="document.getElementById('pg-examples').style.display=document.getElementById('pg-examples').style.display==='none'?'block':'none'">
-        💬 Przykłady gotowych rozmów
+  <!-- ── SHARE MODAL ── -->
+  <div class="modal-overlay" id="playground-modal">
+    <div class="modal" style="max-width:720px;max-height:90vh;display:flex;flex-direction:column;">
+      <div class="modal-header">
+        <div class="modal-title">🧪 Agent Playground</div>
+        <button class="modal-close" onclick="closePlayground()">✕</button>
       </div>
-      <div id="pg-examples" style="display:none;margin-top:0.5rem;background:var(--surface2);padding:0.5rem;border-radius:8px;">
-        <button onclick="loadPlaygroundExample('support')" style="display:block;width:100%;text-align:left;background:none;border:none;color:var(--text);padding:0.3rem;cursor:pointer;font-size:0.8rem;">📦 Jak obsłużyć reklamację klienta</button>
-        <button onclick="loadPlaygroundExample('content')" style="display:block;width:100%;text-align:left;background:none;border:none;color:var(--text);padding:0.3rem;cursor:pointer;font-size:0.8rem;">📅 Plan treści na 30 dni</button>
-        <button onclick="loadPlaygroundExample('saas')" style="display:block;width:100%;text-align:left;background:none;border:none;color:var(--text);padding:0.3rem;cursor:pointer;font-size:0.8rem;">📊 Analiza konkurencji SaaS</button>
+      <!-- Agent selector -->
+      <div style="padding:0.75rem 1.5rem 0;flex-shrink:0;">
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;">
+          <span
+            style="font-size:0.72rem;font-family:'Space Mono',monospace;color:var(--muted);letter-spacing:0.08em;">AGENT:</span>
+          <div id="playground-agent-tabs" style="display:flex;gap:0.4rem;flex-wrap:wrap;"></div>
+        </div>
       </div>
-    </div>
 
-    <!-- Chat area -->
-    <div id="playground-messages" style="
+      <!-- EXAMPLE CONVERSATIONS -->
+      <div style="padding:0.5rem 1.5rem;">
+        <div
+          style="font-size:0.75rem;color:var(--muted);cursor:pointer;border-bottom:1px dashed var(--border);display:inline-block;"
+          onclick="document.getElementById('pg-examples').style.display=document.getElementById('pg-examples').style.display==='none'?'block':'none'">
+          💬 Przykłady gotowych rozmów
+        </div>
+        <div id="pg-examples"
+          style="display:none;margin-top:0.5rem;background:var(--surface2);padding:0.5rem;border-radius:8px;">
+          <button onclick="loadPlaygroundExample('support')"
+            style="display:block;width:100%;text-align:left;background:none;border:none;color:var(--text);padding:0.3rem;cursor:pointer;font-size:0.8rem;">📦
+            Jak obsłużyć reklamację klienta</button>
+          <button onclick="loadPlaygroundExample('content')"
+            style="display:block;width:100%;text-align:left;background:none;border:none;color:var(--text);padding:0.3rem;cursor:pointer;font-size:0.8rem;">📅
+            Plan treści na 30 dni</button>
+          <button onclick="loadPlaygroundExample('saas')"
+            style="display:block;width:100%;text-align:left;background:none;border:none;color:var(--text);padding:0.3rem;cursor:pointer;font-size:0.8rem;">📊
+            Analiza konkurencji SaaS</button>
+        </div>
+      </div>
+
+      <!-- Chat area -->
+      <div id="playground-messages" style="
       flex:1;overflow-y:auto;padding:1rem 1.5rem;
       display:flex;flex-direction:column;gap:0.75rem;
       min-height:280px;max-height:400px;
     "></div>
-    <!-- Input -->
-    <div style="padding:0.75rem 1.5rem 1.25rem;flex-shrink:0;border-top:1px solid var(--border);display:flex;gap:0.5rem;">
-      <textarea id="playground-input"
-        style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:10px;
+      <!-- Input -->
+      <div
+        style="padding:0.75rem 1.5rem 1.25rem;flex-shrink:0;border-top:1px solid var(--border);display:flex;gap:0.5rem;">
+        <textarea id="playground-input" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:10px;
                color:var(--text);font-family:'Manrope',sans-serif;font-size:0.88rem;padding:0.65rem 0.9rem;
                resize:none;line-height:1.5;outline:none;min-height:44px;max-height:120px;transition:border-color 0.2s;"
-        placeholder="Talk to this agent…" rows="1"
-        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendPlaygroundMessage();}"
-        oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"></textarea>
-      <button class="btn-primary" onclick="sendPlaygroundMessage()" id="playground-send-btn"
-        style="padding:0.65rem 1.1rem;align-self:flex-end;flex-shrink:0;">Send →</button>
-    </div>
-    <div style="padding:0 1.5rem 1rem;flex-shrink:0;display:flex;justify-content:space-between;align-items:center;">
-      <button onclick="clearPlayground()" style="background:none;border:none;color:var(--muted);font-size:0.75rem;cursor:pointer;padding:0;">🗑 Clear chat</button>
-      <div style="display:flex;gap:0.75rem;align-items:center;">
-        <button onclick="exportPlaygroundChat()" id="playground-export-btn"
-          style="background:none;border:1px solid var(--border);color:var(--muted);font-size:0.75rem;
+          placeholder="Talk to this agent…" rows="1"
+          onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendPlaygroundMessage();}"
+          oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"></textarea>
+        <button class="btn-primary" onclick="sendPlaygroundMessage()" id="playground-send-btn"
+          style="padding:0.65rem 1.1rem;align-self:flex-end;flex-shrink:0;">Send →</button>
+      </div>
+      <div style="padding:0 1.5rem 1rem;flex-shrink:0;display:flex;justify-content:space-between;align-items:center;">
+        <button onclick="clearPlayground()"
+          style="background:none;border:none;color:var(--muted);font-size:0.75rem;cursor:pointer;padding:0;">🗑 Clear
+          chat</button>
+        <div style="display:flex;gap:0.75rem;align-items:center;">
+          <button onclick="exportPlaygroundChat()" id="playground-export-btn" style="background:none;border:1px solid var(--border);color:var(--muted);font-size:0.75rem;
                  cursor:pointer;padding:0.2rem 0.6rem;border-radius:6px;font-family:'Space Mono',monospace;
                  transition:color 0.15s,border-color 0.15s;"
-          onmouseover="this.style.color='var(--accent)';this.style.borderColor='var(--accent)'"
-          onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--border)'"
-          title="Export chat as Markdown">💾 Export</button>
-        <span id="playground-status" style="font-size:0.72rem;color:var(--muted);font-family:'Space Mono',monospace;"></span>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="modal-overlay" id="share-modal">
-  <div class="share-modal">
-    <div class="modal-header">
-      <div class="modal-title">🔗 Share Your Team</div>
-      <button class="modal-close" onclick="closeShareModal()">✕</button>
-    </div>
-    <div style="padding:1.5rem;">
-      <div class="share-options" id="share-options">
-        <label class="share-option active" id="share-opt-open">
-          <input type="radio" name="share-mode" value="open" checked onchange="onShareModeChange()">
-          <div class="share-option-text">
-            <div class="share-option-label">🌍 Public link</div>
-            <div class="share-option-desc">Anyone with the link can view this team</div>
-          </div>
-        </label>
-        <label class="share-option" id="share-opt-password">
-          <input type="radio" name="share-mode" value="password" onchange="onShareModeChange()">
-          <div class="share-option-text">
-            <div class="share-option-label">🔒 Password protected <span style="font-size:0.65rem;font-family:'Space Mono',monospace;padding:0.1rem 0.4rem;border-radius:3px;background:rgba(242,185,13,0.1);border:1px solid rgba(242,185,13,0.2);color:var(--accent);vertical-align:middle;margin-left:0.3rem;">AES-256-GCM</span></div>
-            <div class="share-option-desc">End-to-end encrypted — only someone with the password can read this team</div>
-          </div>
-          <div class="share-password-row" id="share-password-row" style="display:none;width:100%;">
-            <input type="text" class="input-field" id="share-password-input" placeholder="Set a password…" oninput="generateShareUrl()" style="font-size:0.82rem;padding:0.5rem 0.8rem;">
-          </div>
-        </label>
-      </div>
-
-      <div class="share-url-row">
-        <input type="text" class="share-url-input" id="share-url-display" readonly placeholder="Generating link…">
-        <button class="share-copy-btn" id="share-copy-btn" onclick="copyShareUrl()">📋 Copy</button>
-      </div>
-
-      <div class="share-meta" id="share-meta">
-        <span>📦 <span id="share-size-label">–</span></span>
-        <span>⚡ <span id="share-agent-count">–</span></span>
-        <span>🕓 <span id="share-version-label">–</span></span>
-      </div>
-
-      <!-- Gist publish section -->
-      <div style="margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid var(--border);">
-        <div style="font-size:0.72rem;font-family:'Space Mono',monospace;color:var(--accent);letter-spacing:0.08em;margin-bottom:0.75rem;">PUBLISH TO GALLERY</div>
-        <p style="font-size:0.8rem;color:var(--muted);margin-bottom:0.75rem;">Save your team as a public GitHub Gist so others can fork it from the gallery.</p>
-        <input type="text" class="input-field" id="gist-token-input"
-          placeholder="GitHub Personal Access Token (gist scope)"
-          style="font-size:0.8rem;padding:0.5rem 0.8rem;margin-bottom:0.5rem;"
-          autocomplete="off"/>
-        <div style="display:flex;gap:0.5rem;align-items:center;">
-          <button class="btn-primary" onclick="publishToGist()" id="gist-publish-btn" style="font-size:0.82rem;">
-            <span id="gist-publish-label">⬆ Publish Gist</span>
-          </button>
-          <a href="https://github.com/settings/tokens/new?scopes=gist&description=AgentSpark" target="_blank"
-            style="font-size:0.72rem;color:var(--muted);text-decoration:underline;">Get token ↗</a>
+            onmouseover="this.style.color='var(--accent)';this.style.borderColor='var(--accent)'"
+            onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--border)'"
+            title="Export chat as Markdown">💾 Export</button>
+          <span id="playground-status"
+            style="font-size:0.72rem;color:var(--muted);font-family:'Space Mono',monospace;"></span>
         </div>
-        <div id="gist-result" style="display:none;margin-top:0.75rem;"></div>
       </div>
     </div>
   </div>
-</div>
 
-<!-- ── FRAMEWORK EXPORT MODAL ── -->
-<div class="modal-overlay" id="fw-modal">
-  <div class="fw-modal">
-    <div class="modal-header">
-      <div class="modal-title">🚀 Export to Framework</div>
-      <button class="modal-close" onclick="closeFwModal()">✕</button>
+  <div class="modal-overlay" id="share-modal">
+    <div class="share-modal">
+      <div class="modal-header">
+        <div class="modal-title">🔗 Share Your Team</div>
+        <button class="modal-close" onclick="closeShareModal()">✕</button>
+      </div>
+      <div style="padding:1.5rem;">
+        <div class="share-options" id="share-options">
+          <label class="share-option active" id="share-opt-open">
+            <input type="radio" name="share-mode" value="open" checked onchange="onShareModeChange()">
+            <div class="share-option-text">
+              <div class="share-option-label">🌍 Public link</div>
+              <div class="share-option-desc">Anyone with the link can view this team</div>
+            </div>
+          </label>
+          <label class="share-option" id="share-opt-password">
+            <input type="radio" name="share-mode" value="password" onchange="onShareModeChange()">
+            <div class="share-option-text">
+              <div class="share-option-label">🔒 Password protected <span
+                  style="font-size:0.65rem;font-family:'Space Mono',monospace;padding:0.1rem 0.4rem;border-radius:3px;background:rgba(242,185,13,0.1);border:1px solid rgba(242,185,13,0.2);color:var(--accent);vertical-align:middle;margin-left:0.3rem;">AES-256-GCM</span>
+              </div>
+              <div class="share-option-desc">End-to-end encrypted — only someone with the password can read this team
+              </div>
+            </div>
+            <div class="share-password-row" id="share-password-row" style="display:none;width:100%;">
+              <input type="text" class="input-field" id="share-password-input" placeholder="Set a password…"
+                oninput="generateShareUrl()" style="font-size:0.82rem;padding:0.5rem 0.8rem;">
+            </div>
+          </label>
+        </div>
+
+        <div class="share-url-row">
+          <input type="text" class="share-url-input" id="share-url-display" readonly placeholder="Generating link…">
+          <button class="share-copy-btn" id="share-copy-btn" onclick="copyShareUrl()">📋 Copy</button>
+        </div>
+
+        <div class="share-meta" id="share-meta">
+          <span>📦 <span id="share-size-label">–</span></span>
+          <span>⚡ <span id="share-agent-count">–</span></span>
+          <span>🕓 <span id="share-version-label">–</span></span>
+        </div>
+
+        <!-- Gist publish section -->
+        <div style="margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid var(--border);">
+          <div
+            style="font-size:0.72rem;font-family:'Space Mono',monospace;color:var(--accent);letter-spacing:0.08em;margin-bottom:0.75rem;">
+            PUBLISH TO GALLERY</div>
+          <p style="font-size:0.8rem;color:var(--muted);margin-bottom:0.75rem;">Save your team as a public GitHub Gist
+            so others can fork it from the gallery.</p>
+          <input type="text" class="input-field" id="gist-token-input"
+            placeholder="GitHub Personal Access Token (gist scope)"
+            style="font-size:0.8rem;padding:0.5rem 0.8rem;margin-bottom:0.5rem;" autocomplete="off" />
+          <div style="display:flex;gap:0.5rem;align-items:center;">
+            <button class="btn-primary" onclick="publishToGist()" id="gist-publish-btn" style="font-size:0.82rem;">
+              <span id="gist-publish-label">⬆ Publish Gist</span>
+            </button>
+            <a href="https://github.com/settings/tokens/new?scopes=gist&description=AgentSpark" target="_blank"
+              style="font-size:0.72rem;color:var(--muted);text-decoration:underline;">Get token ↗</a>
+          </div>
+          <div id="gist-result" style="display:none;margin-top:0.75rem;"></div>
+        </div>
+      </div>
     </div>
-    <div class="fw-tabs" id="fw-tabs"></div>
-    <div class="fw-body" id="fw-body"></div>
   </div>
-</div>
 
-<!-- ── PROMPT EXPORT MODAL (#7) ── -->
-<div class="modal-overlay" id="prompt-export-modal">
-  <div class="modal" style="max-width:720px;max-height:85vh;display:flex;flex-direction:column;">
-    <div class="modal-header">
-      <div class="modal-title">📋 System Prompts</div>
-      <button class="modal-close" onclick="closePromptExport()">✕</button>
+  <!-- ── FRAMEWORK EXPORT MODAL ── -->
+  <div class="modal-overlay" id="fw-modal">
+    <div class="fw-modal">
+      <div class="modal-header">
+        <div class="modal-title">🚀 Export to Framework</div>
+        <button class="modal-close" onclick="closeFwModal()">✕</button>
+      </div>
+      <div class="fw-tabs" id="fw-tabs"></div>
+      <div class="fw-body" id="fw-body"></div>
     </div>
-    <div style="display:flex;gap:0.5rem;padding:1rem 1.5rem 0;flex-shrink:0;">
-      <button class="prompt-tab-btn active" id="ptab-interview" onclick="switchPromptTab('interview')">🎤 Interview</button>
-      <button class="prompt-tab-btn" id="ptab-generate" onclick="switchPromptTab('generate')">⚡ Generate</button>
-      <button class="prompt-tab-btn" id="ptab-refine" onclick="switchPromptTab('refine')">✏ Refine</button>
-    </div>
-    <div style="padding:1rem 1.5rem;flex:1;overflow:hidden;display:flex;flex-direction:column;gap:0.75rem;">
-      <div style="font-size:0.72rem;color:var(--muted);font-family:'Space Mono',monospace;" id="prompt-tab-desc"></div>
-      <textarea id="prompt-export-textarea" readonly
-        style="flex:1;min-height:320px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;
+  </div>
+
+  <!-- ── PROMPT EXPORT MODAL (#7) ── -->
+  <div class="modal-overlay" id="prompt-export-modal">
+    <div class="modal" style="max-width:720px;max-height:85vh;display:flex;flex-direction:column;">
+      <div class="modal-header">
+        <div class="modal-title">📋 System Prompts</div>
+        <button class="modal-close" onclick="closePromptExport()">✕</button>
+      </div>
+      <div style="display:flex;gap:0.5rem;padding:1rem 1.5rem 0;flex-shrink:0;">
+        <button class="prompt-tab-btn active" id="ptab-interview" onclick="switchPromptTab('interview')">🎤
+          Interview</button>
+        <button class="prompt-tab-btn" id="ptab-generate" onclick="switchPromptTab('generate')">⚡ Generate</button>
+        <button class="prompt-tab-btn" id="ptab-refine" onclick="switchPromptTab('refine')">✏ Refine</button>
+      </div>
+      <div style="padding:1rem 1.5rem;flex:1;overflow:hidden;display:flex;flex-direction:column;gap:0.75rem;">
+        <div style="font-size:0.72rem;color:var(--muted);font-family:'Space Mono',monospace;" id="prompt-tab-desc">
+        </div>
+        <textarea id="prompt-export-textarea" readonly style="flex:1;min-height:320px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;
                color:var(--text);font-family:'Space Mono',monospace;font-size:0.72rem;padding:1rem;
                resize:none;line-height:1.6;outline:none;"></textarea>
-      <div style="display:flex;gap:0.75rem;flex-shrink:0;">
-        <button class="btn-primary" onclick="copyPromptToClipboard()" id="copy-prompt-btn">📋 Copy to clipboard</button>
-        <button class="btn-secondary" onclick="downloadPromptTxt()">⬇ Download .txt</button>
-        <span id="copy-prompt-feedback" style="font-size:0.78rem;color:var(--success);align-self:center;opacity:0;transition:opacity 0.3s;"></span>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ── PASSWORD UNLOCK MODAL (#3) ── -->
-<div class="modal-overlay" id="unlock-modal">
-  <div class="modal" style="max-width:420px;">
-    <div class="modal-header">
-      <div class="modal-title">🔒 Password Protected</div>
-      <button class="modal-close" onclick="_unlockReject()">✕</button>
-    </div>
-    <div style="padding:1.5rem;display:flex;flex-direction:column;gap:1rem;">
-      <p style="font-size:0.88rem;color:var(--muted);" id="unlock-modal-desc">This team is password protected. Enter the password to unlock it.</p>
-      <input type="password" class="input-field" id="unlock-password-input"
-        placeholder="Enter password…"
-        style="font-size:0.9rem;"
-        onkeydown="if(event.key==='Enter') _unlockConfirm()"
-        autocomplete="current-password"/>
-      <div id="unlock-error" style="display:none;font-size:0.8rem;color:var(--accent2);">⚠ Wrong password. Please try again.</div>
-      <div style="display:flex;gap:0.75rem;">
-        <button class="btn-primary" onclick="_unlockConfirm()" style="flex:1;">Unlock</button>
-        <button class="btn-secondary" onclick="_unlockReject()">Cancel</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ── IMPORT MODAL (#4) ── -->
-<!-- ── TEMPLATE DETAIL MODAL ── -->
-<div class="modal-overlay" id="template-detail-overlay">
-  <div class="modal" style="max-width:680px;max-height:88vh;display:flex;flex-direction:column;">
-    <div class="modal-header">
-      <div class="modal-title" id="tpl-modal-title"></div>
-      <button class="modal-close" onclick="closeTemplateDetail()">✕</button>
-    </div>
-    <div style="flex:1;overflow-y:auto;padding:1.5rem;">
-      <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;margin-bottom:1rem;">
-        <span class="template-badge" id="tpl-badge"></span>
-        <span style="font-size:0.82rem;color:var(--muted);" id="tpl-difficulty"></span>
-        <span style="font-size:0.82rem;color:var(--muted);" id="tpl-agent-count"></span>
-      </div>
-      <p style="color:var(--muted);font-size:0.9rem;line-height:1.6;margin-bottom:1.5rem;" id="tpl-description"></p>
-
-      <div style="margin-bottom:1.5rem;">
-        <div id="tpl-usecases-label" style="font-size:0.72rem;font-family:'Space Mono',monospace;color:var(--accent);letter-spacing:0.08em;margin-bottom:0.75rem;">USE CASES</div>
-        <ul id="tpl-usecases" style="list-style:none;padding:0;display:flex;flex-direction:column;gap:0.35rem;"></ul>
-      </div>
-
-      <div style="margin-bottom:1.5rem;">
-        <div id="tpl-team-label" style="font-size:0.72rem;font-family:'Space Mono',monospace;color:var(--accent);letter-spacing:0.08em;margin-bottom:0.75rem;">AGENT TEAM</div>
-        <div id="tpl-team"></div>
-      </div>
-
-      <div id="tpl-tags" style="display:flex;flex-wrap:wrap;gap:0.4rem;"></div>
-    </div>
-    <div style="padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;gap:0.75rem;flex-shrink:0;">
-      <button class="btn-primary" id="tpl-fork-btn" style="flex:1;" onclick="forkTemplate()">🔀 Use This Template</button>
-      <button class="btn-secondary" id="tpl-cancel-btn" onclick="closeTemplateDetail()">Cancel</button>
-    </div>
-  </div>
-</div>
-
-<div class="modal-overlay" id="confirm-modal">
-  <div class="modal" style="max-width:420px;">
-    <div class="modal-header">
-      <div class="modal-title" id="confirm-modal-title">Confirm</div>
-      <button class="modal-close" onclick="closeConfirmModal()">✕</button>
-    </div>
-    <div style="padding:1.5rem;display:flex;flex-direction:column;gap:1rem;">
-      <p id="confirm-modal-message" style="font-size:0.88rem;color:var(--muted);line-height:1.5;"></p>
-      <div style="display:flex;gap:0.75rem;">
-        <button class="btn-secondary" id="confirm-modal-cancel" onclick="_confirmReject()" style="flex:1;">Cancel</button>
-        <button class="btn-primary" id="confirm-modal-ok" onclick="_confirmResolve()" style="flex:1;">OK</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="modal-overlay" id="import-modal">
-  <div class="modal" style="max-width:620px;">
-    <div class="modal-header">
-      <div class="modal-title" id="import-modal-title">📥 Import Project</div>
-      <button class="modal-close" onclick="closeImportModal()">✕</button>
-    </div>
-    <div style="padding:1.5rem;">
-
-      <!-- Drop zone -->
-      <div id="import-dropzone" class="import-dropzone"
-           ondragover="event.preventDefault();this.classList.add('drag-over')"
-           ondragleave="this.classList.remove('drag-over')"
-           ondrop="handleImportDrop(event)">
-        <div style="font-size:2.5rem;margin-bottom:0.75rem;">📂</div>
-        <div style="font-weight:700;font-size:1rem;margin-bottom:0.35rem;" id="import-dz-title">Drop your file here</div>
-        <div style="font-size:0.78rem;color:var(--muted);margin-bottom:1.25rem;">Supports <code style="font-family:'Space Mono',monospace;font-size:0.72rem;">.json</code> and <code style="font-family:'Space Mono',monospace;font-size:0.72rem;">.zip</code> from AgentSpark</div>
-        <label class="btn-secondary" style="cursor:pointer;display:inline-flex;align-items:center;gap:0.5rem;padding:0.6rem 1.25rem;font-size:0.85rem;">
-          📁 Browse file
-          <input type="file" id="import-file-input" accept=".json,.zip" style="display:none" onchange="handleImportFileSelect(this)"/>
-        </label>
-      </div>
-
-      <!-- Preview panel (hidden until file parsed) -->
-      <div id="import-preview" style="display:none;margin-top:1.25rem;">
-        <div style="font-size:0.72rem;font-family:'Space Mono',monospace;color:var(--accent);letter-spacing:0.08em;margin-bottom:0.75rem;">PREVIEW</div>
-        <div id="import-preview-content" style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:1rem;font-size:0.82rem;line-height:1.7;"></div>
-        <div style="display:flex;gap:0.75rem;margin-top:1rem;flex-wrap:wrap;">
-          <button class="btn-primary" onclick="confirmImport()">✓ Import</button>
-          <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.8rem;color:var(--muted);cursor:pointer;">
-            <input type="checkbox" id="import-save-checkbox" checked style="accent-color:var(--accent);"/>
-            Save as project
-          </label>
-          <button class="btn-secondary" style="margin-left:auto;" onclick="resetImportModal()">✕ Clear</button>
+        <div style="display:flex;gap:0.75rem;flex-shrink:0;">
+          <button class="btn-primary" onclick="copyPromptToClipboard()" id="copy-prompt-btn">📋 Copy to
+            clipboard</button>
+          <button class="btn-secondary" onclick="downloadPromptTxt()">⬇ Download .txt</button>
+          <span id="copy-prompt-feedback"
+            style="font-size:0.78rem;color:var(--success);align-self:center;opacity:0;transition:opacity 0.3s;"></span>
         </div>
       </div>
+    </div>
+  </div>
 
-      <!-- Error display -->
-      <div id="import-error" style="display:none;margin-top:1rem;padding:0.75rem 1rem;background:rgba(255,107,53,0.08);border:1px solid rgba(255,107,53,0.3);border-radius:8px;font-size:0.82rem;color:var(--accent2);"></div>
+  <!-- ── PASSWORD UNLOCK MODAL (#3) ── -->
+  <div class="modal-overlay" id="unlock-modal">
+    <div class="modal" style="max-width:420px;">
+      <div class="modal-header">
+        <div class="modal-title">🔒 Password Protected</div>
+        <button class="modal-close" onclick="_unlockReject()">✕</button>
+      </div>
+      <div style="padding:1.5rem;display:flex;flex-direction:column;gap:1rem;">
+        <p style="font-size:0.88rem;color:var(--muted);" id="unlock-modal-desc">This team is password protected. Enter
+          the password to unlock it.</p>
+        <input type="password" class="input-field" id="unlock-password-input" placeholder="Enter password…"
+          style="font-size:0.9rem;" onkeydown="if(event.key==='Enter') _unlockConfirm()"
+          autocomplete="current-password" />
+        <div id="unlock-error" style="display:none;font-size:0.8rem;color:var(--accent2);">⚠ Wrong password. Please try
+          again.</div>
+        <div style="display:flex;gap:0.75rem;">
+          <button class="btn-primary" onclick="_unlockConfirm()" style="flex:1;">Unlock</button>
+          <button class="btn-secondary" onclick="_unlockReject()">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
-      <!-- Gist URL import -->
-      <div style="margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--border);">
-        <div style="font-size:0.72rem;font-family:'Space Mono',monospace;color:var(--accent);letter-spacing:0.08em;margin-bottom:0.75rem;">LOAD FROM GITHUB GIST</div>
-        <p style="font-size:0.8rem;color:var(--muted);margin-bottom:0.75rem;">Paste a Gist URL or ID to load a shared AgentSpark team.</p>
-        <div style="display:flex;gap:0.5rem;">
-          <input type="text" class="input-field" id="gist-import-input"
-            placeholder="https://gist.github.com/… or Gist ID"
-            style="flex:1;font-size:0.82rem;padding:0.5rem 0.8rem;"
-            onkeydown="if(event.key==='Enter') loadFromGistUrl()"/>
-          <button class="btn-primary" onclick="loadFromGistUrl()" id="gist-import-btn" style="white-space:nowrap;font-size:0.82rem;">
-            <span id="gist-import-label">Load →</span>
+  <!-- ── IMPORT MODAL (#4) ── -->
+  <!-- ── TEMPLATE DETAIL MODAL ── -->
+  <div class="modal-overlay" id="template-detail-overlay">
+    <div class="modal" style="max-width:680px;max-height:88vh;display:flex;flex-direction:column;">
+      <div class="modal-header">
+        <div class="modal-title" id="tpl-modal-title"></div>
+        <button class="modal-close" onclick="closeTemplateDetail()">✕</button>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:1.5rem;">
+        <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;margin-bottom:1rem;">
+          <span class="template-badge" id="tpl-badge"></span>
+          <span style="font-size:0.82rem;color:var(--muted);" id="tpl-difficulty"></span>
+          <span style="font-size:0.82rem;color:var(--muted);" id="tpl-agent-count"></span>
+        </div>
+        <p style="color:var(--muted);font-size:0.9rem;line-height:1.6;margin-bottom:1.5rem;" id="tpl-description"></p>
+
+        <div style="margin-bottom:1.5rem;">
+          <div id="tpl-usecases-label"
+            style="font-size:0.72rem;font-family:'Space Mono',monospace;color:var(--accent);letter-spacing:0.08em;margin-bottom:0.75rem;">
+            USE CASES</div>
+          <ul id="tpl-usecases" style="list-style:none;padding:0;display:flex;flex-direction:column;gap:0.35rem;"></ul>
+        </div>
+
+        <div style="margin-bottom:1.5rem;">
+          <div id="tpl-team-label"
+            style="font-size:0.72rem;font-family:'Space Mono',monospace;color:var(--accent);letter-spacing:0.08em;margin-bottom:0.75rem;">
+            AGENT TEAM</div>
+          <div id="tpl-team"></div>
+        </div>
+
+        <div id="tpl-tags" style="display:flex;flex-wrap:wrap;gap:0.4rem;"></div>
+      </div>
+      <div style="padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;gap:0.75rem;flex-shrink:0;">
+        <button class="btn-primary" id="tpl-fork-btn" style="flex:1;" onclick="forkTemplate()">🔀 Use This
+          Template</button>
+        <button class="btn-secondary" id="tpl-cancel-btn" onclick="closeTemplateDetail()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="confirm-modal">
+    <div class="modal" style="max-width:420px;">
+      <div class="modal-header">
+        <div class="modal-title" id="confirm-modal-title">Confirm</div>
+        <button class="modal-close" onclick="closeConfirmModal()">✕</button>
+      </div>
+      <div style="padding:1.5rem;display:flex;flex-direction:column;gap:1rem;">
+        <p id="confirm-modal-message" style="font-size:0.88rem;color:var(--muted);line-height:1.5;"></p>
+        <div style="display:flex;gap:0.75rem;">
+          <button class="btn-secondary" id="confirm-modal-cancel" onclick="_confirmReject()"
+            style="flex:1;">Cancel</button>
+          <button class="btn-primary" id="confirm-modal-ok" onclick="_confirmResolve()" style="flex:1;">OK</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="import-modal">
+    <div class="modal" style="max-width:620px;">
+      <div class="modal-header">
+        <div class="modal-title" id="import-modal-title">📥 Import Project</div>
+        <button class="modal-close" onclick="closeImportModal()">✕</button>
+      </div>
+      <div style="padding:1.5rem;">
+
+        <!-- Drop zone -->
+        <div id="import-dropzone" class="import-dropzone"
+          ondragover="event.preventDefault();this.classList.add('drag-over')"
+          ondragleave="this.classList.remove('drag-over')" ondrop="handleImportDrop(event)">
+          <div style="font-size:2.5rem;margin-bottom:0.75rem;">📂</div>
+          <div style="font-weight:700;font-size:1rem;margin-bottom:0.35rem;" id="import-dz-title">Drop your file here
+          </div>
+          <div style="font-size:0.78rem;color:var(--muted);margin-bottom:1.25rem;">Supports <code
+              style="font-family:'Space Mono',monospace;font-size:0.72rem;">.json</code> and <code
+              style="font-family:'Space Mono',monospace;font-size:0.72rem;">.zip</code> from AgentSpark</div>
+          <label class="btn-secondary"
+            style="cursor:pointer;display:inline-flex;align-items:center;gap:0.5rem;padding:0.6rem 1.25rem;font-size:0.85rem;">
+            📁 Browse file
+            <input type="file" id="import-file-input" accept=".json,.zip" style="display:none"
+              onchange="handleImportFileSelect(this)" />
+          </label>
+        </div>
+
+        <!-- Preview panel (hidden until file parsed) -->
+        <div id="import-preview" style="display:none;margin-top:1.25rem;">
+          <div
+            style="font-size:0.72rem;font-family:'Space Mono',monospace;color:var(--accent);letter-spacing:0.08em;margin-bottom:0.75rem;">
+            PREVIEW</div>
+          <div id="import-preview-content"
+            style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:1rem;font-size:0.82rem;line-height:1.7;">
+          </div>
+          <div style="display:flex;gap:0.75rem;margin-top:1rem;flex-wrap:wrap;">
+            <button class="btn-primary" onclick="confirmImport()">✓ Import</button>
+            <label
+              style="display:flex;align-items:center;gap:0.4rem;font-size:0.8rem;color:var(--muted);cursor:pointer;">
+              <input type="checkbox" id="import-save-checkbox" checked style="accent-color:var(--accent);" />
+              Save as project
+            </label>
+            <button class="btn-secondary" style="margin-left:auto;" onclick="resetImportModal()">✕ Clear</button>
+          </div>
+        </div>
+
+        <!-- Error display -->
+        <div id="import-error"
+          style="display:none;margin-top:1rem;padding:0.75rem 1rem;background:rgba(255,107,53,0.08);border:1px solid rgba(255,107,53,0.3);border-radius:8px;font-size:0.82rem;color:var(--accent2);">
+        </div>
+
+        <!-- Gist URL import -->
+        <div style="margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--border);">
+          <div
+            style="font-size:0.72rem;font-family:'Space Mono',monospace;color:var(--accent);letter-spacing:0.08em;margin-bottom:0.75rem;">
+            LOAD FROM GITHUB GIST</div>
+          <p style="font-size:0.8rem;color:var(--muted);margin-bottom:0.75rem;">Paste a Gist URL or ID to load a shared
+            AgentSpark team.</p>
+          <div style="display:flex;gap:0.5rem;">
+            <input type="text" class="input-field" id="gist-import-input"
+              placeholder="https://gist.github.com/… or Gist ID" style="flex:1;font-size:0.82rem;padding:0.5rem 0.8rem;"
+              onkeydown="if(event.key==='Enter') loadFromGistUrl()" />
+            <button class="btn-primary" onclick="loadFromGistUrl()" id="gist-import-btn"
+              style="white-space:nowrap;font-size:0.82rem;">
+              <span id="gist-import-label">Load →</span>
+            </button>
+          </div>
+          <div id="gist-import-error" style="display:none;margin-top:0.5rem;font-size:0.78rem;color:var(--accent2);">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── VERSION DIFF MODAL ── -->
+  <div class="modal-overlay" id="diff-modal">
+    <div class="modal" style="max-width:680px;">
+      <div class="modal-header">
+        <div class="modal-title" id="diff-modal-title">🔍 Compare Versions</div>
+        <button class="modal-close" onclick="closeDiffModal()">✕</button>
+      </div>
+      <div class="diff-modal-body" id="diff-modal-body"></div>
+    </div>
+  </div>
+
+  <!-- EXPORT CODE MODAL -->
+  <div class="modal-overlay" id="export-code-modal">
+    <div class="modal" style="max-width:480px;">
+      <div class="modal-header">
+        <div class="modal-title">🐍 Export to Code</div>
+        <button class="modal-close"
+          onclick="document.getElementById('export-code-modal').classList.remove('open')">✕</button>
+      </div>
+      <div style="padding:1.5rem;">
+        <p style="color:var(--muted);font-size:0.9rem;margin-bottom:1.5rem;">Download your team as ready-to-run Python
+          code.</p>
+
+        <div style="display:grid;gap:0.75rem;">
+          <button class="btn-secondary" onclick="exportCode('crewai')"
+            style="text-align:left;padding:1rem;display:flex;align-items:center;gap:0.75rem;">
+            <span style="font-size:1.5rem;">🚢</span>
+            <div>
+              <div style="font-weight:700;">CrewAI</div>
+              <div style="font-size:0.75rem;color:var(--muted);">Best for sequential tasks & orchestration</div>
+            </div>
+          </button>
+
+          <button class="btn-secondary" onclick="exportCode('langgraph')"
+            style="text-align:left;padding:1rem;display:flex;align-items:center;gap:0.75rem;">
+            <span style="font-size:1.5rem;">🦜</span>
+            <div>
+              <div style="font-weight:700;">LangGraph</div>
+              <div style="font-size:0.75rem;color:var(--muted);">State-based, complex flows</div>
+            </div>
+          </button>
+
+          <button class="btn-secondary" disabled
+            style="text-align:left;padding:1rem;display:flex;align-items:center;gap:0.75rem;opacity:0.6;">
+            <span style="font-size:1.5rem;">🤖</span>
+            <div>
+              <div style="font-weight:700;">Microsoft AutoGen</div>
+              <div style="font-size:0.75rem;color:var(--muted);">Coming soon...</div>
+            </div>
           </button>
         </div>
-        <div id="gist-import-error" style="display:none;margin-top:0.5rem;font-size:0.78rem;color:var(--accent2);"></div>
       </div>
     </div>
   </div>
-</div>
 
-<!-- ── VERSION DIFF MODAL ── -->
-<div class="modal-overlay" id="diff-modal">
-  <div class="modal" style="max-width:680px;">
-    <div class="modal-header">
-      <div class="modal-title" id="diff-modal-title">🔍 Compare Versions</div>
-      <button class="modal-close" onclick="closeDiffModal()">✕</button>
-    </div>
-    <div class="diff-modal-body" id="diff-modal-body"></div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/core/sync-queue.js"></script>
+  <script src="js/core/api-client.js"></script>
+  <script src="js/core/generation-client.js"></script>
+  <script src="js/ui/confirm.js"></script>
+  <script src="js/ui/error-modal.js"></script>
+  <script src="js/ui/loader.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/gallery.js"></script>
+  <script src="js/export.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/ui/results-render.js"></script>
+  <script src="js/features/share.js"></script>
+  <script src="js/features/share-loader.js"></script>
+  <script src="js/features/playground.js"></script>
+  <script src="js/core/pwa.js"></script>
+
+  <!-- ── STICKY CONTEXT BAR (mobile) ── -->
+  <div id="sticky-context-bar">
+    <!-- populated dynamically by updateContextBar() -->
   </div>
-</div>
 
-<!-- EXPORT CODE MODAL -->
-<div class="modal-overlay" id="export-code-modal">
-  <div class="modal" style="max-width:480px;">
-    <div class="modal-header">
-      <div class="modal-title">🐍 Export to Code</div>
-      <button class="modal-close" onclick="document.getElementById('export-code-modal').classList.remove('open')">✕</button>
-    </div>
-    <div style="padding:1.5rem;">
-      <p style="color:var(--muted);font-size:0.9rem;margin-bottom:1.5rem;">Download your team as ready-to-run Python code.</p>
-      
-      <div style="display:grid;gap:0.75rem;">
-        <button class="btn-secondary" onclick="exportCode('crewai')" style="text-align:left;padding:1rem;display:flex;align-items:center;gap:0.75rem;">
-          <span style="font-size:1.5rem;">🚢</span>
-          <div>
-            <div style="font-weight:700;">CrewAI</div>
-            <div style="font-size:0.75rem;color:var(--muted);">Best for sequential tasks & orchestration</div>
-          </div>
-        </button>
-        
-        <button class="btn-secondary" onclick="exportCode('langgraph')" style="text-align:left;padding:1rem;display:flex;align-items:center;gap:0.75rem;">
-          <span style="font-size:1.5rem;">🦜</span>
-          <div>
-            <div style="font-weight:700;">LangGraph</div>
-            <div style="font-size:0.75rem;color:var(--muted);">State-based, complex flows</div>
-          </div>
-        </button>
-        
-        <button class="btn-secondary" disabled style="text-align:left;padding:1rem;display:flex;align-items:center;gap:0.75rem;opacity:0.6;">
-          <span style="font-size:1.5rem;">🤖</span>
-          <div>
-            <div style="font-weight:700;">Microsoft AutoGen</div>
-            <div style="font-size:0.75rem;color:var(--muted);">Coming soon...</div>
-          </div>
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<script src="js/i18n.js"></script>
-<script src="js/core/api-client.js"></script>
-<script src="js/core/generation-client.js"></script>
-<script src="js/ui/confirm.js"></script>
-<script src="js/db.js"></script>
-<script src="js/auth.js"></script>
-<script src="js/gallery.js"></script>
-<script src="js/export.js"></script>
-<script src="js/app.js"></script>
-<script src="js/features/share.js"></script>
-<script src="js/features/playground.js"></script>
-
-<!-- ── STICKY CONTEXT BAR (mobile) ── -->
-<div id="sticky-context-bar">
-  <!-- populated dynamically by updateContextBar() -->
-</div>
-
-<!-- ── BACK TO TOP ── -->
-<button id="back-to-top" onclick="scrollToTop()" aria-label="Back to top" title="Back to top">↑</button>
+  <!-- ── BACK TO TOP ── -->
+  <button id="back-to-top" onclick="scrollToTop()" aria-label="Back to top" title="Back to top">↑</button>
 
 </body>
+
 </html>
-
-
-
-
-

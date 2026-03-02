@@ -17,7 +17,7 @@ async function initRevenueCat() {
   try {
     const { Purchases } = window.Purchases;
     await Purchases.configure({ apiKey: RC_API_KEY });
-    
+
     // Check initial status if user logged in
     if (window.currentUser) {
       await checkProStatus(window.currentUser.uid);
@@ -32,7 +32,7 @@ async function _checkRevenueCatProStatus(uid) {
   try {
     const { Purchases } = window.Purchases;
     const { customerInfo } = await Purchases.logIn({ appUserID: uid });
-    
+
     // Check active entitlements
     if (customerInfo.entitlements.active[RC_ENTITLEMENT]) {
       window.isPro = true;
@@ -79,7 +79,7 @@ async function loadOfferings() {
     if (offerings.current && offerings.current.availablePackages.length > 0) {
       const pkg = offerings.current.availablePackages[0]; // e.g. Monthly
       const product = pkg.product;
-      
+
       document.getElementById('paywall-price').textContent = product.priceString;
       document.getElementById('paywall-btn').onclick = () => purchasePackage(pkg);
     }
@@ -92,12 +92,12 @@ async function purchasePackage(pkg) {
   try {
     const { Purchases } = window.Purchases;
     const { customerInfo } = await Purchases.purchasePackage({ aPackage: pkg });
-    
+
     if (customerInfo.entitlements.active[RC_ENTITLEMENT]) {
       window.isPro = true;
       updateProUI(true);
       closePaywall();
-      showNotif(lang==='en' ? '🎉 Welcome to Pro!' : '🎉 Witaj w wersji Pro!');
+      showNotif(lang === 'en' ? '🎉 Welcome to Pro!' : '🎉 Witaj w wersji Pro!');
     }
   } catch (e) {
     if (!e.userCancelled) {
@@ -117,6 +117,7 @@ function closePaywall() {
 window.currentUser = null;
 window.isPro = false;
 const AUTH_TOKEN_KEY = 'agentspark-auth-token';
+const REFRESH_TOKEN_KEY = 'agentspark-refresh-token';
 const DEVICE_EMAIL_KEY = 'agentspark-device-email';
 const toMillis = (v) => {
   if (typeof v === 'number') return v;
@@ -133,6 +134,15 @@ function setAuthToken(token) {
   else localStorage.removeItem(AUTH_TOKEN_KEY);
 }
 
+function getRefreshToken() {
+  return localStorage.getItem(REFRESH_TOKEN_KEY) || '';
+}
+
+function setRefreshToken(token) {
+  if (token) localStorage.setItem(REFRESH_TOKEN_KEY, token);
+  else localStorage.removeItem(REFRESH_TOKEN_KEY);
+}
+
 function getDeviceEmail() {
   const existing = localStorage.getItem(DEVICE_EMAIL_KEY);
   if (existing) return existing;
@@ -142,12 +152,45 @@ function getDeviceEmail() {
   return email;
 }
 
-async function apiFetch(path, options = {}, requireAuth = true) {
+async function apiFetch(path, options = {}, requireAuth = true, retryCount = 0) {
   if (typeof window.agentsparkApiFetch !== 'function') {
     throw new Error('API client not initialized');
   }
   const token = requireAuth ? getAuthToken() : '';
-  return window.agentsparkApiFetch(path, { ...options, token });
+
+  try {
+    const res = await window.agentsparkApiFetch(path, { ...options, token });
+    return res;
+  } catch (error) {
+    if (error.status === 401 && requireAuth && retryCount < 1) {
+      const refreshToken = getRefreshToken();
+      if (refreshToken) {
+        try {
+          // Attempt to refresh token
+          const refreshRes = await window.agentsparkApiFetch('/auth/refresh', {
+            method: 'POST',
+            body: JSON.stringify({ refreshToken }),
+          }, { token: '' }); // explicitly don't send expired token
+
+          if (refreshRes.token) {
+            setAuthToken(refreshRes.token);
+            setRefreshToken(refreshRes.refreshToken);
+            // Retry original request
+            return apiFetch(path, options, requireAuth, retryCount + 1);
+          }
+        } catch (refreshErr) {
+          console.warn('Refresh token failed:', refreshErr);
+          setAuthToken('');
+          setRefreshToken('');
+          updateAuthUI(null);
+        }
+      } else {
+        setAuthToken('');
+        updateAuthUI(null);
+      }
+    }
+    throw error;
+  }
 }
 
 async function backendRegister() {
@@ -170,8 +213,10 @@ async function restoreBackendSession() {
     const data = await apiFetch('/auth/me', { method: 'GET' }, true);
     updateAuthUI(data.user || null);
   } catch (e) {
-    setAuthToken('');
-    updateAuthUI(null);
+    // handled inside apiFetch retry logic if 401
+    if (e.status !== 401) {
+      updateAuthUI(null);
+    }
   }
 }
 
@@ -180,7 +225,7 @@ function updateAuthUI(user) {
   if (!btn) return;
   const label = btn.querySelector('.auth-label');
   const icon = btn.querySelector('.auth-icon');
-  
+
   if (user) {
     window.currentUser = {
       ...user,
@@ -191,7 +236,7 @@ function updateAuthUI(user) {
     icon.textContent = '✅';
     btn.classList.add('active');
     btn.title = `Logged in as ${window.currentUser.email || 'user'}`;
-    
+
     checkProStatus(window.currentUser.uid);
   } else {
     window.currentUser = null;
@@ -212,24 +257,29 @@ async function toggleAuth() {
         'Log Out',
         'Wylogowanie'
       )
-      : Promise.resolve(confirm(lang==='en' ? 'Log out?' : 'Wylogować się?')));
+      : Promise.resolve(confirm(lang === 'en' ? 'Log out?' : 'Wylogować się?')));
     if (shouldLogout) {
       try {
-        await apiFetch('/auth/logout', { method: 'POST' }, true);
+        await apiFetch('/auth/logout', {
+          method: 'POST',
+          body: JSON.stringify({ refreshToken: getRefreshToken() })
+        }, true);
       } catch (e) {
         console.warn('Logout API warning:', e.message);
       }
       setAuthToken('');
+      setRefreshToken('');
       updateAuthUI(null);
-      showNotif(lang==='en' ? '👋 Logged out' : '👋 Wylogowano');
+      showNotif(lang === 'en' ? '👋 Logged out' : '👋 Wylogowano');
       renderProjectsList();
     }
   } else {
     try {
       const data = await backendRegister();
-      setAuthToken(data.token || '');
+      if (data.token) setAuthToken(data.token);
+      if (data.refreshToken) setRefreshToken(data.refreshToken);
       updateAuthUI(data.user || null);
-      showNotif(lang==='en'
+      showNotif(lang === 'en'
         ? `👋 Welcome, ${window.currentUser?.displayName || 'User'}!`
         : `👋 Witaj, ${window.currentUser?.displayName || 'Użytkowniku'}!`
       );
@@ -244,7 +294,7 @@ async function toggleAuth() {
 async function syncProjectsWithCloud() {
   if (!window.currentUser || !getAuthToken()) return;
 
-  showNotif(lang==='en' ? '☁ Syncing...' : '☁ Synchronizacja...');
+  showNotif(lang === 'en' ? '☁ Syncing...' : '☁ Synchronizacja...');
 
   try {
     const remote = await apiFetch('/projects', { method: 'GET' }, true);
@@ -283,7 +333,7 @@ async function syncProjectsWithCloud() {
     }
 
     await renderProjectsList();
-    showNotif(lang==='en' ? '☁ Sync complete' : '☁ Synchronizacja zakończona');
+    showNotif(lang === 'en' ? '☁ Sync complete' : '☁ Synchronizacja zakończona');
   } catch (e) {
     console.error('Sync failed:', e);
     showNotif('Sync Error', true);

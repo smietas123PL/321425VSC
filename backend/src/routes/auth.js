@@ -1,10 +1,12 @@
 import express from 'express';
+import { OAuth2Client } from 'google-auth-library';
 import { generateToken, authMiddleware, requireAuth } from '../middleware/auth.js';
 import { validateEmail } from '../middleware/validation.js';
-import { createUser, getUserById, getUserByEmail } from '../db/models.js';
-import { logAudit } from '../db/models.js';
+import { createUser, getUserById, getUserByEmail, logAudit, createRefreshToken, getRefreshToken, deleteRefreshToken } from '../db/models.js';
 
 const router = express.Router();
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
 
 // POST /api/v1/auth/register
 // Simple email/password registration (placeholder - use OAuth in production)
@@ -35,11 +37,22 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// POST /api/v1/auth/google
-// Google OAuth login (simplified)
-router.post('/google', async (req, res) => {
+// POST /api/v1/auth/callback
+// Google OAuth callback
+router.post('/callback', async (req, res) => {
   try {
-    const { email, name, googleId } = req.body;
+    const { credential } = req.body;
+
+    if (!credential) {
+      return res.status(400).json({ error: 'Missing credential' });
+    }
+
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+    const { email, name, sub: googleId } = payload;
 
     if (!email || !validateEmail(email)) {
       return res.status(400).json({ error: 'Invalid email from Google' });
@@ -51,16 +64,48 @@ router.post('/google', async (req, res) => {
     }
 
     const token = generateToken(user.id, user.email);
+    const refreshToken = await createRefreshToken(user.id);
 
     await logAudit(user.id, 'GOOGLE_LOGIN', 'auth', { email }, req.ip);
 
     res.json({
       user: { id: user.id, email: user.email, name: user.name },
       token,
+      refreshToken
     });
   } catch (error) {
     console.error('Google auth error:', error);
     res.status(500).json({ error: 'Google authentication failed' });
+  }
+});
+
+// POST /api/v1/auth/refresh
+// Wymiana refresh token na nowy JWT
+router.post('/refresh', async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+    if (!refreshToken) return res.status(400).json({ error: 'Refresh token required' });
+
+    const tokenRecord = await getRefreshToken(refreshToken);
+    if (!tokenRecord) return res.status(401).json({ error: 'Invalid refresh token' });
+
+    if (new Date(tokenRecord.expiresAt) < new Date()) {
+      await deleteRefreshToken(refreshToken);
+      return res.status(401).json({ error: 'Refresh token expired' });
+    }
+
+    const user = await getUserById(tokenRecord.userId);
+    if (!user) return res.status(401).json({ error: 'User not found' });
+
+    // Generowanie nowego tokena głównego i rotacja t. odświeżającego
+    const newToken = generateToken(user.id, user.email);
+    await deleteRefreshToken(refreshToken);
+    const newRefreshToken = await createRefreshToken(user.id);
+
+    res.json({ token: newToken, refreshToken: newRefreshToken });
+  } catch (error) {
+    console.error('Refresh error:', error);
+    res.status(500).json({ error: 'Token refresh failed' });
   }
 });
 
@@ -86,6 +131,10 @@ router.post('/logout', authMiddleware, async (req, res) => {
   try {
     if (req.user) {
       await logAudit(req.user.id, 'USER_LOGOUT', 'auth', {}, req.ip);
+    }
+    const { refreshToken } = req.body;
+    if (refreshToken) {
+      await deleteRefreshToken(refreshToken);
     }
     res.json({ success: true });
   } catch (error) {

@@ -1925,6 +1925,193 @@ function renderProgressSteps(activeIndex) {
   if (stepLabel) stepLabel.textContent = `${activeIndex + 1}/${t('progressSteps').length}`;
 }
 
+// ─── AI MODELS & ORCHESTRATION ─────────────────────────────
+const MODEL_KEY_HINTS = {
+  'gemini':    { label:'Gemini API Key', url:'https://aistudio.google.com/apikey' },
+  'openai':    { label:'OpenAI API Key', url:'https://platform.openai.com/api-keys' },
+  'mistral':   { label:'Mistral API Key', url:'https://console.mistral.ai/api-keys' },
+  'groq':      { label:'Groq API Key', url:'https://console.groq.com/keys' },
+  'anthropic': { label:'Anthropic API Key', url:'https://console.anthropic.com/settings/keys' },
+};
+
+async function callSingleModel(m, key, systemInstruction, userMessage, _traceLabel, multiTurnMessages, onChunk) {
+  const provider = m.provider || 'gemini';
+  const url = m.endpoint;
+  const isGemini = provider === 'gemini';
+  const isAnthropic = provider === 'anthropic';
+  
+  const headers = { 'Content-Type': 'application/json' };
+  let body = {};
+
+  if (isGemini) {
+    // Determine endpoint for streaming vs regular
+    const finalUrl = onChunk 
+      ? `${url.replace(':generateContent', ':streamGenerateContent')}?key=${key}&alt=sse`
+      : `${url}?key=${key}`;
+      
+    body = {
+      contents: multiTurnMessages ? multiTurnMessages : [{ role: 'user', parts: [{ text: userMessage }] }],
+      generationConfig: { temperature: 0.7, maxOutputTokens: 2048 }
+    };
+    if(systemInstruction) body.systemInstruction = { parts: [{ text: systemInstruction }] };
+
+    try {
+      const response = await fetch(finalUrl, { method: 'POST', headers, body: JSON.stringify(body) });
+      if (!response.ok) {
+        const errTxt = await response.text();
+        throw new Error(`Gemini Error ${response.status}: ${errTxt}`);
+      }
+
+      if (onChunk) {
+        // STREAMING HANDLING FOR GEMINI
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let fullText = '';
+        
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const chunk = decoder.decode(value, { stream: true });
+          const lines = chunk.split('\n');
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const data = JSON.parse(line.slice(6));
+                const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (text) {
+                  fullText += text;
+                  onChunk(text);
+                }
+              } catch (e) { /* ignore parse errors for partial chunks */ }
+            }
+          }
+        }
+        return fullText;
+      } else {
+        // REGULAR HANDLING
+        const data = await response.json();
+        return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      }
+    } catch (e) { throw e; }
+
+  } else if (isAnthropic) {
+    headers['x-api-key'] = key;
+    headers['anthropic-version'] = '2023-06-01';
+    headers['anthropic-dangerous-direct-browser-access'] = 'true'; // Dev only
+
+    const messages = multiTurnMessages || [{ role: 'user', content: userMessage }];
+    body = {
+      model: m.model,
+      messages: messages,
+      system: systemInstruction,
+      max_tokens: 2048,
+      stream: !!onChunk
+    };
+
+    const response = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body) });
+    if (!response.ok) {
+      const errTxt = await response.text();
+      throw new Error(`Anthropic Error ${response.status}: ${errTxt}`);
+    }
+
+    if (onChunk) {
+      // STREAMING FOR ANTHROPIC
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let fullText = '';
+      
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value);
+        const lines = chunk.split('\n');
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const eventData = JSON.parse(line.slice(6));
+              if (eventData.type === 'content_block_delta' && eventData.delta?.text) {
+                fullText += eventData.delta.text;
+                onChunk(eventData.delta.text);
+              }
+            } catch(e) {}
+          }
+        }
+      }
+      return fullText;
+    } else {
+      const data = await response.json();
+      return data.content?.[0]?.text || '';
+    }
+
+  } else {
+    // OpenAI / Mistral / Groq
+    headers['Authorization'] = `Bearer ${key}`;
+    const messages = multiTurnMessages || [
+      { role: 'system', content: systemInstruction || 'You are a helpful assistant.' },
+      { role: 'user', content: userMessage }
+    ];
+    body = {
+      model: m.model,
+      messages: messages,
+      temperature: 0.7,
+      stream: !!onChunk
+    };
+
+    const response = await fetch(url, { method: 'POST', headers, body: JSON.stringify(body) });
+    if (!response.ok) {
+      const errTxt = await response.text();
+      throw new Error(`${provider} Error ${response.status}: ${errTxt}`);
+    }
+
+    if (onChunk) {
+      // STREAMING FOR OPENAI/GROQ
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let fullText = '';
+      
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value);
+        const lines = chunk.split('\n');
+        for (const line of lines) {
+          if (line.startsWith('data: ') && line !== 'data: [DONE]') {
+            try {
+              const data = JSON.parse(line.slice(6));
+              const text = data.choices?.[0]?.delta?.content;
+              if (text) {
+                fullText += text;
+                onChunk(text);
+              }
+            } catch(e) {}
+          }
+        }
+      }
+      return fullText;
+    } else {
+      const data = await response.json();
+      return data.choices?.[0]?.message?.content || '';
+    }
+  }
+}
+
+// Wrapper with retries
+async function callGemini(systemInstruction, userMessage, _traceLabel = 'Task', multiTurnMessages = null, onChunk = null) {
+// ...existing code...
+// Retry logic handles static responses only for now to keep it simple, 
+// unless we refactor retry to handle stream interruption.
+// For now, if streaming fails, it throws and user can retry manually.
+  try {
+    return await callSingleModel(selectedModel, apiKey, systemInstruction, userMessage, _traceLabel, multiTurnMessages, onChunk);
+  } catch (e) {
+    console.warn(`Attempt 1 failed: ${e.message}`);
+    // If it was a stream call, we probably can't retry seamlessly mid-stream.
+    // But for a fresh start:
+    if (!navigator.onLine) throw new Error('Offline');
+    // Simple retry for non-streaming, or if streaming failed immediately
+    return await callSingleModel(selectedModel, apiKey, systemInstruction, userMessage, _traceLabel, multiTurnMessages, onChunk);
+  }
+}
 // ─── AI API (multi-provider + automatic fallback) ─────────
 
 // Cost per 1M tokens (input+output blended estimate) in USD

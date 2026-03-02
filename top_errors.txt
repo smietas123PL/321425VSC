@@ -1,0 +1,40 @@
+﻿js/app.ts(185,38): error TS7006: Parameter 'l' implicitly has an 'any' type.
+js/app.ts(295,23): error TS7005: Variable 'chatHistory' implicitly has an 'any[]' type.
+js/app.ts(400,18): error TS2339: Property 'style' does not exist on type 'Element'.
+js/app.ts(549,19): error TS7005: Variable 'chatHistory' implicitly has an 'any[]' type.
+js/app.ts(566,7): error TS7053: Element implicitly has an 'any' type because expression of type '`agent-${any}.md`' can't be used to index type '{}'.
+js/app.ts(567,7): error TS7053: Element implicitly has an 'any' type because expression of type '`skill-${any}.md`' can't be used to index type '{}'.
+js/app.ts(569,5): error TS7053: Element implicitly has an 'any' type because expression of type '"team-config.md"' can't be used to index type '{}'.
+  Property 'team-config.md' does not exist on type '{}'.
+js/app.ts(569,151): error TS7006: Parameter 'a' implicitly has an 'any' type.
+js/app.ts(570,5): error TS7053: Element implicitly has an 'any' type because expression of type '"README.md"' can't be used to index type '{}'.
+  Property 'README.md' does not exist on type '{}'.
+js/app.ts(578,31): error TS7005: Variable 'chatHistory' implicitly has an 'any[]' type.
+js/app.ts(596,43): error TS7005: Variable 'generatedAgents' implicitly has an 'any[]' type.
+js/app.ts(600,40): error TS7005: Variable 'generatedAgents' implicitly has an 'any[]' type.
+js/app.ts(609,43): error TS18046: 'err' is of type 'unknown'.
+js/app.ts(612,27): error TS2339: Property 'message' does not exist on type '{}'.
+js/app.ts(622,21): error TS7005: Variable 'generatedAgents' implicitly has an 'any[]' type.
+js/app.ts(623,20): error TS7005: Variable 'generatedAgents' implicitly has an 'any[]' type.
+js/app.ts(683,26): error TS7053: Element implicitly has an 'any' type because expression of type 'any' can't be used to index type '{ improve: string; add: string; remove: string; connections: string; }'.
+js/app.ts(762,42): error TS7005: Variable 'generatedAgents' implicitly has an 'any[]' type.
+js/app.ts(822,21): error TS7005: Variable 'refineHistory' implicitly has an 'any[]' type.
+js/app.ts(828,25): error TS7053: Element implicitly has an 'any' type because expression of type 'any' can't be used to index type '{ improve: string; add: string; remove: string; connections: string; }'.
+js/app.ts(854,29): error TS7005: Variable 'generatedAgents' implicitly has an 'any[]' type.
+js/app.ts(855,44): error TS7006: Parameter 'a' implicitly has an 'any' type.
+js/app.ts(858,145): error TS7005: Variable 'generatedAgents' implicitly has an 'any[]' type.
+js/app.ts(859,71): error TS7005: Variable 'generatedAgents' implicitly has an 'any[]' type.
+js/app.ts(880,70): error TS18046: 'err' is of type 'unknown'.
+js/app.ts(894,60): error TS7005: Variable 'generatedAgents' implicitly has an 'any[]' type.
+js/app.ts(898,5): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{}'.
+  No index signature with a parameter of type 'string' was found on type '{}'.
+js/app.ts(899,5): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{}'.
+  No index signature with a parameter of type 'string' was found on type '{}'.
+js/app.ts(902,12): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{}'.
+  No index signature with a parameter of type 'string' was found on type '{}'.
+js/app.ts(903,12): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{}'.
+  No index signature with a parameter of type 'string' was found on type '{}'.
+js/app.ts(905,24): error TS7053: Element implicitly has an 'any' type because expression of type '"team-config.md"' can't be used to index type '{}'.
+  Property 'team-config.md' does not exist on type '{}'.
+js/app.ts(906,3): error TS7053: Element implicitly has an 'any' type because expression of type '"README.md"' can't be used to index type '{}'.
+  Property 'README.md' does not exist on type '{}'.

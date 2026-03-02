@@ -30,9 +30,9 @@
 
 ### Nadal otwarte (P0/P1)
 - ✅ Frontend generacji jest przełączony na backend proxy `/api/v1/generate` (BYOK przekazywany per-request).
-- ⏳ Pełna integracja OAuth Google po stronie backend (z `/api/v1/auth/callback` i refresh tokens).
-- ⏳ Brak kolejkowania zmian offline do sync (na teraz: manualny sync po zalogowaniu).
-- ⏳ Dalsza redukcja monolitu `js/app.js` (kolejne wydzielenia: `results-render.js`, `pwa.js`, `share-loader.js`).
+- ✅ Pełna integracja OAuth Google po stronie backend (z `/api/v1/auth/callback` i refresh tokens).
+- ✅ Kolejkowanie zmian offline do sync (`js/core/sync-queue.js`).
+- ✅ Dalsza redukcja monolitu `js/app.js` (kolejne wydzielenia: `results-render.js`, `pwa.js`, `share-loader.js`).
 
 ## Audyt Stanów Obecnego (v1.1.0)
 
@@ -90,34 +90,34 @@
 **Focus:** Secure API handling + podstawowy backend
 
 #### Security Hardening (Sprint 1)
-- [ ] **Backend API proxy** (Node.js/Express starter)
+- [x] **Backend API proxy** (Node.js/Express starter)
   - Endpoint: `/api/generate` — wrapper dla LLM calls
   - Proxy encryption API keys (env variables, nie klient)
   - Rate limiting: 10 req/min per IP
   - Request verification (HMAC signature)
   
-- [ ] **Frontend API key improvements**
+- [x] **Frontend API key improvements**
   - Shift API calls through backend proxy
   - sessionStorage zamiast localStorage (keys are session-only)
   - Encryption layer (TweetNaCl.js) dla client-side keys (optional)
   - ⚠️ KOMUNIKAT: "Your API key is never sent to our servers"
   
-- [ ] **CSP Headers + Security Policies**
+- [x] **CSP Headers + Security Policies**
   - Manifest CSP w meta tags + server headers
   - Whitelist: fonts.googleapis.com, cdnjs.cloudflare.com
   - Disable inline scripts (except minimal)
   
-- [ ] **Input Validation**
+- [x] **Input Validation**
   - Sanitize ALL JSON inputs (DOMPurify)
   - Validate project schema na save
   - Rate limit: max 100 agents per project
   
-- [ ] **Auth.js refactor**
+- [x] **Auth.js refactor**
   - Remove test keys (use .env)
   - RevenueCat → placeholder dla future integration
 
 #### Backend MVP (Sprint 2)
-- [ ] **Setup Node.js backend** (Express + SQLite)
+- [x] **Setup Node.js backend** (Express + SQLite)
   ```
   backend/
     ├── server.js (Express, CORS, rate-limit)
@@ -134,19 +134,19 @@
         └── schema.sql (users, projects, audit_log)
   ```
 
-- [ ] **User Authentication**
+- [x] **User Authentication**
   - OAuth Google integration (Google Cloud Console setup)
   - JWT tokens (HttpOnly cookies)
   - User table: `id | email | name | createdAt`
   
-- [ ] **Projects API**
+- [x] **Projects API**
   - `POST /api/v1/projects` — create
   - `GET /api/v1/projects` — list (authenticated)
   - `PUT /api/v1/projects/:id` — update
   - `DELETE /api/v1/projects/:id` — delete
   - Backend stores: full project JSON + updatedAt
   
-- [ ] **LLM Call Proxy**
+- [x] **LLM Call Proxy**
   - `POST /api/v1/generate` — all calls go here
   - Backend manages API keys
   - Logging: request, model, tokens used (audit_log table)
@@ -158,7 +158,7 @@
   - Add `.env` file (NEVER commit API keys)
 
 #### UX Polish (Sprint 3)
-- [ ] **Code modularization** (NO TypeScript yet)
+- [x] **Code modularization** (NO TypeScript yet)
   - Split app.js → modules:
     ```
     js/
@@ -180,23 +180,23 @@
           └── validation.js (new)
     ```
   
-- [ ] **Better error handling**
+- [x] **Better error handling**
   - Create error.js (custom error class)
   - UI error modal zamiast alert()
   - Error logging (telemetry) na backend
   - Retry logic dla failed API calls
   
-- [ ] **Loading states**
+- [x] **Loading states**
   - Add spinner component (CSS-only, no external lib)
   - Disable buttons during API calls
   - Progress bar dla long generations
   
-- [ ] **Offline + Sync**
+- [x] **Offline + Sync**
   - Detect online/offline (navigator.onLine)
   - Queue offline edits → sync on reconnect
   - Show "syncing..." indicator
   
-- [ ] **Accessibility (WCAG 2.1 AA)**
+- [x] **Accessibility (WCAG 2.1 AA)**
   - aria-labels na wszystkie buttons
   - Keyboard navigation (Tab, Enter, Esc)
   - Skip links
@@ -208,7 +208,7 @@
 **Focus:** Bundle optimization + developer experience
 
 #### Migration to TypeScript (Sprint 1)
-- [ ] **Setup TypeScript** (tsconfig.json)
+- [x] **Setup TypeScript** (tsconfig.json)
   ```json
   {
     "target": "ES2020",
@@ -218,18 +218,18 @@
     "esModuleInterop": true
   }
   ```
-- [ ] **Migrate modules one-by-one**
+- [x] **Migrate modules one-by-one**
   - Phase 1: utils/ → type all functions
   - Phase 2: core/ → add interfaces
   - Phase 3: ui/ → component types
   - Phase 4: features/ → full types
-- [ ] **Setup build pipeline** (esbuild or Vite)
+- [x] **Setup build pipeline** (esbuild or Vite)
   - Dev: `npm run dev` → local server + HMR
   - Build: `npm run build` → minified es/ + source maps
   - Bundle analysis: `npm run analyze`
 
 #### Performance Optimization (Sprint 2)
-- [ ] **Code splitting**
+- [x] **Code splitting**
   - Lazy load gallery templates (load on demand)
   - Lazy load export formats (CrewAI, LangChain when opened)
   - Split CSS → core.css (critical) + feature-*.css
@@ -239,7 +239,7 @@
   - Add srcset dla responsive images
   - Use SVG kde možliwe
   
-- [ ] **Caching strategy**
+- [x] **Caching strategy**
   - Service Worker: cache-first dla JS/CSS, stale-while-revalidate dla API
   - Manifest versioning: use hash (bundle-v123.js)
   - Max cache age: 30 days

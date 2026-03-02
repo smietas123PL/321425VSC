@@ -46,6 +46,7 @@
 </head>
 
 <body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
   <!-- ── AGENTSPARK CONFIG ── -->
   <script>
     window.__AGENTSPARK_CONFIG__ = {
@@ -183,7 +184,7 @@
         <button class="theme-toggle" id="theme-toggle-btn" onmousedown="_themeHoldStart()"
           ontouchstart="_themeHoldStart()" onmouseup="toggleTheme()" ontouchend="toggleTheme()"
           onmouseleave="if(_themeHoldTimer){clearTimeout(_themeHoldTimer);_themeHoldTimer=null;}"
-          title="Click: toggle theme | Hold: follow OS">🌙</button>
+          title="Click: toggle theme | Hold: follow OS" aria-label="Toggle theme">🌙</button>
       </div>
     </header>
 
@@ -752,7 +753,7 @@
     <div class="modal" style="max-width:960px;">
       <div class="modal-header">
         <div class="modal-title" id="md-browser-title">📄 Documentation Preview</div>
-        <button class="modal-close" onclick="closeMdBrowser()">✕</button>
+        <button class="modal-close" onclick="closeMdBrowser()" aria-label="Close modal">✕</button>
       </div>
       <div style="display:flex;height:calc(85vh - 120px);">
         <!-- Sidebar file list -->
@@ -915,7 +916,7 @@
     <div class="modal" style="max-width:720px;max-height:90vh;display:flex;flex-direction:column;">
       <div class="modal-header">
         <div class="modal-title">🧪 Agent Playground</div>
-        <button class="modal-close" onclick="closePlayground()">✕</button>
+        <button class="modal-close" onclick="closePlayground()" aria-label="Close modal">✕</button>
       </div>
       <!-- Agent selector -->
       <div style="padding:0.75rem 1.5rem 0;flex-shrink:0;">
@@ -987,7 +988,7 @@
     <div class="share-modal">
       <div class="modal-header">
         <div class="modal-title">🔗 Share Your Team</div>
-        <button class="modal-close" onclick="closeShareModal()">✕</button>
+        <button class="modal-close" onclick="closeShareModal()" aria-label="Close modal">✕</button>
       </div>
       <div style="padding:1.5rem;">
         <div class="share-options" id="share-options">
@@ -1053,7 +1054,7 @@
     <div class="fw-modal">
       <div class="modal-header">
         <div class="modal-title">🚀 Export to Framework</div>
-        <button class="modal-close" onclick="closeFwModal()">✕</button>
+        <button class="modal-close" onclick="closeFwModal()" aria-label="Close modal">✕</button>
       </div>
       <div class="fw-tabs" id="fw-tabs"></div>
       <div class="fw-body" id="fw-body"></div>
@@ -1065,7 +1066,7 @@
     <div class="modal" style="max-width:720px;max-height:85vh;display:flex;flex-direction:column;">
       <div class="modal-header">
         <div class="modal-title">📋 System Prompts</div>
-        <button class="modal-close" onclick="closePromptExport()">✕</button>
+        <button class="modal-close" onclick="closePromptExport()" aria-label="Close modal">✕</button>
       </div>
       <div style="display:flex;gap:0.5rem;padding:1rem 1.5rem 0;flex-shrink:0;">
         <button class="prompt-tab-btn active" id="ptab-interview" onclick="switchPromptTab('interview')">🎤
@@ -1095,7 +1096,7 @@
     <div class="modal" style="max-width:420px;">
       <div class="modal-header">
         <div class="modal-title">🔒 Password Protected</div>
-        <button class="modal-close" onclick="_unlockReject()">✕</button>
+        <button class="modal-close" onclick="_unlockReject()" aria-label="Close modal">✕</button>
       </div>
       <div style="padding:1.5rem;display:flex;flex-direction:column;gap:1rem;">
         <p style="font-size:0.88rem;color:var(--muted);" id="unlock-modal-desc">This team is password protected. Enter
@@ -1119,7 +1120,7 @@
     <div class="modal" style="max-width:680px;max-height:88vh;display:flex;flex-direction:column;">
       <div class="modal-header">
         <div class="modal-title" id="tpl-modal-title"></div>
-        <button class="modal-close" onclick="closeTemplateDetail()">✕</button>
+        <button class="modal-close" onclick="closeTemplateDetail()" aria-label="Close modal">✕</button>
       </div>
       <div style="flex:1;overflow-y:auto;padding:1.5rem;">
         <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;margin-bottom:1rem;">
@@ -1157,7 +1158,7 @@
     <div class="modal" style="max-width:420px;">
       <div class="modal-header">
         <div class="modal-title" id="confirm-modal-title">Confirm</div>
-        <button class="modal-close" onclick="closeConfirmModal()">✕</button>
+        <button class="modal-close" onclick="closeConfirmModal()" aria-label="Close modal">✕</button>
       </div>
       <div style="padding:1.5rem;display:flex;flex-direction:column;gap:1rem;">
         <p id="confirm-modal-message" style="font-size:0.88rem;color:var(--muted);line-height:1.5;"></p>
@@ -1174,7 +1175,7 @@
     <div class="modal" style="max-width:620px;">
       <div class="modal-header">
         <div class="modal-title" id="import-modal-title">📥 Import Project</div>
-        <button class="modal-close" onclick="closeImportModal()">✕</button>
+        <button class="modal-close" onclick="closeImportModal()" aria-label="Close modal">✕</button>
       </div>
       <div style="padding:1.5rem;">
 
@@ -1248,7 +1249,7 @@
     <div class="modal" style="max-width:680px;">
       <div class="modal-header">
         <div class="modal-title" id="diff-modal-title">🔍 Compare Versions</div>
-        <button class="modal-close" onclick="closeDiffModal()">✕</button>
+        <button class="modal-close" onclick="closeDiffModal()" aria-label="Close modal">✕</button>
       </div>
       <div class="diff-modal-body" id="diff-modal-body"></div>
     </div>
@@ -1259,8 +1260,8 @@
     <div class="modal" style="max-width:480px;">
       <div class="modal-header">
         <div class="modal-title">🐍 Export to Code</div>
-        <button class="modal-close"
-          onclick="document.getElementById('export-code-modal').classList.remove('open')">✕</button>
+        <button class="modal-close" onclick="document.getElementById('export-code-modal').classList.remove('open')"
+          aria-label="Close modal">✕</button>
       </div>
       <div style="padding:1.5rem;">
         <p style="color:var(--muted);font-size:0.9rem;margin-bottom:1.5rem;">Download your team as ready-to-run Python
@@ -1299,23 +1300,24 @@
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
-  <script src="js/i18n.js"></script>
-  <script src="js/core/sync-queue.js"></script>
-  <script src="js/core/api-client.js"></script>
-  <script src="js/core/generation-client.js"></script>
-  <script src="js/ui/confirm.js"></script>
-  <script src="js/ui/error-modal.js"></script>
-  <script src="js/ui/loader.js"></script>
-  <script src="js/db.js"></script>
-  <script src="js/auth.js"></script>
-  <script src="js/gallery.js"></script>
-  <script src="js/export.js"></script>
-  <script src="js/app.js"></script>
-  <script src="js/ui/results-render.js"></script>
-  <script src="js/features/share.js"></script>
-  <script src="js/features/share-loader.js"></script>
-  <script src="js/features/playground.js"></script>
-  <script src="js/core/pwa.js"></script>
+  <script type="module" src="js/utils/i18n.ts"></script>
+  <script type="module" src="js/utils/validation.ts"></script>
+  <script type="module" src="js/core/sync-queue.ts"></script>
+  <script type="module" src="js/core/api-client.ts"></script>
+  <script type="module" src="js/core/generation-client.ts"></script>
+  <script type="module" src="js/ui/confirm.ts"></script>
+  <script type="module" src="js/ui/error-modal.ts"></script>
+  <script type="module" src="js/ui/loader.ts"></script>
+  <script type="module" src="js/db.ts"></script>
+  <script type="module" src="js/auth.ts"></script>
+  <script type="module" src="js/gallery.ts"></script>
+  <script type="module" src="js/export.ts"></script>
+  <script type="module" src="js/app.ts"></script>
+  <script type="module" src="js/ui/results-render.ts"></script>
+  <script type="module" src="js/features/share.ts"></script>
+  <script type="module" src="js/features/share-loader.ts"></script>
+  <script type="module" src="js/features/playground.ts"></script>
+  <script type="module" src="js/core/pwa.ts"></script>
 
   <!-- ── STICKY CONTEXT BAR (mobile) ── -->
   <div id="sticky-context-bar">

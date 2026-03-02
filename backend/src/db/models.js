@@ -1,4 +1,4 @@
-import { runQuery, getQuery, allQuery } from './init.js';
+import { db } from './firestore.js';
 import crypto from 'crypto';
 
 // Helper for generating UUID v4
@@ -15,26 +15,29 @@ function uuidv4() {
 export async function createUser(email, name, provider = 'google') {
   const id = uuidv4();
   try {
-    await runQuery(
-      'INSERT INTO users (id, email, name, provider) VALUES (?, ?, ?, ?)',
-      [id, email, name, provider]
-    );
-    return { id, email, name };
-  } catch (error) {
-    if (error.message.includes('UNIQUE')) {
-      // User already exists
-      return getUserByEmail(email);
+    const existing = await getUserByEmail(email);
+    if (existing) {
+      return existing; // Return existing if email is already tracked
     }
+
+    const userData = { id, email, name, provider, createdAt: new Date().toISOString() };
+    await db.collection('users').doc(id).set(userData);
+    return userData;
+  } catch (error) {
     throw error;
   }
 }
 
 export async function getUserByEmail(email) {
-  return getQuery('SELECT * FROM users WHERE email = ?', [email]);
+  const snapshot = await db.collection('users').where('email', '==', email).limit(1).get();
+  if (snapshot.empty) return null;
+  return snapshot.docs[0].data();
 }
 
 export async function getUserById(id) {
-  return getQuery('SELECT * FROM users WHERE id = ?', [id]);
+  const doc = await db.collection('users').doc(id).get();
+  if (!doc.exists) return null;
+  return doc.data();
 }
 
 // ─── PROJECTS ──────────────────────────────────
@@ -45,25 +48,22 @@ export async function createProject(userId, projectData) {
   const createdAt = projectData.createdAt || now;
   const updatedAt = projectData.updatedAt || now;
 
+  const data = {
+    id,
+    userId,
+    name: projectData.name || 'Untitled Project',
+    topic: projectData.topic || '',
+    level: projectData.level || 'intermediate',
+    description: projectData.description || '',
+    agents: projectData.agents || [],
+    files: projectData.files || [],
+    createdAt,
+    updatedAt
+  };
+
   try {
-    await runQuery(
-      `INSERT INTO projects 
-       (id, userId, name, topic, level, description, agents, files, createdAt, updatedAt) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        id,
-        userId,
-        projectData.name || 'Untitled Project',
-        projectData.topic || '',
-        projectData.level || 'intermediate',
-        projectData.description || '',
-        JSON.stringify(projectData.agents || []),
-        JSON.stringify(projectData.files || []),
-        createdAt,
-        updatedAt,
-      ]
-    );
-    return { id, userId, ...projectData, createdAt, updatedAt };
+    await db.collection('projects').doc(id).set(data);
+    return data;
   } catch (error) {
     console.error('Error creating project:', error);
     throw error;
@@ -71,69 +71,41 @@ export async function createProject(userId, projectData) {
 }
 
 export async function getProject(projectId) {
-  const project = await getQuery('SELECT * FROM projects WHERE id = ?', [projectId]);
-  if (project) {
-    project.agents = JSON.parse(project.agents || '[]');
-    project.files = JSON.parse(project.files || '[]');
-  }
-  return project;
+  const doc = await db.collection('projects').doc(projectId).get();
+  if (!doc.exists) return null;
+  return doc.data();
 }
 
-export async function getUserProjects(userId, limit = 50) {
-  const projects = await allQuery(
-    'SELECT * FROM projects WHERE userId = ? ORDER BY updatedAt DESC LIMIT ?',
-    [userId, limit]
-  );
-  return projects.map(p => ({
-    ...p,
-    agents: JSON.parse(p.agents || '[]'),
-    files: JSON.parse(p.files || '[]'),
-  }));
+export async function getUserProjects(userId, limitNum = 50) {
+  const snapshot = await db.collection('projects')
+    .where('userId', '==', userId)
+    .orderBy('updatedAt', 'desc')
+    .limit(limitNum)
+    .get();
+
+  const projects = [];
+  snapshot.forEach(doc => projects.push(doc.data()));
+  return projects;
 }
 
 export async function updateProject(projectId, updateData) {
   const now = new Date().toISOString();
-  const fields = [];
-  const values = [];
+  const updates = { ...updateData, updatedAt: updateData.updatedAt || now };
 
-  // Build dynamic SET clause
-  if (updateData.name !== undefined) {
-    fields.push('name = ?');
-    values.push(updateData.name);
-  }
-  if (updateData.agents !== undefined) {
-    fields.push('agents = ?');
-    values.push(JSON.stringify(updateData.agents));
-  }
-  if (updateData.files !== undefined) {
-    fields.push('files = ?');
-    values.push(JSON.stringify(updateData.files));
-  }
-  if (updateData.topic !== undefined) {
-    fields.push('topic = ?');
-    values.push(updateData.topic);
-  }
-  if (updateData.level !== undefined) {
-    fields.push('level = ?');
-    values.push(updateData.level);
-  }
-  if (updateData.description !== undefined) {
-    fields.push('description = ?');
-    values.push(updateData.description);
-  }
+  // Clean undefined properties
+  Object.keys(updates).forEach(key => updates[key] === undefined && delete updates[key]);
 
-  fields.push('updatedAt = ?');
-  values.push(updateData.updatedAt || now);
-  values.push(projectId);
-
-  const sql = `UPDATE projects SET ${fields.join(', ')} WHERE id = ?`;
-  await runQuery(sql, values);
-
-  return getProject(projectId);
+  try {
+    await db.collection('projects').doc(projectId).update(updates);
+    return getProject(projectId);
+  } catch (error) {
+    console.error('Error updating project:', error);
+    throw error;
+  }
 }
 
 export async function deleteProject(projectId) {
-  await runQuery('DELETE FROM projects WHERE id = ?', [projectId]);
+  await db.collection('projects').doc(projectId).delete();
   return { success: true };
 }
 
@@ -142,33 +114,39 @@ export async function deleteProject(projectId) {
 export async function createRefreshToken(userId) {
   const token = crypto.randomBytes(40).toString('hex');
   const expiresAt = new Date();
-  expiresAt.setDate(expiresAt.getDate() + 30); // Ważne 30 dni
+  expiresAt.setDate(expiresAt.getDate() + 30); // 30 days valid
 
-  await runQuery(
-    'INSERT INTO refresh_tokens (userId, token, expiresAt) VALUES (?, ?, ?)',
-    [userId, token, expiresAt.toISOString()]
-  );
+  await db.collection('refresh_tokens').doc(token).set({
+    userId,
+    token,
+    expiresAt: expiresAt.toISOString()
+  });
 
   return token;
 }
 
 export async function getRefreshToken(token) {
-  return getQuery('SELECT * FROM refresh_tokens WHERE token = ?', [token]);
+  const doc = await db.collection('refresh_tokens').doc(token).get();
+  if (!doc.exists) return null;
+  return doc.data();
 }
 
 export async function deleteRefreshToken(token) {
-  await runQuery('DELETE FROM refresh_tokens WHERE token = ?', [token]);
+  await db.collection('refresh_tokens').doc(token).delete();
 }
 
 // ─── AUDIT LOG ─────────────────────────────────
 
 export async function logAudit(userId, action, resource, details, ipAddress) {
   try {
-    await runQuery(
-      `INSERT INTO audit_log (userId, action, resource, details, ipAddress) 
-       VALUES (?, ?, ?, ?, ?)`,
-      [userId || null, action, resource, JSON.stringify(details), ipAddress]
-    );
+    await db.collection('audit_logs').add({
+      userId: userId || null,
+      action,
+      resource,
+      details,
+      ipAddress,
+      timestamp: new Date().toISOString()
+    });
   } catch (error) {
     console.error('Error logging audit:', error);
   }
@@ -180,39 +158,37 @@ export async function createCommunityTemplate(userId, templateData) {
   const id = uuidv4();
   const now = new Date().toISOString();
 
+  const data = {
+    id,
+    userId,
+    name: templateData.name,
+    description: templateData.description || '',
+    category: templateData.category || 'general',
+    difficulty: templateData.difficulty || 'intermediate',
+    agents: templateData.agents || [],
+    approved: false, // Not approved yet
+    createdAt: now,
+    updatedAt: now
+  };
+
   try {
-    await runQuery(
-      `INSERT INTO community_templates 
-       (id, userId, name, description, category, difficulty, agents, approved, createdAt, updatedAt)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        id,
-        userId,
-        templateData.name,
-        templateData.description || '',
-        templateData.category || 'general',
-        templateData.difficulty || 'intermediate',
-        JSON.stringify(templateData.agents || []),
-        false, // Not approved yet
-        now,
-        now,
-      ]
-    );
-    return { id, userId, ...templateData, approved: false };
+    await db.collection('community_templates').doc(id).set(data);
+    return data;
   } catch (error) {
     console.error('Error creating community template:', error);
     throw error;
   }
 }
 
-export async function getApprovedTemplates(limit = 100) {
-  const templates = await allQuery(
-    'SELECT * FROM community_templates WHERE approved = 1 ORDER BY downloads DESC, createdAt DESC LIMIT ?',
-    [limit]
-  );
-  return templates.map(t => ({
-    ...t,
-    agents: JSON.parse(t.agents || '[]'),
-  }));
-}
+export async function getApprovedTemplates(limitNum = 100) {
+  const snapshot = await db.collection('community_templates')
+    .where('approved', '==', true)
+    .orderBy('downloads', 'desc')
+    .orderBy('createdAt', 'desc')
+    .limit(limitNum)
+    .get();
 
+  const templates = [];
+  snapshot.forEach(doc => templates.push(doc.data()));
+  return templates;
+}

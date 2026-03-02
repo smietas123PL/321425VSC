@@ -4,9 +4,11 @@
   "description": "Build your AI agent team in minutes, no code required",
   "main": "index.html",
   "scripts": {
-    "start": "python -m http.server 8000",
-    "serve": "npx serve .",
-    "dev": "npx serve . --listen 3000",
+    "start": "vite",
+    "serve": "npx serve dist",
+    "dev": "vite",
+    "build": "vite build && node scripts/inject-sw.mjs",
+    "preview": "vite preview",
     "format": "prettier --write \"**/*.{html,css,js,json,md}\"",
     "lint": "eslint . --ext .js",
     "smoke": "node scripts/release-smoke.mjs",
@@ -33,12 +35,16 @@
   "bugs": {
     "url": "https://github.com/yourusername/agentspark/issues"
   },
-  "homepage": "https://agentspark.app",
   "devDependencies": {
+    "eslint": "^8.55.0",
     "prettier": "^3.1.0",
-    "eslint": "^8.55.0"
+    "typescript": "^5.0.0",
+    "vite": "^5.0.0"
   },
   "engines": {
     "node": ">=14.0.0"
+  },
+  "dependencies": {
+    "@sentry/browser": "^10.41.0"
   }
 }

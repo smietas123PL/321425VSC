@@ -1,5 +1,11 @@
 import jwt from 'jsonwebtoken';
 
+// Validate JWT_SECRET is set (critical for security)
+if (!process.env.JWT_SECRET) {
+  console.warn('⚠️ WARNING: JWT_SECRET is not set in environment variables!');
+  console.warn('   This will cause authentication to fail. Set JWT_SECRET before deploying.');
+}
+
 export function authMiddleware(req, res, next) {
   try {
     // Extract JWT from Authorization header (Bearer token)

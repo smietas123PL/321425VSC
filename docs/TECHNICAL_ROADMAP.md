@@ -1,6 +1,6 @@
 # 🛠 AgentSpark — Roadmapa Techniczna
 
-## Status Update (2026-03-02)
+## Status Update (2026-03-02) - AUDYT & DEBUG COMPLETED
 
 ### Zrealizowane w tym repo
 - ✅ Backend API (`backend/`) działa jako Express + SQLite z route'ami `/api/v1/auth`, `/api/v1/projects`, `/api/v1/generate`.
@@ -15,10 +15,22 @@
 - ✅ Frontend auth przełączony na backend (`/api/v1/auth/register|me|logout`) z trwałym tokenem lokalnym.
 - ✅ Frontend cloud sync przełączony na backend (`/api/v1/projects`) z merge local↔cloud po `updatedAt`.
 - ✅ Etap 2 modularyzacji rozpoczęty: wydzielone `js/core/api-client.js`, `js/core/generation-client.js`, `js/ui/confirm.js`, `js/features/share.js` i `js/features/playground.js`, podpięte do `index.html`.
+- ✅ **[AUDYT FIX]** Dodana inicjalizacja `window.__AGENTSPARK_CONFIG__` w `index.html` (BACKEND_API_BASE, REVENUECAT_API_KEY).
+- ✅ **[AUDYT FIX]** Dodana walidacja JWT_SECRET w `backend/src/middleware/auth.js` (warning w console jeśli brakuje).
+- ✅ **[AUDYT FIX]** Dodany import `isomorphic-fetch` w `backend/src/routes/generate.js`.
+
+### 🔴 Znalezione problemy w audycie (FIXED)
+| Problem | Lokacja | Status | Opis |
+|---------|---------|--------|------|
+| `__AGENTSPARK_CONFIG__` nie inicjalizowany | `index.html` | ✅ FIXED | Dodano `<script>` blok przed i18n.js |
+| JWT_SECRET walidacja brakuje | `backend/src/middleware/auth.js` | ✅ FIXED | Dodano warning w console przy starcie |
+| `isomorphic-fetch` nie importowany | `backend/src/routes/generate.js` | ✅ FIXED | Dodano `import fetch from 'isomorphic-fetch'` |
+| RevenueCat placeholder w froncie | `js/auth.js:4` | ⏳ DEFER | Na P3 roadmapie (v1.4.0+) |
+| Google OAuth callback brakuje | `backend/src/routes/auth.js` | ⏳ DEFER | Na P1 roadmapie, uproszczony flow na razie |
 
 ### Nadal otwarte (P0/P1)
 - ✅ Frontend generacji jest przełączony na backend proxy `/api/v1/generate` (BYOK przekazywany per-request).
-- ⏳ Brak pełnej integracji OAuth Google po stronie backend (obecnie uproszczony flow).
+- ⏳ Pełna integracja OAuth Google po stronie backend (z `/api/v1/auth/callback` i refresh tokens).
 - ⏳ Brak kolejkowania zmian offline do sync (na teraz: manualny sync po zalogowaniu).
 - ⏳ Dalsza redukcja monolitu `js/app.js` (kolejne wydzielenia: `results-render.js`, `pwa.js`, `share-loader.js`).
 

@@ -38,6 +38,18 @@
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+<!-- ── AGENTSPARK CONFIG ── -->
+<script>
+window.__AGENTSPARK_CONFIG__ = {
+  BACKEND_API_BASE: window.location.hostname === 'localhost' 
+    ? 'http://localhost:5000/api/v1'
+    : '/api/v1',
+  REVENUECAT_API_KEY: null,
+  // Add more config keys as needed
+};
+console.log('[AgentSpark] Config initialized:', window.__AGENTSPARK_CONFIG__);
+</script>
+
 <div class="offline-bar" id="offline-bar">Działa offline ✓ Załadowano z pamięci podręcznej</div>
 
 <!-- ── NAV DRAWER ── -->

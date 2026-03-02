@@ -1,12 +1,22 @@
-// AgentSpark Service Worker v1.1.0
-const CACHE_NAME = 'agentspark-v1.1.0';
+// AgentSpark Service Worker v1.1.2
+const CACHE_NAME = 'agentspark-v1.1.2';
 const ASSETS = [
   './',
   './index.html',
+  './css/style.css',
+  './js/i18n.js',
+  './js/db.js',
+  './js/auth.js',
+  './js/gallery.js',
+  './js/app.js',
   './manifest.json',
   './featured_templates.json',
   './icons/icon-192.png',
-  './icons/icon-512.png'
+  './icons/icon-512.png',
+  'https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap',
+  'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@400,0..1&display=swap',
+  'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',
+  'https://js.revenuecat.com/rc-web-sdk/v1.0.0/rc-web-sdk.min.js'
 ];
 
 self.addEventListener('install', event => {

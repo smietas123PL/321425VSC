@@ -440,11 +440,16 @@ async function publishToGist(): Promise<void> {
 
     label.textContent = tr('✓ Published', '✓ Opublikowano');
     showNotif(tr('✓ Gist published!', '✓ Gist opublikowany!'));
-  } catch (e: any) {
-    // TS2339 fix: catch typed as any → .message is safe
+  } catch (err: any) {
+    console.error('publishGist error:', err);
+    showNotif(tr(`⚠ Failed: ${err.message}`, `⚠ Błąd: ${err.message}`), true);
+  } finally {
     label.textContent = tr('⬆ Publish Gist', '⬆ Publikuj Gist');
     btn.disabled = false;
-    showNotif(tr(`⚠ Gist error: ${e?.message}`, `⚠ Blad Gist: ${e?.message}`), true);
+
+    // SECURITY: Clear token from DOM and memory explicitly
+    const tokenInput = document.getElementById('gist-token-input') as HTMLInputElement | null;
+    if (tokenInput) tokenInput.value = '';
   }
 }
 

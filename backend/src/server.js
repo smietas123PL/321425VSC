@@ -45,6 +45,13 @@ if (!process.env.JWT_SECRET) {
   process.exit(1);
 }
 
+if (process.env.NODE_ENV === 'production') {
+  if (!process.env.REQUEST_HMAC_SECRET || process.env.REQUEST_HMAC_SECRET === 'change_me_hmac_secret') {
+    console.error('❌ FATAL: REQUEST_HMAC_SECRET must be explicitly set in production and cannot be the default.');
+    process.exit(1);
+  }
+}
+
 if (process.env.NODE_ENV === 'production' && !process.env.CORS_ORIGIN) {
   console.error('❌ FATAL: CORS_ORIGIN must be set in production.');
   process.exit(1);

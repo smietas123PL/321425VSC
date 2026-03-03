@@ -1033,9 +1033,9 @@
             PUBLISH TO GALLERY</div>
           <p style="font-size:0.8rem;color:var(--muted);margin-bottom:0.75rem;">Save your team as a public GitHub Gist
             so others can fork it from the gallery.</p>
-          <input type="text" class="input-field" id="gist-token-input"
-            placeholder="GitHub Personal Access Token (gist scope)"
-            style="font-size:0.8rem;padding:0.5rem 0.8rem;margin-bottom:0.5rem;" autocomplete="off" />
+          <input type="password" class="input-field" id="gist-token-input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
+            autocomplete="off" spellcheck="false"
+            style="font-family:'Space Mono',monospace;font-size:0.85rem;padding:0.8rem;margin-bottom:0.5rem;" />
           <div style="display:flex;gap:0.5rem;align-items:center;">
             <button class="btn-primary" onclick="publishToGist()" id="gist-publish-btn" style="font-size:0.82rem;">
               <span id="gist-publish-label">⬆ Publish Gist</span>

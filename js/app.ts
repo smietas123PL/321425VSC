@@ -85,11 +85,36 @@ function syncApiKey(val: string) {
     localStorage.removeItem('agentspark-api-key');
     const demoCta = (document.getElementById('demo-cta') as HTMLElement);
     if (demoCta) demoCta.style.display = 'none';
+    _resetApiKeyInactivityTimer();
   } else {
     sessionStorage.removeItem('agentspark-api-key');
+    _clearApiKeyInactivityTimer();
   }
   checkApiKey();
 }
+
+let _apiKeyInactivityTimeout: ReturnType<typeof setTimeout> | null = null;
+function _clearApiKeyInactivityTimer() {
+  if (_apiKeyInactivityTimeout) {
+    clearTimeout(_apiKeyInactivityTimeout);
+    _apiKeyInactivityTimeout = null;
+  }
+}
+function _resetApiKeyInactivityTimer() {
+  _clearApiKeyInactivityTimer();
+  // Clear API key after 15 minutes of inactivity
+  _apiKeyInactivityTimeout = setTimeout(() => {
+    apiKey = '';
+    sessionStorage.removeItem('agentspark-api-key');
+    showNotif(tr('⏳ Session expired. API Key cleared for security.', '⏳ Sesja wygasła. Klucz API został wyczyszczony.'));
+    checkApiKey();
+  }, 15 * 60 * 1000);
+}
+
+// Reset timer on user activity
+document.addEventListener('mousemove', () => { if (apiKey.length > 10) _resetApiKeyInactivityTimer(); }, { passive: true });
+document.addEventListener('keydown', () => { if (apiKey.length > 10) _resetApiKeyInactivityTimer(); }, { passive: true });
+
 function checkApiKey() {
   const val = apiKey || (document.getElementById('apiKeySetupInput') as HTMLInputElement)?.value?.trim() || '';
   apiKey = val;

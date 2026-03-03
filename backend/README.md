@@ -30,8 +30,9 @@ PORT=5000
 NODE_ENV=development
 CORS_ORIGIN=http://localhost:3000,https://agentspark.app
 
-# Database
-DATABASE_PATH=./data/agentspark.db
+# Database (Firestore)
+FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 # Optional for local dev
+GOOGLE_APPLICATION_CREDENTIALS=./serviceAccount.json # Production
 
 # JWT
 JWT_SECRET=your_super_secret_key_change_in_production
@@ -243,19 +244,17 @@ Response:
 
 ## 📊 Database Schema
 
-SQLite database with tables:
+Firestore NoSQL database with collections:
 - `users` — Authentication & profiles
-- `projects` — User projects (JSON storage)
+- `projects` — User projects (JSON document storage)
 - `project_shares` — Collaboration (v1.4.0)
 - `audit_log` — Security events
 - `community_templates` — User submissions (v1.4.0)
 
 ## 📈 Monitoring & Logging
 
-View audit logs:
-```sql
-SELECT * FROM audit_log ORDER BY createdAt DESC LIMIT 100;
-```
+View audit logs in the Firebase Console:
+- Navigate to Firestore Database -> `audit_log` collection.
 
 Check error logs:
 ```bash

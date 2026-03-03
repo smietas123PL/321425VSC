@@ -28,7 +28,7 @@ AgentSpark interviews you about your project, then generates a complete team of 
 
 ### Option 2: Run locally
 ```bash
-git clone https://github.com/yourusername/agentspark.git
+git clone https://github.com/smietas123PL/321425VSC.git
 cd agentspark
 python -m http.server 8000
 # Open http://localhost:8000
@@ -101,10 +101,10 @@ agentspark/
 Push to `main` branch — GitHub Actions deploys automatically via `.github/workflows/deploy.yml`.
 
 ### Netlify (recommended)
-[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/yourusername/agentspark)
+[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/smietas123PL/321425VSC)
 
 ### Vercel
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/yourusername/agentspark)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/smietas123PL/321425VSC)
 
 ## 🤝 Contributing
 

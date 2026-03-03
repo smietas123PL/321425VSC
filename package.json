@@ -4,15 +4,14 @@
   "description": "Build your AI agent team in minutes, no code required",
   "main": "index.html",
   "scripts": {
-    "start": "vite",
-    "serve": "npx serve dist",
     "dev": "vite",
-    "build": "vite build && node scripts/inject-sw.mjs",
+    "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "format": "prettier --write \"**/*.{html,css,js,json,md}\"",
-    "lint": "eslint . --ext .js",
+    "lint": "eslint . --ext .js,.ts",
     "smoke": "node scripts/release-smoke.mjs",
-    "test": "npm run smoke"
+    "backend-syntax": "node --syntax-check backend/src/**/*.js",
+    "test": "vitest run",
+    "test:e2e": "playwright test"
   },
   "repository": {
     "type": "git",
@@ -33,16 +32,19 @@
   "author": "AgentSpark Team",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/yourusername/agentspark/issues"
+    "url": "https://github.com/smietas123PL/321425VSC/issues"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "eslint": "^8.55.0",
+    "glob": "^13.0.6",
     "prettier": "^3.1.0",
     "typescript": "^5.0.0",
-    "vite": "^5.0.0"
+    "vite": "^5.0.0",
+    "vitest": "^4.0.18"
   },
   "engines": {
-    "node": ">=14.0.0"
+    "node": ">=20.0.0"
   },
   "dependencies": {
     "@sentry/browser": "^10.41.0"

@@ -9,8 +9,7 @@ export function validateProjectPayload(payload) {
   }
   if (!Array.isArray(payload.agents) || payload.agents.length === 0) {
     errors.push('agents must be a non-empty array');
-  }
-  if (payload.agents.length > 100) {
+  } else if (payload.agents.length > 100) {
     errors.push('Maximum 100 agents allowed per project');
   }
 

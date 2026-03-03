@@ -3519,4 +3519,7 @@ function showSwToast(msg: string, isError = true) {
 (window as any).openFrameworkExport = openFrameworkExport;
 (window as any)._themeHoldStart = _themeHoldStart;
 (window as any).updateDrawerActive = updateDrawerActive;
+(window as any).closeFwModal = closeFwModal;
+(window as any).closeImportModal = closeImportModal;
+(window as any).renderHomeProjectsList = renderHomeProjectsList;
 

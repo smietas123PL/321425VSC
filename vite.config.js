@@ -1,15 +1,16 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
+    base: './',
     server: {
         port: 3000,
         open: true,
     },
     build: {
         outDir: 'dist',
+        emptyOutDir: true,
         sourcemap: true,
         manifest: true,
-        // When we migrate fully to TS, we can adjust this
-        target: 'es2020',
+        target: 'esnext',
     },
 });

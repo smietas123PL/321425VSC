@@ -3455,3 +3455,68 @@ function showSwToast(msg: string, isError = true) {
   };
 })();
 
+
+// ─── WINDOW EXPORTS ─────────────────────────────────────────
+(window as any).toggleApiSetup = toggleApiSetup;
+(window as any).onModelChange = onModelChange;
+(window as any).syncApiKey = syncApiKey;
+(window as any).checkApiKey = checkApiKey;
+(window as any).restart = restart;
+(window as any).showNotif = showNotif;
+(window as any).toggleTracePanel = toggleTracePanel;
+(window as any).renderTraceLive = renderTraceLive;
+(window as any).renderVersionPanel = renderVersionPanel;
+(window as any).toggleVersionPanel = toggleVersionPanel;
+(window as any).restoreVersion = restoreVersion;
+(window as any).downloadVersionZip = downloadVersionZip;
+(window as any).showDiffModal = showDiffModal;
+(window as any).closeDiffModal = closeDiffModal;
+(window as any).openSettingsSheet = openSettingsSheet;
+(window as any).toggleChatSidebar = toggleChatSidebar;
+(window as any).regenerateTeam = regenerateTeam;
+(window as any).toggleTheme = toggleTheme;
+(window as any).toggleDrawer = toggleDrawer;
+(window as any).closeDrawer = closeDrawer;
+(window as any).scrollToTop = scrollToTop;
+(window as any).openImportModal = openImportModal;
+(window as any).closeRefine = closeRefine;
+(window as any).submitRefine = submitRefine;
+(window as any).applyRefinement = applyRefinement;
+(window as any).backToRefineStep1 = backToRefineStep1;
+(window as any).revertLastRefine = revertLastRefine;
+(window as any).addMessage = addMessage;
+(window as any).sanitizeRichText = sanitizeRichText;
+(window as any).renderProgressSteps = renderProgressSteps;
+(window as any).renderResults = renderResults;
+(window as any).openRefine = openRefine;
+(window as any).startWithTopic = startWithTopic;
+(window as any).renderLevelGrid = renderLevelGrid;
+(window as any).renderTopicScreen = renderTopicScreen;
+(window as any).selectOption = selectOption;
+(window as any).submitAnswer = submitAnswer;
+(window as any).generateAgents = generateAgents;
+(window as any).generateReadme = generateReadme;
+(window as any).openPlayground = (window as any).openPlayground;
+(window as any).openShareModal = (window as any).openShareModal;
+
+// --- Remaining Exports ---
+(window as any).obNext = obNext;
+(window as any).obBack = obBack;
+(window as any).obCheckKey = obCheckKey;
+(window as any).obFinish = obFinish;
+(window as any).obSkip = obSkip;
+(window as any).openPromptExport = openPromptExport;
+(window as any).closePromptExport = closePromptExport;
+(window as any).switchPromptTab = switchPromptTab;
+(window as any).copyPromptToClipboard = copyPromptToClipboard;
+(window as any).downloadPromptTxt = downloadPromptTxt;
+(window as any).handleImportDrop = handleImportDrop;
+(window as any).handleImportFileSelect = handleImportFileSelect;
+(window as any).confirmImport = confirmImport;
+(window as any).resetImportModal = resetImportModal;
+(window as any).loadDemo = loadDemo;
+(window as any).switchHomePanel = switchHomePanel;
+(window as any).openFrameworkExport = openFrameworkExport;
+(window as any)._themeHoldStart = _themeHoldStart;
+(window as any).updateDrawerActive = updateDrawerActive;
+

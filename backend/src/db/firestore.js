@@ -21,14 +21,27 @@ if (!admin.apps.length) {
     } else {
         // Fallback to applicationDefault (which uses GOOGLE_APPLICATION_CREDENTIALS)
         console.log('[Firestore] FIREBASE_SERVICE_ACCOUNT not set. Using applicationDefault().');
-        credential = admin.credential.applicationDefault();
+        if (process.env.NODE_ENV !== 'production' && !process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+            console.log('[Firestore] Dev/test mode detected without credentials. Using mock credential.');
+            // Initialize with empty credential for local tests if needed, or point to emulator
+            admin.initializeApp({ projectId: 'demo-local-project' });
+        } else {
+            try {
+                credential = admin.credential.applicationDefault();
+                admin.initializeApp({ credential });
+            } catch (err) {
+                console.error('[Firestore] Init error:', err.message);
+            }
+        }
     }
 
-    try {
-        admin.initializeApp({ credential });
-        console.log('[Firestore] Firebase Admin initialized.');
-    } catch (err) {
-        console.error('[Firestore] Init error:', err.message);
+    if (!admin.apps.length && credential) {
+        try {
+            admin.initializeApp({ credential });
+            console.log('[Firestore] Firebase Admin initialized.');
+        } catch (err) {
+            console.error('[Firestore] Init error:', err.message);
+        }
     }
 }
 

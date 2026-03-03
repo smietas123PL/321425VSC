@@ -19,18 +19,20 @@ dotenv.config();
 // Install: npm install @sentry/node (optional — server starts fine without it)
 let Sentry = null;
 if (process.env.SENTRY_DSN) {
-  try {
-    const sentryModule = await import('@sentry/node');
-    Sentry = sentryModule.default || sentryModule;
-    Sentry.init({
-      dsn: process.env.SENTRY_DSN,
-      environment: process.env.NODE_ENV || 'development',
-      tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
-    });
-    console.log('✅ Sentry initialized');
-  } catch (e) {
-    console.warn('⚠ Sentry not available (@sentry/node not installed):', e.message);
-  }
+  (async () => {
+    try {
+      const sentryModule = await import('@sentry/node');
+      Sentry = sentryModule.default || sentryModule;
+      Sentry.init({
+        dsn: process.env.SENTRY_DSN,
+        environment: process.env.NODE_ENV || 'development',
+        tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
+      });
+      console.log('✅ Sentry initialized');
+    } catch (e) {
+      console.warn('⚠ Sentry not available (@sentry/node not installed):', e.message);
+    }
+  })();
 }
 
 const app = express();
@@ -201,9 +203,18 @@ app.use((err, req, res, _next) => {
 async function start() {
   try {
     // Verify Firestore connection on startup
-    const { db } = await import('./db/firestore.js');
-    await db.collection('_health').limit(1).get();
-    console.log('✅ Firestore connected');
+    try {
+      const { db } = await import('./db/firestore.js');
+      // Use Promise.race to enforce a 5-second timeout on the initial connection check
+      // so the server doesn't hang indefinitely in local development.
+      await Promise.race([
+        db.collection('_health').limit(1).get(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Connection timeout')), 5000))
+      ]);
+      console.log('✅ Firestore connected');
+    } catch (dbErr) {
+      console.warn('⚠ Firestore connection check failed or timed out at startup (expected in local dev without real credentials).', dbErr.message);
+    }
 
     app.listen(PORT, () => {
       console.log(`

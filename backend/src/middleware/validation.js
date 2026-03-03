@@ -26,7 +26,8 @@ export function sanitizeString(str) {
   if (typeof str !== 'string') return '';
   // Basic server-side sanitization for plain-text fields.
   const noTags = str.replace(/<[^>]*>/g, ' ');
-  const noControlChars = noTags.replace(/[\u0000-\u001F\u007F]/g, ' ');
+  // eslint-disable-next-line no-control-regex
+  const noControlChars = noTags.replace(/[\x00-\x1F\x7F]/g, ' ');
   const collapsed = noControlChars.replace(/\s+/g, ' ').trim();
   return collapsed.substring(0, 500);
 }

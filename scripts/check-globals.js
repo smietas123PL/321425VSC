@@ -30,11 +30,11 @@ const fns = Array.from(words).sort();
 
 const globRegex = /window\.([a-zA-Z0-9_]+)\s*=|^\s*\(\s*window\s+as\s+any\s*\)\.([a-zA-Z0-9_]+)\s*=/gm;
 const jsMods = [];
-try { jsMods.push(...fs.readdirSync('js').filter(f => f.endsWith('.ts')).map(f => 'js/' + f)); } catch (e) { }
+try { jsMods.push(...fs.readdirSync('js').filter(f => f.endsWith('.ts')).map(f => 'js/' + f)); } catch (e) {/* eslint-disable-line no-empty */ }
 ['core', 'features', 'ui', 'utils'].forEach(dir => {
     try {
         jsMods.push(...fs.readdirSync('js/' + dir).filter(f => f.endsWith('.ts')).map(f => 'js/' + dir + '/' + f));
-    } catch (e) { }
+    } catch (e) {/* eslint-disable-line no-empty */ }
 });
 
 const exported = new Set();

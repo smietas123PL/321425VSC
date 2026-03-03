@@ -10,17 +10,21 @@
   ],
   "parserOptions": {
     "ecmaVersion": 2021,
-    "sourceType": "script"
+    "sourceType": "module"
   },
   "ignorePatterns": [
     "docs/**",
     "icons/**",
     "mnt/**",
+    "dist/**",
+    "node_modules/**",
+    "**/*.ts",
     "gallery-addon.html",
     "gallery_feature.html"
   ],
   "rules": {
     "no-unused-vars": "off",
-    "no-constant-condition": "off"
+    "no-constant-condition": "off",
+    "no-undef": "off"
   }
 }

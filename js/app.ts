@@ -1,18 +1,44 @@
 ﻿import * as Sentry from '@sentry/browser';
 
-Sentry.init({
-  dsn: "https://examplePublicKey@o0.ingest.sentry.io/0", // Placeholder DSN, configure as needed
-  integrations: [
-    Sentry.browserTracingIntegration(),
-    Sentry.replayIntegration(),
-  ],
-  tracesSampleRate: 1.0,
-  replaysSessionSampleRate: 0.1,
-  replaysOnErrorSampleRate: 1.0,
-});
+// ─── SENTRY — conditional init ────────────────────────────
+// Only initialize if a real DSN is provided via window.__AGENTSPARK_CONFIG__
+// Never init with the placeholder 'examplePublicKey' DSN.
+(function initSentry() {
+  const config = (window as any).__AGENTSPARK_CONFIG__ || {};
+  const dsn: string | undefined = config.SENTRY_DSN;
 
+  const isPlaceholder = !dsn ||
+    dsn.includes('examplePublicKey') ||
+    dsn.includes('o0.ingest.sentry.io/0') ||
+    dsn.trim() === '';
 
+  if (isPlaceholder) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.debug('[Sentry] No valid DSN configured — error tracking disabled.');
+    }
+    return;
+  }
 
+  Sentry.init({
+    dsn,
+    integrations: [
+      Sentry.browserTracingIntegration(),
+      Sentry.replayIntegration(),
+    ],
+    tracesSampleRate: 0.2,          // reduce from 1.0 to avoid high quota usage
+    replaysSessionSampleRate: 0.05, // 5% of sessions
+    replaysOnErrorSampleRate: 1.0,
+    environment: (window as any).__AGENTSPARK_CONFIG__?.ENV || 'production',
+    beforeSend(event) {
+      // Strip API keys from breadcrumbs / request data before sending
+      if (event.request?.headers) {
+        delete event.request.headers['Authorization'];
+        delete event.request.headers['x-api-key'];
+      }
+      return event;
+    },
+  });
+})();
 
 
 // ─── MODEL SELECTION ──────────────────────────────────────

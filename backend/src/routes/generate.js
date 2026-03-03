@@ -1,11 +1,42 @@
+// ─── ROUTES/GENERATE.JS ──────────────────────────────────────────────────
+// Fixed C-03: Added `requireAuth` — unauthenticated callers now get 401.
+// Fixed H-03: All provider fetch() calls wrapped with AbortController + 60s timeout.
+// Fixed H-06: Server-side length caps on userMessage / multiTurnMessages.
+// Fixed M-04: Explicit logging + error response when provider returns non-JSON.
+
 import express from 'express';
 import fetch from 'isomorphic-fetch';
 import { generateLimiter } from '../middleware/rateLimiter.js';
 import { sanitizeString } from '../middleware/validation.js';
 import { verifyHmac } from '../middleware/hmac.js';
+import { requireAuth } from '../middleware/auth.js';
 import { logAudit } from '../db/models.js';
 
 const router = express.Router();
+
+// H-06: Input length limits
+const MAX_USER_MESSAGE_CHARS = 32_000;
+const MAX_MULTI_TURN_ITEMS = 50;
+const MAX_MULTI_TURN_TOTAL_CHARS = 100_000;
+
+// H-03: Fetch with abort controller and timeout
+async function fetchWithTimeout(url, options, timeoutMs = 60_000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(url, { ...options, signal: controller.signal });
+    return response;
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      const e = new Error(`Provider request timed out after ${timeoutMs / 1000}s`);
+      e.status = 504;
+      throw e;
+    }
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 function normalizeMode(mode) {
   const m = String(mode || 'hybrid').toLowerCase();
@@ -45,7 +76,7 @@ function resolveApiKey({ providerTag, clientApiKey }) {
     return { apiKey: userKey, keySource: 'byok' };
   }
 
-  // hybrid: prefer server key, fallback to BYOK.
+  // hybrid: prefer server key, fallback to BYOK
   if (serverKey) return { apiKey: serverKey, keySource: 'env' };
   if (userKey) return { apiKey: userKey, keySource: 'byok' };
   throw new Error(`No API key available for provider: ${providerTag}`);
@@ -65,6 +96,17 @@ function toOpenAiMessages(systemInstruction, userMessage, multiTurnMessages) {
   return out;
 }
 
+// M-04: Safe JSON parse that returns explicit error details
+async function safeParseJson(response) {
+  const text = await response.text();
+  try {
+    return { ok: true, data: JSON.parse(text) };
+  } catch {
+    console.error('[generate] Provider returned non-JSON body. Status:', response.status, 'Preview:', text.slice(0, 200));
+    return { ok: false, data: {}, parseError: true, rawPreview: text.slice(0, 200) };
+  }
+}
+
 async function proxyGenerate({ providerTag, modelId, apiKey, systemInstruction, userMessage, multiTurnMessages }) {
   if (providerTag === 'gemini') {
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(modelId)}:generateContent?key=${encodeURIComponent(apiKey)}`;
@@ -81,12 +123,14 @@ async function proxyGenerate({ providerTag, modelId, apiKey, systemInstruction, 
       body.systemInstruction = { parts: [{ text: String(systemInstruction) }] };
     }
 
-    const response = await fetch(endpoint, {
+    const response = await fetchWithTimeout(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
-    const data = await response.json().catch(() => ({}));
+
+    const { ok: parsed, data, parseError } = await safeParseJson(response);
+    if (parseError) return { ok: false, status: 502, error: 'Gemini returned malformed response' };
     if (!response.ok) {
       const msg = data.error?.message || `Gemini error ${response.status}`;
       return { ok: false, status: response.status, error: msg };
@@ -99,7 +143,7 @@ async function proxyGenerate({ providerTag, modelId, apiKey, systemInstruction, 
   }
 
   if (providerTag === 'anthropic') {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetchWithTimeout('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -118,7 +162,9 @@ async function proxyGenerate({ providerTag, modelId, apiKey, systemInstruction, 
         max_tokens: 4096,
       }),
     });
-    const data = await response.json().catch(() => ({}));
+
+    const { ok: parsed, data, parseError } = await safeParseJson(response);
+    if (parseError) return { ok: false, status: 502, error: 'Anthropic returned malformed response' };
     if (!response.ok) {
       const msg = data.error?.message || `Anthropic error ${response.status}`;
       return { ok: false, status: response.status, error: msg };
@@ -131,11 +177,12 @@ async function proxyGenerate({ providerTag, modelId, apiKey, systemInstruction, 
     };
   }
 
+  // OpenAI-compatible: openai / mistral / groq
   let endpoint = 'https://api.openai.com/v1/chat/completions';
   if (providerTag === 'mistral') endpoint = 'https://api.mistral.ai/v1/chat/completions';
   if (providerTag === 'groq') endpoint = 'https://api.groq.com/openai/v1/chat/completions';
 
-  const response = await fetch(endpoint, {
+  const response = await fetchWithTimeout(endpoint, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -148,7 +195,9 @@ async function proxyGenerate({ providerTag, modelId, apiKey, systemInstruction, 
       max_tokens: 4096,
     }),
   });
-  const data = await response.json().catch(() => ({}));
+
+  const { ok: parsed, data, parseError } = await safeParseJson(response);
+  if (parseError) return { ok: false, status: 502, error: 'Provider returned malformed response' };
   if (!response.ok) {
     const msg = data.error?.message || `Provider error ${response.status}`;
     return { ok: false, status: response.status, error: msg };
@@ -175,7 +224,7 @@ async function handleGenerate(req, res) {
       clientApiKey,
     } = req.body;
 
-    // Validate input
+    // Validate required fields
     if (!modelId || (!userMessage && (!Array.isArray(multiTurnMessages) || !multiTurnMessages.length))) {
       return res.status(400).json({
         error: 'Missing required fields: modelId and prompt payload',
@@ -183,9 +232,21 @@ async function handleGenerate(req, res) {
     }
 
     if (agentCount && agentCount > 100) {
-      return res.status(400).json({
-        error: 'Maximum 100 agents allowed',
-      });
+      return res.status(400).json({ error: 'Maximum 100 agents allowed' });
+    }
+
+    // H-06: Enforce server-side length caps
+    if (userMessage && String(userMessage).length > MAX_USER_MESSAGE_CHARS) {
+      return res.status(400).json({ error: `userMessage exceeds maximum length of ${MAX_USER_MESSAGE_CHARS} characters` });
+    }
+    if (Array.isArray(multiTurnMessages)) {
+      if (multiTurnMessages.length > MAX_MULTI_TURN_ITEMS) {
+        return res.status(400).json({ error: `multiTurnMessages exceeds maximum of ${MAX_MULTI_TURN_ITEMS} items` });
+      }
+      const totalChars = multiTurnMessages.reduce((sum, m) => sum + String(m.content || '').length, 0);
+      if (totalChars > MAX_MULTI_TURN_TOTAL_CHARS) {
+        return res.status(400).json({ error: `multiTurnMessages total content exceeds ${MAX_MULTI_TURN_TOTAL_CHARS} characters` });
+      }
     }
 
     const providerTag = normalizeProviderTag({ modelTag, modelProvider });
@@ -209,7 +270,7 @@ async function handleGenerate(req, res) {
       providerTag,
       modelId,
       apiKey,
-      systemInstruction: String(systemInstruction || '').slice(0, 32000),
+      systemInstruction: String(systemInstruction || '').slice(0, 32_000),
       userMessage: String(userMessage || ''),
       multiTurnMessages: Array.isArray(multiTurnMessages) ? multiTurnMessages : null,
     });
@@ -228,9 +289,7 @@ async function handleGenerate(req, res) {
     res.json({
       success: true,
       text: proxied.text,
-      usage: {
-        totalTokens: proxied.tokens || null,
-      },
+      usage: { totalTokens: proxied.tokens || null },
       provider: providerTag,
       model: modelId,
       keySource,
@@ -241,17 +300,17 @@ async function handleGenerate(req, res) {
       error: error.message,
     }, req.ip);
 
-    res.status(500).json({
+    res.status(error.status || 500).json({
       error: 'Failed to generate agents',
     });
   }
 }
 
 // POST /api/v1/generate
-// Generate agents via LLM API (proxied from backend)
-router.post('/', generateLimiter, verifyHmac, handleGenerate);
+// C-03: requireAuth added — unauthenticated callers get 401 before handleGenerate
+router.post('/', generateLimiter, verifyHmac, requireAuth, handleGenerate);
 
 // Backward compatibility for old route shape: /api/v1/generate/generate
-router.post('/generate', generateLimiter, verifyHmac, handleGenerate);
+router.post('/generate', generateLimiter, verifyHmac, requireAuth, handleGenerate);
 
 export default router;

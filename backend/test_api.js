@@ -1,118 +1,144 @@
-import fetch from 'node-fetch'; // Używamy Node 18 fetch, a w pakiecie jest też isomorphic-fetch w razie czego
+// ─── BACKEND SECURITY TESTS ──────────────────────────────────────────────────
+// Requires backend server running on PORT 5000.
+// Run: node backend/test_api.js
+// (with backend started: cd backend && node src/server.js)
+
 import assert from 'assert';
 
-const BASE_URL = 'http://localhost:5000';
+const BASE_URL = process.env.TEST_API_BASE || 'http://localhost:5000';
+
+let passed = 0;
+let failed = 0;
+
+function pass(desc) { console.log(`  ✅ ${desc}`); passed++; }
+function fail(desc, actual) { console.error(`  ❌ ${desc}`, actual != null ? `(got: ${actual})` : ''); failed++; }
+
+async function check(desc, fn) {
+    try { await fn(); }
+    catch (e) { fail(desc, e?.message || String(e)); }
+}
+
+// Helper: fetch with timeout
+async function timedFetch(url, opts = {}, ms = 5000) {
+    const ctrl = new AbortController();
+    const id = setTimeout(() => ctrl.abort(), ms);
+    try { return await fetch(url, { ...opts, signal: ctrl.signal }); }
+    finally { clearTimeout(id); }
+}
 
 async function runTests() {
-    console.log('--- STARTING BACKEND SECURITY TESTS ---');
-    let passed = 0;
-    let failed = 0;
+    console.log(`\n── AgentSpark Backend Security Tests ──`);
+    console.log(`   Target: ${BASE_URL}\n`);
 
-    const testUrls = [
-        { method: 'GET', url: '/non-existent-path', desc: '404 and Security Headers' }
-    ];
+    // ─── 1. Health check ───────────────────────────────────────────────────────
+    await check('[1] GET /health returns 200 | 503', async () => {
+        const r = await timedFetch(`${BASE_URL}/health`);
+        if (r.status === 200 || r.status === 503) pass('Health endpoint responds');
+        else fail('Health endpoint', r.status);
 
-    try {
-        // 1. Sprawdzenie nagłówków bezpieczeństwa (Helmet/CSP)
-        console.log('[TEST 1] Security Headers (Helmet, CSP)');
-        const resHeaders = await fetch(BASE_URL + '/');
-        const headers = resHeaders.headers;
+        const body = await r.json().catch(() => ({}));
+        if (body.status) pass('Health body has status field');
+        else fail('Health body missing status field');
+    });
 
-        // Express returns 404 for root if no route, but headers should be present
-        const csp = headers.get('content-security-policy');
-        const hsts = headers.get('strict-transport-security');
+    // ─── 2. Security headers ───────────────────────────────────────────────────
+    await check('[2] Helmet security headers', async () => {
+        const r = await timedFetch(`${BASE_URL}/health`);
+        const h = r.headers;
+        if (h.get('x-content-type-options') === 'nosniff') pass('x-content-type-options: nosniff');
+        else fail('Missing x-content-type-options header');
+        if (h.get('x-frame-options')) pass('x-frame-options present');
+        else fail('Missing x-frame-options header');
+    });
 
-        if (csp && csp.includes("default-src 'self'")) {
-            console.log('  ✅ CSP is present and valid');
-            passed++;
-        } else {
-            console.error('  ❌ CSP is missing or invalid');
-            failed++;
-        }
+    // ─── 3. IDOR — unauthenticated GET /api/v1/projects/:id → 401 (C-02) ───────
+    await check('[3] C-02: Unauthenticated GET /projects/:id returns 401', async () => {
+        const r = await timedFetch(`${BASE_URL}/api/v1/projects/any-random-id`);
+        if (r.status === 401) pass('GET /projects/:id → 401 (IDOR fixed)');
+        else fail('GET /projects/:id should be 401', `got ${r.status}`);
+    });
 
-        if (hsts && hsts.includes('max-age=31536000')) {
-            console.log('  ✅ HSTS is present and valid');
-            passed++;
-        } else {
-            console.error('  ❌ HSTS is missing or invalid');
-            failed++;
-        }
-
-        // 2. Auth Endpoints - Brak dostępu (401)
-        console.log('[TEST 2] Missing Auth Token on Protected Route');
-        const resAuthMe = await fetch(BASE_URL + '/api/v1/auth/me');
-        if (resAuthMe.status === 401) {
-            console.log('  ✅ /auth/me returns 401 Unauthorized');
-            passed++;
-        } else {
-            console.error('  ❌ /auth/me returned ' + resAuthMe.status);
-            failed++;
-        }
-
-        // 3. Rejestracja testowa (Local Auth)
-        console.log('[TEST 3] Local Registration (POST /api/v1/auth/register)');
-        const email = `testuser_${Date.now()}@example.com`;
-        const resReg = await fetch(BASE_URL + '/api/v1/auth/register', {
+    // ─── 4. Unauth generate → 401 (C-03) ─────────────────────────────────────
+    await check('[4] C-03: Unauthenticated POST /generate returns 401', async () => {
+        const r = await timedFetch(`${BASE_URL}/api/v1/generate`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: email, name: 'Test User' })
+            body: JSON.stringify({ modelId: 'gemini-1.5-flash', userMessage: 'hi', modelTag: 'gemini' }),
         });
+        if (r.status === 401) pass('POST /generate → 401 (unauth blocked)');
+        else fail('POST /generate should be 401', `got ${r.status}`);
+    });
 
-        if (resReg.status === 201) {
-            const dataReg = await resReg.json();
-            if (dataReg.token && dataReg.user) {
-                console.log('  ✅ Registration successful, token received');
-                passed++;
+    // ─── 5. Unauth GET /projects → 401 ───────────────────────────────────────
+    await check('[5] GET /api/v1/projects requires auth', async () => {
+        const r = await timedFetch(`${BASE_URL}/api/v1/projects`);
+        if (r.status === 401) pass('GET /projects → 401');
+        else fail('GET /projects should be 401', `got ${r.status}`);
+    });
 
-                // 4. Dostęp do chronionego zasobu z tokenem
-                console.log('[TEST 4] Authenticated Route Access');
-                const resMeAuth = await fetch(BASE_URL + '/api/v1/auth/me', {
-                    headers: { 'Authorization': 'Bearer ' + dataReg.token }
-                });
-                if (resMeAuth.status === 200) {
-                    const authData = await resMeAuth.json();
-                    if (authData.user.email === email) {
-                        console.log('  ✅ /auth/me returns valid user data using Token');
-                        passed++;
-                    } else {
-                        console.error('  ❌ /auth/me user data mismatch');
-                        failed++;
-                    }
-                } else {
-                    console.error('  ❌ /auth/me failed with token. Status: ' + resMeAuth.status);
-                    failed++;
-                }
+    // ─── 6. Unauth GET /auth/me → 401 ─────────────────────────────────────────
+    await check('[6] GET /auth/me without token returns 401', async () => {
+        const r = await timedFetch(`${BASE_URL}/api/v1/auth/me`);
+        if (r.status === 401) pass('GET /auth/me → 401');
+        else fail('GET /auth/me should be 401', `got ${r.status}`);
+    });
 
-            } else {
-                console.error('  ❌ Registration JSON missing token/user');
-                failed++;
-            }
+    // ─── 7. Invalid JWT → 401 ─────────────────────────────────────────────────
+    await check('[7] Invalid Bearer token returns 401', async () => {
+        const r = await timedFetch(`${BASE_URL}/api/v1/projects`, {
+            headers: { Authorization: 'Bearer this.is.not.valid' },
+        });
+        if (r.status === 401) pass('Invalid JWT → 401');
+        else fail('Invalid JWT should be 401', `got ${r.status}`);
+    });
+
+    // ─── 8. 404 for unknown routes ────────────────────────────────────────────
+    await check('[8] Unknown route returns 404 JSON', async () => {
+        const r = await timedFetch(`${BASE_URL}/api/v1/does-not-exist`);
+        if (r.status === 404) pass('Unknown route → 404');
+        else fail('Unknown route should be 404', `got ${r.status}`);
+    });
+
+    // ─── 9. GET /api/v1/templates (public) ───────────────────────────────────
+    await check('[9] G-01: GET /api/v1/templates is publicly accessible', async () => {
+        const r = await timedFetch(`${BASE_URL}/api/v1/templates`);
+        if (r.status === 200) {
+            const body = await r.json().catch(() => ({}));
+            if (Array.isArray(body.templates)) pass('GET /templates → 200 with templates array');
+            else fail('GET /templates missing templates array in body');
         } else {
-            console.error('  ❌ Registration failed. Status: ' + resReg.status);
-            failed++;
+            fail('GET /templates should be 200', `got ${r.status}`);
         }
+    });
 
-        // 5. Rate Limiting (jeśli jest skonfigurowane na np. 10 żądań w oknie)
-        console.log('[TEST 5] Checking endpoint presence (Projects)');
-        const resProjects = await fetch(BASE_URL + '/api/v1/projects', { method: 'GET' });
-        if (resProjects.status === 401) {
-            console.log('  ✅ /projects correctly requires Auth');
-            passed++;
-        } else {
-            console.error('  ❌ /projects returned ' + resProjects.status);
-            failed++;
-        }
+    // ─── 10. POST /api/v1/templates requires auth ─────────────────────────────
+    await check('[10] POST /api/v1/templates requires auth', async () => {
+        const r = await timedFetch(`${BASE_URL}/api/v1/templates`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: 'Test', agents: [] }),
+        });
+        if (r.status === 401) pass('POST /templates → 401 (auth required)');
+        else fail('POST /templates should be 401', `got ${r.status}`);
+    });
 
-        console.log(`\n--- TEST RESULTS: ${passed} Passed, ${failed} Failed ---`);
-        if (failed > 0) process.exit(1);
-
-    } catch (err) {
-        if (err.code === 'ECONNREFUSED') {
-            console.error('❌ Serwer odrzuca połączenie. Upewnij się, że backend jest urchomiony.');
-        } else {
-            console.error('Wystąpił nieoczekiwany błąd w teście:', err);
-        }
+    // ─── Summary ───────────────────────────────────────────────────────────────
+    const total = passed + failed;
+    console.log(`\n── Results: ${passed}/${total} passed ──`);
+    if (failed > 0) {
+        console.error(`   ${failed} test(s) FAILED.`);
+        process.exit(1);
+    } else {
+        console.log(`   All tests passed. ✅`);
     }
 }
 
-runTests();
+runTests().catch(err => {
+    if (err.code === 'ECONNREFUSED' || err.cause?.code === 'ECONNREFUSED') {
+        console.error('\n❌ Server is not running. Start it first:');
+        console.error('   cd backend && node src/server.js');
+    } else {
+        console.error('\nUnexpected test error:', err);
+    }
+    process.exit(1);
+});

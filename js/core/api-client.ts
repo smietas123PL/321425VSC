@@ -47,6 +47,8 @@ export async function apiFetch(path: string, options: any = {}): Promise<any> {
 }
 
 export async function generate(payload: any): Promise<any> {
+    // L-03: Pass payload as plain object — apiFetch handles JSON.stringify internally
+    // Do NOT pre-stringify here; doing so causes double-serialization
     return apiFetch('/generate', { method: 'POST', body: payload });
 }
 

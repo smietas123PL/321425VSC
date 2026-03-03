@@ -1,24 +1,34 @@
-﻿// ─── REVENUECAT & SUBSCRIPTIONS (#PRO) ───────────────────
-// ═══════════════════════════════════════════════════════════
+// ─── AUTH.TS — AgentSpark backend auth + RevenueCat ──────
+// Fixed: TS7006 implicit any params, TS18046 unknown catch, TS18047 null,
+//        TS2698 spread of unknown, TS2339 property on {}
 
+// ─── REVENUECAT ───────────────────────────────────────────
 const RC_API_KEY = window.__AGENTSPARK_CONFIG__?.REVENUECAT_API_KEY || null;
-const RC_ENTITLEMENT = 'pro_access'; // Name of entitlement in RevenueCat
+const RC_ENTITLEMENT = 'pro_access';
+const AUTH_TOKEN_KEY = 'agentspark-auth-token';
+const REFRESH_TOKEN_KEY = 'agentspark-refresh-token';
+const DEVICE_EMAIL_KEY = 'agentspark-device-email';
 
-// Initialize RevenueCat
-async function initRevenueCat() {
+const toMillis = (v: any): number => {
+  if (typeof v === 'number') return v;
+  const n = Date.parse(v);
+  return Number.isFinite(n) ? n : 0;
+};
+
+// ─── RevenueCat helpers ───────────────────────────────────
+async function initRevenueCat(): Promise<void> {
   if (!RC_API_KEY) {
     console.info('RevenueCat key not configured; subscription checks disabled');
     return;
   }
-  if (!window.Purchases) {
-    console.warn('RevenueCat SDK not loaded');
+  const Purchases = _rcSdk();
+  if (!Purchases) {
+    // M-08: RC SDK may not be loaded in all environments — fail gracefully
+    console.warn('RevenueCat SDK not loaded or not initialized');
     return;
   }
   try {
-    const { Purchases } = window.Purchases;
     await Purchases.configure({ apiKey: RC_API_KEY });
-
-    // Check initial status if user logged in
     if (window.currentUser) {
       await checkProStatus(window.currentUser.uid);
     }
@@ -27,73 +37,77 @@ async function initRevenueCat() {
   }
 }
 
-async function _checkRevenueCatProStatus(uid: string) {
-  if (!uid || !window.Purchases) return;
-  try {
-    const { Purchases } = window.Purchases;
-    const { customerInfo } = await Purchases.logIn({ appUserID: uid });
+// M-08: RevenueCat Web SDK loads as window.Purchases (UMD global namespace).
+// The pattern `const { Purchases } = window.Purchases` is RC Web SDK convention:
+//   window.Purchases = { Purchases: <SDK class> }
+// Safe accessor to avoid TS errors and avoid crash when SDK not loaded.
+function _rcSdk(): any | null {
+  if (!window.Purchases || typeof (window.Purchases as any).Purchases?.configure !== 'function') {
+    return null;
+  }
+  return (window.Purchases as any).Purchases;
+}
 
-    // Check active entitlements
-    if (customerInfo.entitlements.active[RC_ENTITLEMENT]) {
-      window.isPro = true;
-      console.log('User is PRO 🌟');
-      updateProUI(true);
-    } else {
-      window.isPro = false;
-      console.log('User is FREE');
-      updateProUI(false);
-    }
+async function _checkRevenueCatProStatus(uid: string): Promise<void> {
+  if (!uid) return;
+  const Purchases = _rcSdk();
+  if (!Purchases) return;
+  try {
+    // M-08: Use typed RC SDK accessor instead of double-destructure
+    const { customerInfo } = await Purchases.logIn({ appUserID: uid });
+    const isActive = !!customerInfo?.entitlements?.active?.[RC_ENTITLEMENT];
+    window.isPro = isActive;
+    updateProUI(isActive);
   } catch (e) {
     console.error('Check Pro Status Failed:', e);
   }
 }
 
-function updateProUI(isPro: boolean) {
-  const badge = (document.getElementById('pro-badge') as HTMLElement);
+function updateProUI(isPro: boolean): void {
+  const badge = document.getElementById('pro-badge') as HTMLElement | null;
   if (isPro) {
     if (badge) badge.style.display = 'inline-block';
-    // Unlock features
     document.querySelectorAll('.locked-feature').forEach(el => el.classList.remove('locked'));
   } else {
     if (badge) badge.style.display = 'none';
-    // Lock features
     document.querySelectorAll('.locked-feature').forEach(el => el.classList.add('locked'));
   }
 }
 
-// Show Paywall Modal
-function showPaywall() {
-  const modal = (document.getElementById('paywall-modal') as HTMLElement);
+function showPaywall(): void {
+  const modal = document.getElementById('paywall-modal') as HTMLElement | null;
   if (modal) {
     modal.classList.add('open');
-    // Load offerings dynamically if needed
     loadOfferings();
   }
 }
 
-async function loadOfferings() {
-  if (!window.Purchases) return;
+async function loadOfferings(): Promise<void> {
+  const Purchases = _rcSdk();
+  if (!Purchases) return;
   try {
-    const { Purchases } = window.Purchases;
+    // M-08: typed SDK access via _rcSdk() helper
     const offerings = await Purchases.getOfferings();
     if (offerings.current && offerings.current.availablePackages.length > 0) {
-      const pkg = offerings.current.availablePackages[0]; // e.g. Monthly
+      const pkg = offerings.current.availablePackages[0];
       const product = pkg.product;
-
-      (document.getElementById('paywall-price') as HTMLElement).textContent = product.priceString;
-      (document.getElementById('paywall-btn') as HTMLElement).onclick = () => purchasePackage(pkg);
+      const priceEl = document.getElementById('paywall-price') as HTMLElement | null;
+      const btnEl = document.getElementById('paywall-btn') as HTMLElement | null;
+      if (priceEl) priceEl.textContent = product.priceString;
+      if (btnEl) btnEl.onclick = () => purchasePackage(pkg);
     }
   } catch (e) {
     console.error('Load Offerings Error:', e);
   }
 }
 
-async function purchasePackage(pkg: any) {
+async function purchasePackage(pkg: any): Promise<void> {
+  const Purchases = _rcSdk();
+  if (!Purchases) return;
   try {
-    const { Purchases } = window.Purchases;
+    // M-08: typed SDK access via _rcSdk() helper
     const { customerInfo } = await Purchases.purchasePackage({ aPackage: pkg });
-
-    if (customerInfo.entitlements.active[RC_ENTITLEMENT]) {
+    if (customerInfo?.entitlements?.active?.[RC_ENTITLEMENT]) {
       window.isPro = true;
       updateProUI(true);
       closePaywall();
@@ -101,81 +115,64 @@ async function purchasePackage(pkg: any) {
     }
   } catch (e: any) {
     if (!e.userCancelled) {
-      showNotif('Purchase Error: ' + e.message, true);
+      showNotif('Purchase Error: ' + (e?.message || String(e)), true);
     }
   }
 }
 
-function closePaywall() {
+function closePaywall(): void {
   (document.getElementById('paywall-modal') as HTMLElement).classList.remove('open');
 }
 
-// ═══════════════════════════════════════════════════════════
-// ─── AUTHENTICATION & SYNC (#AUTH) ───────────────────────
-// ═══════════════════════════════════════════════════════════
-
-window.currentUser = null;
-window.isPro = false;
-const AUTH_TOKEN_KEY = 'agentspark-auth-token';
-const REFRESH_TOKEN_KEY = 'agentspark-refresh-token';
-const DEVICE_EMAIL_KEY = 'agentspark-device-email';
-const toMillis = (v: any) => {
-  if (typeof v === 'number') return v;
-  const n = Date.parse(v);
-  return Number.isFinite(n) ? n : 0;
-};
-
-function getAuthToken() {
-  return localStorage.getItem(AUTH_TOKEN_KEY) || '';
+// ─── TOKEN HELPERS ────────────────────────────────────────
+// H-02: Migrated from localStorage → sessionStorage to limit XSS token theft
+// exposure. sessionStorage is cleared when the tab/browser closes.
+function getAuthToken(): string {
+  return sessionStorage.getItem(AUTH_TOKEN_KEY) || '';
 }
-
-function setAuthToken(token: string) {
-  if (token) localStorage.setItem(AUTH_TOKEN_KEY, token);
-  else localStorage.removeItem(AUTH_TOKEN_KEY);
+function setAuthToken(token: string): void {
+  if (token) sessionStorage.setItem(AUTH_TOKEN_KEY, token);
+  else sessionStorage.removeItem(AUTH_TOKEN_KEY);
 }
-
-function getRefreshToken() {
-  return localStorage.getItem(REFRESH_TOKEN_KEY) || '';
+function getRefreshToken(): string {
+  return sessionStorage.getItem(REFRESH_TOKEN_KEY) || '';
 }
-
-function setRefreshToken(token: string) {
-  if (token) localStorage.setItem(REFRESH_TOKEN_KEY, token);
-  else localStorage.removeItem(REFRESH_TOKEN_KEY);
+function setRefreshToken(token: string): void {
+  if (token) sessionStorage.setItem(REFRESH_TOKEN_KEY, token);
+  else sessionStorage.removeItem(REFRESH_TOKEN_KEY);
 }
-
-function getDeviceEmail() {
+function getDeviceEmail(): string {
   const existing = localStorage.getItem(DEVICE_EMAIL_KEY);
   if (existing) return existing;
-  const id = (crypto?.randomUUID ? crypto.randomUUID() : `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`).replace(/[^a-zA-Z0-9_]/g, '');
+  const id = (crypto?.randomUUID
+    ? crypto.randomUUID()
+    : `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+  ).replace(/[^a-zA-Z0-9_]/g, '');
   const email = `agentspark_${id.toLowerCase()}@local.agentspark`;
   localStorage.setItem(DEVICE_EMAIL_KEY, email);
   return email;
 }
 
-async function apiFetch(path: string, options: any = {}, requireAuth = true, retryCount = 0) {
+// ─── API FETCH ────────────────────────────────────────────
+async function apiFetch(path: string, options: any = {}, requireAuth = true, retryCount = 0): Promise<any> {
   if (typeof window.agentsparkApiFetch !== 'function') {
     throw new Error('API client not initialized');
   }
   const token = requireAuth ? getAuthToken() : '';
-
   try {
-    const res = await window.agentsparkApiFetch(path, { ...options, token });
-    return res;
+    return await window.agentsparkApiFetch(path, { ...options, token });
   } catch (error: any) {
     if (error.status === 401 && requireAuth && retryCount < 1) {
       const refreshToken = getRefreshToken();
       if (refreshToken) {
         try {
-          // Attempt to refresh token
           const refreshRes = await window.agentsparkApiFetch('/auth/refresh', {
             method: 'POST',
             body: JSON.stringify({ refreshToken }),
-          }, { token: '' }); // explicitly don't send expired token
-
+          });
           if (refreshRes.token) {
             setAuthToken(refreshRes.token);
             setRefreshToken(refreshRes.refreshToken);
-            // Retry original request
             return apiFetch(path, options, requireAuth, retryCount + 1);
           }
         } catch (refreshErr) {
@@ -193,39 +190,51 @@ async function apiFetch(path: string, options: any = {}, requireAuth = true, ret
   }
 }
 
-async function backendRegister() {
+// ─── BACKEND REGISTER ─────────────────────────────────────
+async function backendRegister(): Promise<any> {
   const email = getDeviceEmail();
   const name = email.split('@')[0].slice(0, 18);
-  const data = await apiFetch('/auth/register', {
+  return apiFetch('/auth/register', {
     method: 'POST',
     body: JSON.stringify({ email, name }),
   }, false);
-  return data;
 }
 
-async function restoreBackendSession() {
+async function restoreBackendSession(): Promise<void> {
   const token = getAuthToken();
-  if (!token) {
-    updateAuthUI(null);
-    return;
-  }
+  if (!token) { updateAuthUI(null); return; }
   try {
     const data = await apiFetch('/auth/me', { method: 'GET' }, true);
     updateAuthUI(data.user || null);
   } catch (e: any) {
-    // handled inside apiFetch retry logic if 401
-    if (e.status !== 401) {
+    // M-03: Surface non-401 errors (network failures etc.) via toast
+    if (e.status === 401) {
+      // Token expired or invalid — clear silently
+      setAuthToken('');
+      setRefreshToken('');
       updateAuthUI(null);
+    } else {
+      updateAuthUI(null);
+      console.warn('[Auth] Session restore failed:', e?.message);
+      if (typeof showNotif === 'function') {
+        showNotif(
+          tr('⚠ Could not restore session — check your connection', '⚠ Nie można przywrócić sesji — sprawdź połączenie'),
+          true
+        );
+      }
     }
   }
 }
 
-function updateAuthUI(user: any) {
-  const btn = (document.getElementById('auth-btn') as HTMLElement);
+// ─── AUTH UI ──────────────────────────────────────────────
+function updateAuthUI(user: any): void {
+  const btn = document.getElementById('auth-btn') as HTMLElement | null;
   if (!btn) return;
-  const label = btn.querySelector('.auth-label');
-  const icon = btn.querySelector('.auth-icon');
-  if (!label || !icon) return;
+
+  // label/icon: querySelector returns Element | null → cast to HTMLElement
+  const label = btn.querySelector('.auth-label') as HTMLElement | null;
+  const icon = btn.querySelector('.auth-icon') as HTMLElement | null;
+  if (!label || !icon) return;   // TS18047 fix: null guard
 
   if (user) {
     window.currentUser = {
@@ -237,7 +246,6 @@ function updateAuthUI(user: any) {
     icon.textContent = '✅';
     btn.classList.add('active');
     btn.title = `Logged in as ${window.currentUser.email || 'user'}`;
-
     checkProStatus(window.currentUser.uid);
   } else {
     window.currentUser = null;
@@ -249,67 +257,72 @@ function updateAuthUI(user: any) {
   }
 }
 
-async function toggleAuth() {
+// ─── TOGGLE AUTH ──────────────────────────────────────────
+// H-10: Removed anonymous device auto-registration (backendRegister).
+// Login now directs users to Google OAuth only — no silent account creation.
+async function toggleAuth(): Promise<void> {
   if (window.currentUser) {
     const shouldLogout = await (window.uiConfirm
-      ? window.uiConfirm(
-        'Log out?',
-        'Wylogować się?',
-        'Log Out',
-        'Wylogowanie'
-      )
+      ? window.uiConfirm('Log out?', 'Wylogować się?', 'Log Out', 'Wylogowanie')
       : Promise.resolve(confirm(lang === 'en' ? 'Log out?' : 'Wylogować się?')));
     if (shouldLogout) {
+      const refreshToken = getRefreshToken();
       try {
         await apiFetch('/auth/logout', {
           method: 'POST',
-          body: JSON.stringify({ refreshToken: getRefreshToken() })
+          body: JSON.stringify({ refreshToken }),
         }, true);
       } catch (e: any) {
-        console.warn('Logout API warning:', e.message);
+        // G-04: If offline, enqueue logout so refresh token is invalidated when back online.
+        // This prevents a stolen refresh token from being used after the user logs out.
+        if (typeof window.enqueueSyncAction === 'function') {
+          window.enqueueSyncAction({
+            path: '/auth/logout',
+            method: 'POST',
+            body: JSON.stringify({ refreshToken }),
+            timestamp: Date.now(),
+          }).catch(() => {/* silent — best-effort queue */ });
+        }
+        console.warn('Logout API warning (queued for retry):', e?.message);
       }
       setAuthToken('');
       setRefreshToken('');
       updateAuthUI(null);
       showNotif(lang === 'en' ? '👋 Logged out' : '👋 Wylogowano');
-      renderProjectsList();
+      if (typeof renderProjectsList === 'function') renderProjectsList();
     }
   } else {
-    try {
-      const data = await backendRegister();
-      if (data.token) setAuthToken(data.token);
-      if (data.refreshToken) setRefreshToken(data.refreshToken);
-      updateAuthUI(data.user || null);
-      showNotif(lang === 'en'
-        ? `👋 Welcome, ${window.currentUser?.displayName || 'User'}!`
-        : `👋 Witaj, ${window.currentUser?.displayName || 'Użytkowniku'}!`
-      );
-      await syncProjectsWithCloud();
-    } catch (e: any) {
-      console.error(e);
-      showNotif('Auth Error: ' + e.message, true);
-    }
+    // H-10: Direct user to Google OAuth — no silent anonymous device account creation
+    showNotif(
+      lang === 'en'
+        ? 'Please use Google Sign-In to log in'
+        : 'Użyj Google Sign-In, aby się zalogować'
+    );
+    // Trigger Google One Tap / sign-in button if available
+    const googleBtn = document.getElementById('google-signin-btn') as HTMLElement | null;
+    if (googleBtn) googleBtn.click();
   }
 }
 
-async function syncProjectsWithCloud() {
+// ─── SYNC ─────────────────────────────────────────────────
+async function syncProjectsWithCloud(): Promise<void> {
   if (!window.currentUser || !getAuthToken()) return;
-
   showNotif(lang === 'en' ? '☁ Syncing...' : '☁ Synchronizacja...');
-
   try {
     const remote = await apiFetch('/projects', { method: 'GET' }, true);
-    const cloudProjects = Array.isArray(remote.projects) ? remote.projects : [];
-    const localProjects = (await dbGetAll()) as any[];
+    const cloudProjects: any[] = Array.isArray(remote.projects) ? remote.projects : [];
+    // TS2339 fix: explicit any[] cast so dbGetAll result is typed
+    const localProjects: any[] = await dbGetAll();
     const localMap = new Map<string, any>(localProjects.map((p: any) => [p.id, p]));
     const cloudMap = new Map<string, any>(cloudProjects.map((p: any) => [p.id, p]));
 
     for (const cp of cloudProjects) {
-      const lp = localMap.get(cp.id);
+      const lp: any = localMap.get(cp.id);
       if (!lp || toMillis(cp.updatedAt) > toMillis(lp.updatedAt)) {
+        // TS2698 fix: spread after explicit any cast
+        const merged: any = { ...(lp as any), ...(cp as any) };
         await dbPut({
-          ...lp,
-          ...cp,
+          ...merged,
           createdAt: toMillis(cp.createdAt) || lp?.createdAt || Date.now(),
           updatedAt: toMillis(cp.updatedAt) || lp?.updatedAt || Date.now(),
           agents: cp.agents || [],
@@ -319,17 +332,11 @@ async function syncProjectsWithCloud() {
     }
 
     for (const lp of localProjects) {
-      const cp = cloudMap.get(lp.id);
+      const cp: any = cloudMap.get(lp.id);
       if (!cp) {
-        await apiFetch('/projects', {
-          method: 'POST',
-          body: JSON.stringify(lp),
-        }, true);
+        await apiFetch('/projects', { method: 'POST', body: JSON.stringify(lp) }, true);
       } else if (toMillis(lp.updatedAt) > toMillis(cp.updatedAt)) {
-        await apiFetch(`/projects/${encodeURIComponent(lp.id)}`, {
-          method: 'PUT',
-          body: JSON.stringify(lp),
-        }, true);
+        await apiFetch(`/projects/${encodeURIComponent(lp.id)}`, { method: 'PUT', body: JSON.stringify(lp) }, true);
       }
     }
 
@@ -341,7 +348,8 @@ async function syncProjectsWithCloud() {
   }
 }
 
-async function checkProStatus(uid: string) {
+// ─── PRO STATUS ───────────────────────────────────────────
+async function checkProStatus(uid: string): Promise<void> {
   if (!uid) return;
   if (!RC_API_KEY || !window.Purchases) {
     window.isPro = false;
@@ -351,13 +359,18 @@ async function checkProStatus(uid: string) {
   await _checkRevenueCatProStatus(uid);
 }
 
+// ─── BOOTSTRAP ────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
   restoreBackendSession().catch((e) => {
-    console.warn('Auth bootstrap failed:', e.message);
+    console.warn('Auth bootstrap failed:', e?.message);
     updateAuthUI(null);
   });
 });
 
-// ─── PERSISTENT PROJECTS (#1) ────────────────────────────
-// ═══════════════════════════════════════════════════════════
-
+// ─── WINDOW EXPORTS ───────────────────────────────────────
+window.toggleAuth = toggleAuth;
+window.showPaywall = showPaywall;
+window.closePaywall = closePaywall;
+window.initRevenueCat = initRevenueCat;
+window.syncProjectsWithCloud = syncProjectsWithCloud;
+window.checkProStatus = checkProStatus;

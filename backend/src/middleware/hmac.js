@@ -2,6 +2,14 @@ import crypto from 'crypto';
 
 const MAX_SKEW_MS = 5 * 60 * 1000;
 
+// H-05: Fail-closed HMAC — refuse to start in production without the secret
+if (process.env.NODE_ENV === 'production' && !process.env.REQUEST_HMAC_SECRET) {
+  // Log clearly and crash — better to hard-fail than silently accept unsigned requests
+  console.error('❌ FATAL: REQUEST_HMAC_SECRET is required in production.');
+  console.error('   Set it in your .env file. All generate requests would be unprotected without it.');
+  process.exit(1);
+}
+
 function timingSafeEqualHex(a, b) {
   if (typeof a !== 'string' || typeof b !== 'string') return false;
   if (a.length !== b.length) return false;
@@ -13,6 +21,7 @@ function timingSafeEqualHex(a, b) {
 
 export function verifyHmac(req, res, next) {
   const secret = process.env.REQUEST_HMAC_SECRET;
+  // In development, skip HMAC if secret not configured (dev convenience only)
   if (!secret) return next();
 
   const signature = req.headers['x-signature'];

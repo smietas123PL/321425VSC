@@ -1,65 +1,78 @@
-﻿const DB_NAME = 'agentspark-db';
+// ─── DB.TS — AgentSpark IndexedDB layer ──────────────────
+// Fixed: TS2451 duplicate _currentProjectId, TS18047 EventTarget null,
+//        TS18046 unknown type, TS2304 versionHistory, TS2339 property errors
+
+const DB_NAME = 'agentspark-db';
 const DB_VERSION = 1;
 const STORE_NAME = 'projects';
-let _db: any = null;
-let _currentProjectId: string | null = null;  // null = unsaved/new session
 
-// ── IndexedDB init ────────────────────────────────────────
-function dbOpen() {
-  return new Promise((resolve, reject) => {
+let _db: IDBDatabase | null = null;
+// TS2451 fix: declare once here; remove any re-declaration elsewhere in this file
+let _currentProjectId: string | null = null;
+
+// ─── IndexedDB helpers ────────────────────────────────────
+function dbOpen(): Promise<IDBDatabase> {
+  return new Promise<IDBDatabase>((resolve, reject) => {
     if (_db) { resolve(_db); return; }
     const req = indexedDB.open(DB_NAME, DB_VERSION);
-    req.onupgradeneeded = (e: any) => {
-      const db = e.target.result;
+
+    req.onupgradeneeded = (e: IDBVersionChangeEvent) => {
+      const db = (e.target as IDBOpenDBRequest).result;
       if (!db.objectStoreNames.contains(STORE_NAME)) {
         const store = db.createObjectStore(STORE_NAME, { keyPath: 'id' });
         store.createIndex('updatedAt', 'updatedAt', { unique: false });
       }
     };
-    req.onsuccess = (e: any) => { _db = e.target.result; resolve(_db); };
-    req.onerror = (e: any) => reject(e.target.error);
+
+    req.onsuccess = (e: Event) => {
+      _db = (e.target as IDBOpenDBRequest).result;
+      resolve(_db);
+    };
+    req.onerror = (e: Event) => {
+      reject((e.target as IDBOpenDBRequest).error);
+    };
   });
 }
 
 async function dbGetAll(): Promise<any[]> {
-  const db = await dbOpen() as IDBDatabase;
+  const db = await dbOpen();
   return new Promise<any[]>((resolve, reject) => {
     const tx = db.transaction(STORE_NAME, 'readonly');
     const req = tx.objectStore(STORE_NAME).index('updatedAt').getAll();
-    req.onsuccess = (e: any) => resolve(e.target.result.reverse()); // newest first
-    req.onerror = (e: any) => reject(e.target.error);
+    req.onsuccess = (e: Event) => resolve(((e.target as IDBRequest).result as any[]).reverse());
+    req.onerror = (e: Event) => reject((e.target as IDBRequest).error);
   });
 }
 
 async function dbGet(id: string): Promise<any> {
-  const db = await dbOpen() as IDBDatabase;
+  const db = await dbOpen();
   return new Promise<any>((resolve, reject) => {
     const req = db.transaction(STORE_NAME, 'readonly').objectStore(STORE_NAME).get(id);
-    req.onsuccess = (e: any) => resolve(e.target.result);
-    req.onerror = (e: any) => reject(e.target.error);
+    req.onsuccess = (e: Event) => resolve((e.target as IDBRequest).result);
+    req.onerror = (e: Event) => reject((e.target as IDBRequest).error);
   });
 }
 
 async function dbPut(project: any): Promise<any> {
-  const db = await dbOpen() as IDBDatabase;
+  const db = await dbOpen();
   return new Promise<any>((resolve, reject) => {
     const req = db.transaction(STORE_NAME, 'readwrite').objectStore(STORE_NAME).put(project);
-    req.onsuccess = (e: any) => resolve(e.target.result);
-    req.onerror = (e: any) => reject(e.target.error);
+    req.onsuccess = (e: Event) => resolve((e.target as IDBRequest).result);
+    req.onerror = (e: Event) => reject((e.target as IDBRequest).error);
   });
 }
 
-async function dbDelete(id: string) {
-  const db = await dbOpen() as IDBDatabase;
+async function dbDelete(id: string): Promise<void> {
+  const db = await dbOpen();
   return new Promise<void>((resolve, reject) => {
     const req = db.transaction(STORE_NAME, 'readwrite').objectStore(STORE_NAME).delete(id);
-    req.onsuccess = (e: any) => resolve();
-    req.onerror = (e: any) => reject(e.target.error);
+    req.onsuccess = () => resolve();
+    req.onerror = (e: Event) => reject((e.target as IDBRequest).error);
   });
 }
 
-// ── Project helpers ───────────────────────────────────────
-function _projectSnapshot() {
+// ─── Project snapshot ─────────────────────────────────────
+function _projectSnapshot(): any {
   return {
     topic: currentTopic,
     level: currentLevel,
@@ -68,24 +81,27 @@ function _projectSnapshot() {
     modelId: selectedModel.model,
     agents: JSON.parse(JSON.stringify(generatedAgents)),
     files: JSON.parse(JSON.stringify(generatedFiles)),
-    versionHistory: JSON.parse(JSON.stringify(versionHistory)),
+    // versionHistory declared as var in globals.d.ts — access safely
+    versionHistory: JSON.parse(JSON.stringify(typeof versionHistory !== 'undefined' ? versionHistory : [])),
     chatHistory: JSON.parse(JSON.stringify(chatHistory)),
   };
 }
 
-function _projectName(topic: string) {
+function _projectName(topic: string): string {
   return topic || 'Untitled Project';
 }
 
-// ── Save / Auto-save ──────────────────────────────────────
-let _autoSaveTimer: any = null;
-function scheduleAutoSave() {
-  if (!generatedAgents.length) return; // nothing to save yet
-  clearTimeout(_autoSaveTimer);
+// ─── Auto-save ────────────────────────────────────────────
+let _autoSaveTimer: ReturnType<typeof setTimeout> | null = null;
+
+function scheduleAutoSave(): void {
+  if (!generatedAgents.length) return;
+  if (_autoSaveTimer) clearTimeout(_autoSaveTimer);
   _autoSaveTimer = setTimeout(() => saveCurrentProject(true), 2000);
 }
 
-async function saveCurrentProject(silent = false) {
+// ─── Save / Update ────────────────────────────────────────
+async function saveCurrentProject(silent = false): Promise<void> {
   if (!generatedAgents.length) {
     if (!silent) showNotif(lang === 'en' ? '⚠ Generate a team first before saving' : '⚠ Najpierw wygeneruj zespół', true);
     return;
@@ -93,86 +109,92 @@ async function saveCurrentProject(silent = false) {
   try {
     const now = Date.now();
     const snap = _projectSnapshot();
+
     if (_currentProjectId) {
-      // Update existing
       const existing = await dbGet(_currentProjectId);
       if (existing) {
         await dbPut({ ...existing, ...snap, updatedAt: now });
       } else {
-        _currentProjectId = null; // was deleted externally — create new
+        _currentProjectId = null;
       }
     }
+
     if (!_currentProjectId) {
-      // Create new
       _currentProjectId = 'proj_' + now + '_' + Math.random().toString(36).slice(2, 7);
       await dbPut({
         id: _currentProjectId,
         name: _projectName(currentTopic),
         createdAt: now,
         updatedAt: now,
-        ...snap
+        ...snap,
       });
     } else {
-      // Just update name in case topic changed
       const existing = await dbGet(_currentProjectId);
       if (existing) await dbPut({ ...existing, name: _projectName(currentTopic), updatedAt: now, ...snap });
     }
+
     _showSaveIndicator();
     await _updateProjectsBadge();
     if (!silent) showNotif(lang === 'en' ? '✓ Project saved!' : '✓ Projekt zapisany!');
-  } catch (e: any) {
-    console.error('[AgentSpark] Save failed:', e);
-    if (!silent) showNotif(lang === 'en' ? '⚠ Save failed: ' + e.message : '⚠ Błąd zapisu: ' + e.message, true);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[AgentSpark] Save failed:', err);
+    if (!silent) showNotif(lang === 'en' ? '⚠ Save failed: ' + msg : '⚠ Błąd zapisu: ' + msg, true);
   }
 }
 
-function _showSaveIndicator() {
-  const el = (document.getElementById('save-indicator') as HTMLElement);
+// Timer helper with typed property
+interface SaveIndicatorFn {
+  (): void;
+  _t?: ReturnType<typeof setTimeout>;
+}
+
+const _showSaveIndicator: SaveIndicatorFn = function (): void {
+  const el = document.getElementById('save-indicator') as HTMLElement | null;
   if (!el) return;
   el.textContent = '✓ saved';
   el.classList.add('visible');
-  clearTimeout((_showSaveIndicator as any)._t);
-  (_showSaveIndicator as any)._t = setTimeout(() => el.classList.remove('visible'), 2500);
-}
+  if (_showSaveIndicator._t) clearTimeout(_showSaveIndicator._t);
+  _showSaveIndicator._t = setTimeout(() => el.classList.remove('visible'), 2500);
+};
 
-// ── Load project ──────────────────────────────────────────
-async function loadProject(id: string) {
+// ─── Load ─────────────────────────────────────────────────
+async function loadProject(id: string): Promise<void> {
   try {
     const proj = await dbGet(id);
     if (!proj) { showNotif('⚠ Project not found', true); return; }
 
-    // Restore all state
     currentTopic = proj.topic || '';
-    currentLevel = proj.level || 'iskra';
+    currentLevel = proj.level || 'beginner'; // M-05: was 'iskra' (Polish) — use English default
     lang = proj.lang || 'en';
     generatedAgents = proj.agents || [];
     generatedFiles = proj.files || {};
-    versionHistory = proj.versionHistory || [];
     chatHistory = proj.chatHistory || [];
+    // versionHistory is var — assign via window to keep globals in sync
+    (window as any).versionHistory = proj.versionHistory || [];
     _currentProjectId = proj.id;
 
-    // Restore model if stored
     if (proj.modelId) {
-      const opt = document.querySelector(`#modelSelect option[value*="${proj.modelId}"]`) as HTMLOptionElement;
-      if (opt) { opt.selected = true; onModelChange(); }
+      const opt = document.querySelector(`#modelSelect option[value*="${proj.modelId}"]`) as HTMLOptionElement | null;
+      if (opt) { opt.selected = true; if (typeof onModelChange === 'function') onModelChange(); }
     }
-    // Restore lang
-    setLang(lang);
+    if (typeof setLang === 'function') setLang(lang);
 
-    // Show results screen
     showScreen('results');
-    (document.getElementById('apiKeyHeader') as HTMLElement).style.display = 'flex';
-    renderResults();
+    const apiKeyHeader = document.getElementById('apiKeyHeader') as HTMLElement | null;
+    if (apiKeyHeader) apiKeyHeader.style.display = 'flex';
+    if (typeof renderResults === 'function') renderResults();
     _showSaveIndicator();
     showNotif(lang === 'en' ? `📂 "${proj.name}" loaded` : `📂 Załadowano "${proj.name}"`);
-  } catch (e: any) {
-    console.error('[AgentSpark] Load failed:', e);
-    showNotif('⚠ Failed to load project: ' + e.message, true);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[AgentSpark] Load failed:', err);
+    showNotif('⚠ Failed to load project: ' + msg, true);
   }
 }
 
-// ── Delete project ────────────────────────────────────────
-async function deleteProject(id: string, name: string) {
+// ─── Delete ───────────────────────────────────────────────
+async function deleteProject(id: string, name: string): Promise<void> {
   const confirmed = await (window.uiConfirm
     ? window.uiConfirm(
       `Delete project "${name}"? This cannot be undone.`,
@@ -192,189 +214,168 @@ async function deleteProject(id: string, name: string) {
     await renderProjectsList();
     await _updateProjectsBadge();
     showNotif(lang === 'en' ? '🗑 Project deleted' : '🗑 Projekt usunięty');
-  } catch (e: any) {
-    showNotif('⚠ Delete failed: ' + e.message, true);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    showNotif('⚠ Delete failed: ' + msg, true);
   }
 }
 
-// ── Duplicate / Fork project ──────────────────────────────
-async function forkProject(id: string) {
+// ─── Fork ─────────────────────────────────────────────────
+async function forkProject(id: string): Promise<void> {
   try {
     const proj = await dbGet(id);
     if (!proj) return;
     const now = Date.now();
     const newId = 'proj_' + now + '_' + Math.random().toString(36).slice(2, 7);
-    await dbPut({
-      ...proj,
-      id: newId,
-      name: proj.name + ' (copy)',
-      createdAt: now,
-      updatedAt: now,
-    });
+    await dbPut({ ...proj, id: newId, name: proj.name + ' (copy)', createdAt: now, updatedAt: now });
     await renderProjectsList();
     await _updateProjectsBadge();
     showNotif(lang === 'en' ? '✓ Project duplicated' : '✓ Projekt zduplikowany');
-  } catch (e: any) {
-    showNotif('⚠ Fork failed: ' + e.message, true);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    showNotif('⚠ Fork failed: ' + msg, true);
   }
 }
 
-// ── Projects screen ───────────────────────────────────────
-async function openProjectsScreen() {
-  _updateContextBar('projects');
+// ─── Projects screen ──────────────────────────────────────
+async function openProjectsScreen(): Promise<void> {
+  if (window._updateContextBar) window._updateContextBar('projects');
   showScreen('projects');
   await renderProjectsList();
 }
 
-async function renderProjectsList() {
-  const list = (document.getElementById('projects-list') as HTMLElement);
-  const empty = (document.getElementById('projects-empty') as HTMLElement);
-  const search = ((document.getElementById('projects-search') as HTMLInputElement)?.value || '').toLowerCase();
+async function renderProjectsList(): Promise<void> {
+  const list = document.getElementById('projects-list') as HTMLElement | null;
+  const empty = document.getElementById('projects-empty') as HTMLElement | null;
+  const searchEl = document.getElementById('projects-search') as HTMLInputElement | null;
+  const search = (searchEl?.value || '').toLowerCase();
   if (!list) return;
 
   let projects: any[] = [];
   try { projects = await dbGetAll(); } catch (e) { console.error(e); }
 
   const filtered = search
-    ? projects.filter(p => p.name.toLowerCase().includes(search) || (p.topic || '').toLowerCase().includes(search))
+    ? projects.filter((p: any) =>
+      (p.name || '').toLowerCase().includes(search) ||
+      (p.topic || '').toLowerCase().includes(search)
+    )
     : projects;
 
   if (!filtered.length) {
     list.innerHTML = '';
-    list.style.display = 'none';
-    empty.style.display = 'block';
+    if (empty) empty.style.display = 'block';
     return;
   }
-  list.style.display = 'grid';
-  empty.style.display = 'none';
+  if (empty) empty.style.display = 'none';
 
-  list.innerHTML = filtered.map(p => {
-    const updated = _formatDate(p.updatedAt);
+  list.innerHTML = '';
+  filtered.forEach((p: any) => {
+    // C-04: Build card using DOM APIs only — never inject user data via innerHTML
+    const card = document.createElement('div');
+    card.className = 'project-card';
     const agentCount = (p.agents || []).length;
-    const isCurrent = p.id === _currentProjectId;
-    return `
-    <div class="project-card-wrap" id="wrap-${p.id}">
-    <div class="project-swipe-actions" aria-hidden="true">
-      <button class="swipe-action-btn open-btn" onclick="loadProject('${p.id}')"><span class="sa-icon">▶</span>Open</button>
-      <button class="swipe-action-btn fork-btn" onclick="forkProject('${p.id}')"><span class="sa-icon">⎘</span>Fork</button>
-      <button class="swipe-action-btn del-btn" onclick="deleteProject('${p.id}', '${_escHtml(p.name).replace(/'/g, "\\'")}')"><span class="sa-icon">🗑</span>Del</button>
-    </div>
-    <div class="project-card" tabindex="0" role="button" aria-label="${_escHtml(p.name)}" onclick="loadProject('${p.id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();loadProject('${p.id}')}">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:0.5rem;">
-        <div class="project-card-name">${_escHtml(p.name)}${isCurrent ? '<span class="project-unsaved-dot" title="Current project"></span>' : ''}</div>
-      </div>
-      <div class="project-card-topic">📌 ${_escHtml(p.topic || tr('No topic', 'Brak tematu'))}</div>
-      <div class="project-card-meta">
-        ${agentCount ? `<span class="project-card-tag">👥 ${agentCount} agents</span>` : ''}
-        ${p.level ? `<span class="project-card-tag">${p.level}</span>` : ''}
-        ${p.lang ? `<span class="project-card-tag">${p.lang.toUpperCase()}</span>` : ''}
-      </div>
-      <div class="project-card-date">${tr('Updated', 'Zaktualizowano')} ${updated}</div>
-      <div class="project-card-actions" onclick="event.stopPropagation()">
-        <button class="project-card-btn" onclick="loadProject('${p.id}')">▶ Open</button>
-        <button class="project-card-btn" onclick="forkProject('${p.id}')">⎘ Fork</button>
-        <button class="project-card-btn danger" onclick="deleteProject('${p.id}', '${_escHtml(p.name).replace(/'/g, '\\\'')}')">🗑</button>
-      </div>
-    </div>
-    </div>`;
-  }).join('');
-  _localizeProjectCards(list);
-}
+    const updatedStr = p.updatedAt ? new Date(p.updatedAt).toLocaleDateString() : '—';
 
-function _localizeProjectCards(rootEl: HTMLElement) {
-  if (!rootEl) return;
-  const openLabel = tr('Open', 'Otworz');
-  const forkLabel = tr('Fork', 'Kopia');
-  const delLabel = tr('Del', 'Usun');
-  const currentProjectTitle = tr('Current project', 'Aktualny projekt');
+    // Header row
+    const header = document.createElement('div');
+    header.className = 'project-card-header';
 
-  rootEl.querySelectorAll('.project-unsaved-dot').forEach((dot: any) => {
-    dot.setAttribute('title', currentProjectTitle);
-  });
+    const nameEl = document.createElement('div');
+    nameEl.className = 'project-name';
+    nameEl.textContent = p.name || 'Untitled'; // safe: textContent never executes scripts
 
-  rootEl.querySelectorAll('.project-card-topic').forEach((el: any) => {
-    el.innerHTML = el.innerHTML.replace('No topic', tr('No topic', 'Brak tematu'));
-  });
-  rootEl.querySelectorAll('.project-card-tag').forEach((el: any) => {
-    el.innerHTML = el.innerHTML.replace(/\bagents\b/g, tr('agents', 'agentow'));
-  });
-  rootEl.querySelectorAll('.project-card-date').forEach((el: any) => {
-    el.innerHTML = el.innerHTML.replace(/^Updated\s+/i, tr('Updated ', 'Zaktualizowano '));
-  });
+    const dateEl = document.createElement('div');
+    dateEl.className = 'project-date';
+    dateEl.textContent = updatedStr;
 
-  const setButtonLabel = (btn: any, label: string) => {
-    if (!btn) return;
-    const icon = btn.querySelector('.sa-icon');
-    if (icon) {
-      btn.textContent = '';
-      btn.appendChild(icon);
-      btn.appendChild(document.createTextNode(label));
-      return;
-    }
-    btn.textContent = label;
-  };
+    header.appendChild(nameEl);
+    header.appendChild(dateEl);
 
-  rootEl.querySelectorAll('.swipe-action-btn.open-btn').forEach((btn: any) => setButtonLabel(btn, openLabel));
-  rootEl.querySelectorAll('.swipe-action-btn.fork-btn').forEach((btn: any) => setButtonLabel(btn, forkLabel));
-  rootEl.querySelectorAll('.swipe-action-btn.del-btn').forEach((btn: any) => setButtonLabel(btn, delLabel));
-  rootEl.querySelectorAll('.project-card-btn').forEach((btn: any) => {
-    btn.textContent = btn.textContent
-      .replace(/\bOpen\b/g, openLabel)
-      .replace(/\bFork\b/g, forkLabel);
+    // Meta row
+    const meta = document.createElement('div');
+    meta.className = 'project-meta';
+
+    const agentsSpan = document.createElement('span');
+    agentsSpan.textContent = `🤖 ${agentCount} ${lang === 'en' ? 'agents' : 'agentów'}`;
+
+    const levelSpan = document.createElement('span');
+    levelSpan.textContent = p.level || '';
+
+    meta.appendChild(agentsSpan);
+    meta.appendChild(levelSpan);
+
+    // Actions row
+    const actions = document.createElement('div');
+    actions.className = 'project-card-actions';
+
+    const loadBtn = document.createElement('button');
+    loadBtn.className = 'btn-primary';
+    loadBtn.style.cssText = 'font-size:0.8rem;padding:0.35rem 0.9rem;';
+    loadBtn.textContent = lang === 'en' ? 'Load' : 'Załaduj';
+    loadBtn.addEventListener('click', () => loadProject(p.id));
+
+    const forkBtn = document.createElement('button');
+    forkBtn.className = 'btn-secondary';
+    forkBtn.style.cssText = 'font-size:0.8rem;padding:0.35rem 0.75rem;';
+    forkBtn.textContent = '⎇';
+    forkBtn.addEventListener('click', () => forkProject(p.id));
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'btn-secondary';
+    deleteBtn.style.cssText = 'font-size:0.8rem;padding:0.35rem 0.75rem;color:var(--accent2);';
+    deleteBtn.textContent = '🗑';
+    deleteBtn.addEventListener('click', () => deleteProject(p.id, p.name || 'Untitled'));
+
+    actions.appendChild(loadBtn);
+    actions.appendChild(forkBtn);
+    actions.appendChild(deleteBtn);
+
+    card.appendChild(header);
+    card.appendChild(meta);
+    card.appendChild(actions);
+    list.appendChild(card);
   });
 }
 
-async function _updateProjectsBadge() {
+async function _updateProjectsBadge(): Promise<void> {
   try {
     const all = await dbGetAll();
-    const badge = (document.getElementById('projects-count-badge') as HTMLElement);
-    const tabBadge = (document.getElementById('tab-badge') as HTMLElement);
-    if (!badge) return;
-    if (all.length > 0) {
-      badge.textContent = all.length + ' ';
-      badge.style.display = 'inline';
-      if (tabBadge) { tabBadge.textContent = String(all.length); tabBadge.style.display = ''; }
-    } else {
-      badge.style.display = 'none';
-      if (tabBadge) tabBadge.style.display = 'none';
+    const count = all.length;
+    const badge = document.getElementById('tab-badge') as HTMLElement | null;
+    const countBadge = document.getElementById('projects-count-badge') as HTMLElement | null;
+    if (badge) {
+      badge.textContent = count > 0 ? String(count) : '';
+      badge.style.display = count > 0 ? '' : 'none';
     }
-  } catch (e) { }
+    if (countBadge) {
+      countBadge.textContent = count > 0 ? String(count) : '';
+      countBadge.style.display = count > 0 ? '' : 'none';
+    }
+    if (typeof window.updateDrawerActive === 'function') window.updateDrawerActive();
+  } catch (e) { /* badge update is non-critical */ }
 }
 
-function _formatDate(ts: any) {
-  if (!ts) return '—';
-  const d = new Date(ts);
-  const now = Date.now();
-  const diff = now - ts;
-  if (diff < 60000) return 'just now';
-  if (diff < 3600000) return Math.floor(diff / 60000) + 'm ago';
-  if (diff < 86400000) return Math.floor(diff / 3600000) + 'h ago';
-  if (diff < 604800000) return Math.floor(diff / 86400000) + 'd ago';
-  return d.toLocaleDateString();
-}
-
-function _escHtml(str: string) {
-  return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
-
-// ── Wire auto-save into agent generation ─────────────────
-// Called after generatedAgents is populated (patched into renderResults)
-function _onAgentsReady() {
+// Hook called after agents are generated
+function _onAgentsReady(): void {
   scheduleAutoSave();
-  _updateProjectsBadge();
 }
 
-// ── Init on load ──────────────────────────────────────────
-window.addEventListener('DOMContentLoaded', async () => {
-  try {
-    await dbOpen();
-    await _updateProjectsBadge();
-  } catch (e) {
-    console.warn('[AgentSpark] IndexedDB init failed:', e);
-  }
-  // Initialize collapsible API setup — open by default
-  toggleApiSetup(true);
-  // Restore session API key; migrate legacy localStorage value once.
+// ─── Window exports ───────────────────────────────────────
+window.saveCurrentProject = saveCurrentProject;
+window.loadProject = loadProject;
+window.deleteProject = deleteProject;
+window.forkProject = forkProject;
+window.openProjectsScreen = openProjectsScreen;
+window.renderProjectsList = renderProjectsList;
+window.scheduleAutoSave = scheduleAutoSave;
+window._onAgentsReady = _onAgentsReady;
+window._updateProjectsBadge = _updateProjectsBadge;
+
+// ─── Init on load ─────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+  await _updateProjectsBadge();
+
+  // Restore API key from sessionStorage (migrated from localStorage for security)
   let savedKey = sessionStorage.getItem('agentspark-api-key');
   if (!savedKey) {
     const legacyKey = localStorage.getItem('agentspark-api-key');
@@ -386,83 +387,10 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
   if (savedKey) {
     apiKey = savedKey;
-    const inp = (document.getElementById('apiKeySetupInput') as HTMLInputElement);
+    const inp = document.getElementById('apiKeySetupInput') as HTMLInputElement | null;
     if (inp) inp.value = savedKey;
-    // Hide demo CTA when key already present
-    const demoCta = (document.getElementById('demo-cta') as HTMLElement);
+    const demoCta = document.getElementById('demo-cta') as HTMLElement | null;
     if (demoCta) demoCta.style.display = 'none';
-    checkApiKey();
+    if (typeof checkApiKey === 'function') checkApiKey();
   }
 });
-
-// ─── STATE ───────────────────────────────────────────────
-let lang = 'en';
-let apiKey = '';
-let selectedModel: any = {
-  provider: 'gemini',
-  model: 'gemini-2.5-flash-preview-05-20',
-  endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}',
-  tag: 'gemini'
-};
-let currentTopic = '';
-let currentLevel = 'iskra';
-var chatHistory: any[] = [];
-let conversationState = 'interview';
-let questionCount = 0;
-let MAX_QUESTIONS = 6;
-let generatedAgents: any[] = [];
-let generatedFiles: Record<string, string> = {};
-let refineHistory: any[] = [];
-let isRefining = false;
-const APP_VERSION = '1.1.0';
-let _lastScreenName = 'topic';
-let _teamGeneratedSig = '';
-
-function getActiveScreenName() {
-  const active = (document.querySelector('.screen.active') as HTMLElement);
-  if (!active || !active.id) return _lastScreenName;
-  return active.id.replace(/^screen-/, '');
-}
-
-function trackEvent(eventName: string, data: any = {}) {
-  const payload = {
-    event: String(eventName || 'unknown'),
-    timestamp: new Date().toISOString(),
-    app_version: APP_VERSION,
-    provider: selectedModel?.tag || 'unknown',
-    screen: getActiveScreenName(),
-    success: data.success !== false,
-    ...data
-  };
-  if (window.plausible && typeof window.plausible === 'function') {
-    try { window.plausible(payload.event, { props: payload }); } catch (e) { }
-  }
-  if (window.gtag && typeof window.gtag === 'function') {
-    try { window.gtag('event', payload.event, payload); } catch (e) { }
-  }
-  console.debug('[AgentSpark event]', payload);
-}
-
-window.addEventListener('error', (e: any) => {
-  trackEvent('runtime_error', {
-    success: false,
-    message: String(e.message || 'window_error').slice(0, 220),
-    source: String(e.filename || '').slice(0, 140),
-    line: e.lineno || 0,
-    col: e.colno || 0
-  });
-});
-
-window.addEventListener('unhandledrejection', (e: any) => {
-  trackEvent('runtime_error', {
-    success: false,
-    message: String(e.reason?.message || e.reason || 'unhandled_rejection').slice(0, 220)
-  });
-});
-
-// Modal state
-let currentModalFile = '';
-let currentModalTab = 'preview';
-let mdBrowserActiveFile = '';
-
-// ─── I18N ─────────────────────────────────────────────────

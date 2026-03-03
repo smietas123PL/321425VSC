@@ -1,0 +1,54 @@
+{
+    "indexes": [
+        {
+            "collectionGroup": "community_templates",
+            "queryScope": "COLLECTION",
+            "comment": "G-06: Required for getApprovedTemplates query: WHERE approved==true ORDER BY downloads DESC, createdAt DESC",
+            "fields": [
+                {
+                    "fieldPath": "approved",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "downloads",
+                    "order": "DESCENDING"
+                },
+                {
+                    "fieldPath": "createdAt",
+                    "order": "DESCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "projects",
+            "queryScope": "COLLECTION",
+            "comment": "Required for getUserProjects query: WHERE userId==X ORDER BY updatedAt DESC",
+            "fields": [
+                {
+                    "fieldPath": "userId",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "updatedAt",
+                    "order": "DESCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "refresh_tokens",
+            "queryScope": "COLLECTION",
+            "comment": "Required for token cleanup: WHERE userId==X ORDER BY createdAt ASC",
+            "fields": [
+                {
+                    "fieldPath": "userId",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "createdAt",
+                    "order": "ASCENDING"
+                }
+            ]
+        }
+    ],
+    "fieldOverrides": []
+}

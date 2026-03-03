@@ -16,13 +16,31 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
 
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
       - name: Lint
         run: npm run lint
+
+  typecheck:
+    # L-05: TypeScript type check added \u2014 ensures tsc errors don't reach main
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: TypeScript type check (must be 0 errors)
+        run: npx tsc --noEmit
 
   smoke:
     runs-on: ubuntu-latest
@@ -33,10 +51,47 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
 
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
+      - name: Build (Vite production)
+        run: npm run build
+
       - name: Release smoke checks
         run: npm run smoke
+
+  backend-syntax:
+    # L-05: Backend ESM syntax check \u2014 ensures no CJS/ESM issues at import time
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install backend dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Check backend ESM syntax (no Firestore needed)
+        run: |
+          node --check src/server.js
+          node --check src/db/models.js
+          node --check src/routes/auth.js
+          node --check src/routes/generate.js
+          node --check src/routes/projects.js
+          node --check src/routes/templates.js
+          node --check src/middleware/auth.js
+          node --check src/middleware/hmac.js
+        env:
+          # Minimal env so dotenv/guards don't crash
+          NODE_ENV: test
+          JWT_SECRET: ci-dummy-secret-not-used
+          CORS_ORIGIN: http://localhost:5173

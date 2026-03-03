@@ -1,41 +1,51 @@
-// js/export.js
+// ─── EXPORT.TS — AgentSpark Framework Export ─────────────
+// Fixed: TS2339 Exporter property errors, TS7006 implicit any params,
+//        TS7034/7005 tasks array, TS2304 appAlert
 
-const Exporter: any = {};
-
-// --- Helper Functions ---
-
-function extractSection(md: string, sectionName: string) {
-    if (!md) return '';
-    // Match ## Section Name or **Section Name:**
-    // Case insensitive
-    // Capture content until next ## or ** or end of string
-    const regex = new RegExp(`(?:##|\\*\\*)\\s*${sectionName}(?::|\\s)\\s*([\\s\\S]*?)(?=(?:\\n(?:##|\\*\\*)|\$))`, 'i');
-    const match = md.match(regex);
-    return match ? match[1].trim() : '';
+// ─── Exporter interface ───────────────────────────────────
+interface IExporter {
+  toCrewAI:    (agents: any[]) => string;
+  toLangGraph: (agents: any[]) => string;
+  download:    (filename: string, content: string) => void;
 }
 
-function cleanStr(str: string) {
-    if (!str) return '';
-    return str.replace(/"/g, '\\"').replace(/\n/g, '\\n');
+const Exporter: IExporter = {
+  toCrewAI:    () => '',
+  toLangGraph: () => '',
+  download:    () => {},
+};
+
+// ─── Helper functions ─────────────────────────────────────
+function extractSection(md: string, sectionName: string): string {
+  if (!md) return '';
+  const regex = new RegExp(
+    `(?:##|\\*\\*)\\s*${sectionName}(?::|\\s)\\s*([\\s\\S]*?)(?=(?:\\n(?:##|\\*\\*)|\$))`,
+    'i'
+  );
+  const match = md.match(regex);
+  return match ? match[1].trim() : '';
 }
 
-function pythonStr(str: string) {
-    if (!str) return '""';
-    if (str.includes('\n')) {
-        return `"""${str.replace(/"""/g, '\\"\\"\\"')}"""`;
-    }
-    return `"${str.replace(/"/g, '\\"')}"`;
+function cleanStr(str: string): string {
+  if (!str) return '';
+  return str.replace(/"/g, '\\"').replace(/\n/g, '\\n');
 }
 
-function sanitizeVarName(name: string) {
-    return name.toLowerCase().replace(/[^a-z0-9_]/g, '_').replace(/^_+|_+$/g, '');
+function pythonStr(str: string): string {
+  if (!str) return '""';
+  if (str.includes('\n')) {
+    return `"""${str.replace(/"""/g, '\\"\\"\\"')}"""`;
+  }
+  return `"${str.replace(/"/g, '\\"')}"`;
 }
 
+function sanitizeVarName(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9_]/g, '_').replace(/^_+|_+$/g, '');
+}
 
-// --- CrewAI Export ---
-
-Exporter.toCrewAI = function (agents: any[]) {
-    let pythonCode = `from crewai import Agent, Task, Crew, Process
+// ─── CrewAI Export ────────────────────────────────────────
+Exporter.toCrewAI = function (agents: any[]): string {
+  let pythonCode = `from crewai import Agent, Task, Crew, Process
 import os
 
 # Ensure you have OPENAI_API_KEY set in your environment
@@ -43,20 +53,19 @@ import os
 
 `;
 
-    // 1. Agents
-    pythonCode += `# --- Agents ---\n`;
-    agents.forEach((agent: any) => {
-        const varName = sanitizeVarName(agent.name) + "_agent";
+  pythonCode += `# --- Agents ---\n`;
+  agents.forEach((agent: any) => {
+    const varName = sanitizeVarName(agent.name) + '_agent';
 
-        let goal = extractSection(agent.agentMd, "Goal");
-        if (!goal) goal = agent.description || "Complete assigned tasks effectively.";
+    let goal = extractSection(agent.agentMd, 'Goal');
+    if (!goal) goal = agent.description || 'Complete assigned tasks effectively.';
 
-        let backstory = extractSection(agent.agentMd, "Backstory");
-        if (!backstory) backstory = extractSection(agent.agentMd, "Context");
-        if (!backstory) backstory = extractSection(agent.agentMd, "Personality");
-        if (!backstory) backstory = agent.description || "An AI agent specialized in this role.";
+    let backstory = extractSection(agent.agentMd, 'Backstory');
+    if (!backstory) backstory = extractSection(agent.agentMd, 'Context');
+    if (!backstory) backstory = extractSection(agent.agentMd, 'Personality');
+    if (!backstory) backstory = agent.description || 'An AI agent specialized in this role.';
 
-        pythonCode += `${varName} = Agent(
+    pythonCode += `${varName} = Agent(
     role=${pythonStr(agent.role || agent.name)},
     goal=${pythonStr(goal)},
     backstory=${pythonStr(backstory)},
@@ -65,50 +74,42 @@ import os
 )
 
 `;
-    });
+  });
 
-    // 2. Tasks
-    pythonCode += `# --- Tasks ---\n`;
-    const tasks: any[] = [];
-    agents.forEach((agent: any) => {
-        const agentVar = sanitizeVarName(agent.name) + "_agent";
-        const taskVar = sanitizeVarName(agent.name) + "_task";
-        tasks.push(taskVar);
+  pythonCode += `# --- Tasks ---\n`;
+  const tasks: string[] = [];
+  agents.forEach((agent: any) => {
+    const agentVar = sanitizeVarName(agent.name) + '_agent';
+    const taskVar  = sanitizeVarName(agent.name) + '_task';
+    tasks.push(taskVar);
 
-        const description = `Execute the responsibilities of ${agent.role || agent.name}. Analyze the topic and provide insights.`;
+    const description = `Execute the responsibilities of ${agent.role || agent.name}. Analyze the topic and provide insights.`;
 
-        pythonCode += `${taskVar} = Task(
+    pythonCode += `${taskVar} = Task(
     description=${pythonStr(description)},
-    expected_output=${pythonStr("A detailed report or code based on the task description.")},
+    expected_output=${pythonStr('A detailed report or code based on the task description.')},
     agent=${agentVar}
 )
 
 `;
-    });
+  });
 
-    // 3. Crew
-    pythonCode += `# --- Crew ---\n`;
-    pythonCode += `crew = Crew(
-    agents=[${agents.map((a: any) => sanitizeVarName(a.name) + "_agent").join(', ')}],
+  pythonCode += `# --- Crew ---\n`;
+  pythonCode += `crew = Crew(
+    agents=[${agents.map((a: any) => sanitizeVarName(a.name) + '_agent').join(', ')}],
     tasks=[${tasks.join(', ')}],
     process=Process.sequential,
     verbose=True
 )
 
 `;
-
-    pythonCode += `result = crew.kickoff()
-print(result)
-`;
-
-    return pythonCode;
+  pythonCode += `result = crew.kickoff()\nprint(result)\n`;
+  return pythonCode;
 };
 
-
-// --- LangGraph Export ---
-
-Exporter.toLangGraph = function (agents: any[]) {
-    let pythonCode = `from typing import Dict, TypedDict, Annotated, List, Union
+// ─── LangGraph Export ─────────────────────────────────────
+Exporter.toLangGraph = function (agents: any[]): string {
+  let pythonCode = `from typing import Dict, TypedDict, Annotated, List, Union
 from langgraph.graph import StateGraph, END
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 from langchain_openai import ChatOpenAI
@@ -124,127 +125,108 @@ llm = ChatOpenAI(model="gpt-4o")
 
 `;
 
-    // Nodes
-    pythonCode += `# --- Agent Nodes ---\n`;
+  pythonCode += `# --- Agent Nodes ---\n`;
+  agents.forEach((agent: any) => {
+    const nodeName = sanitizeVarName(agent.name);
 
-    agents.forEach((agent: any) => {
-        const nodeName = sanitizeVarName(agent.name);
+    let systemPrompt = `You are ${agent.name}, a ${agent.role || 'specialist'}.\n`;
+    const goal = extractSection(agent.agentMd, 'Goal');
+    if (goal) systemPrompt += `Your Goal: ${goal}\n`;
+    let backstory = extractSection(agent.agentMd, 'Backstory');
+    if (!backstory) backstory = extractSection(agent.agentMd, 'Context');
+    if (backstory) systemPrompt += `Backstory: ${backstory}\n`;
 
-        let systemPrompt = `You are ${agent.name}, a ${agent.role || "specialist"}.\n`;
-        let goal = extractSection(agent.agentMd, "Goal");
-        if (goal) systemPrompt += `Your Goal: ${goal}\n`;
-
-        let backstory = extractSection(agent.agentMd, "Backstory");
-        if (!backstory) backstory = extractSection(agent.agentMd, "Context");
-        if (backstory) systemPrompt += `Backstory: ${backstory}\n`;
-
-        pythonCode += `def ${nodeName}_node(state: AgentState):
+    pythonCode += `def ${nodeName}_node(state: AgentState):
     messages = state['messages']
-    # Simple invocation - in a real app, bind tools or use system prompt
     response = llm.invoke(
         [{"role": "system", "content": ${pythonStr(systemPrompt)}}] + messages
     )
     return {"messages": [response]}
 
 `;
-    });
+  });
 
-    // Graph Construction
-    pythonCode += `# --- Graph Construction ---\n`;
-    pythonCode += `workflow = StateGraph(AgentState)\n\n`;
+  pythonCode += `# --- Graph Construction ---\n`;
+  pythonCode += `workflow = StateGraph(AgentState)\n\n`;
 
-    agents.forEach((agent: any) => {
-        const nodeName = sanitizeVarName(agent.name);
-        pythonCode += `workflow.add_node("${nodeName}", ${nodeName}_node)\n`;
-    });
+  agents.forEach((agent: any) => {
+    const nodeName = sanitizeVarName(agent.name);
+    pythonCode += `workflow.add_node("${nodeName}", ${nodeName}_node)\n`;
+  });
 
-    pythonCode += `\n# Define Edges (Sequential for simplicity)\n`;
-
-    if (agents.length > 0) {
-        pythonCode += `workflow.set_entry_point("${sanitizeVarName(agents[0].name)}")\n`;
-
-        for (let i = 0; i < agents.length - 1; i++) {
-            const current = sanitizeVarName(agents[i].name);
-            const next = sanitizeVarName(agents[i + 1].name);
-            pythonCode += `workflow.add_edge("${current}", "${next}")\n`;
-        }
-
-        pythonCode += `workflow.add_edge("${sanitizeVarName(agents[agents.length - 1].name)}", END)\n`;
+  pythonCode += `\n# Define Edges (Sequential)\n`;
+  if (agents.length > 0) {
+    pythonCode += `workflow.set_entry_point("${sanitizeVarName(agents[0].name)}")\n`;
+    for (let i = 0; i < agents.length - 1; i++) {
+      const current = sanitizeVarName(agents[i].name);
+      const next    = sanitizeVarName(agents[i + 1].name);
+      pythonCode += `workflow.add_edge("${current}", "${next}")\n`;
     }
+    pythonCode += `workflow.add_edge("${sanitizeVarName(agents[agents.length - 1].name)}", END)\n`;
+  }
 
-    pythonCode += `\n# Compile
-app = workflow.compile()
-
-# Run
-inputs = {"messages": [HumanMessage(content="Start the project.")]}
-for output in app.stream(inputs):
-    for key, value in output.items():
-        print(f"Output from node '{key}':")
-        print("---")
-        print(value)
-        print("\\n---\\n")
-`;
-
-    return pythonCode;
+  pythonCode += `\n# Compile\napp = workflow.compile()\n\n# Run\ninputs = {"messages": [HumanMessage(content="Start the project.")]}\nfor output in app.stream(inputs):\n    for key, value in output.items():\n        print(f"Output from node '{key}':")\n        print("---")\n        print(value)\n        print("\\n---\\n")\n`;
+  return pythonCode;
 };
 
-
-// --- Helper: Download ---
-
-Exporter.download = function (filename: string, content: string) {
-    const blob = new Blob([content], { type: 'text/plain' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = filename;
-    document.body.appendChild(a); // Append to body to ensure click works in some browsers
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(a.href);
+// ─── Download helper ──────────────────────────────────────
+Exporter.download = function (filename: string, content: string): void {
+  const blob = new Blob([content], { type: 'text/plain' });
+  const a    = document.createElement('a');
+  a.href     = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
 };
 
-// Expose to window
+// ─── Window export ────────────────────────────────────────
 window.Exporter = Exporter;
 
-// --- UI Logic (Modal Handling) ---
+// ─── UI Logic ─────────────────────────────────────────────
+// appAlert may not exist in all environments — use window.appAlert with fallback
+function _alert(msg: string, title?: string): void {
+  if (typeof window.appAlert === 'function') {
+    window.appAlert(msg, title);
+  } else {
+    alert(title ? `${title}\n\n${msg}` : msg);
+  }
+}
 
-window.openExportCodeModal = function () {
-    // Check if Pro (optional logic based on existing code)
-    if (typeof window.isPro !== 'undefined' && !window.isPro) {
-        if (typeof showPaywall === 'function') {
-            showPaywall();
-        } else {
-            window.appAlert("This feature is locked for Pro users.", "Pro Feature");
-        }
-        return;
+window.openExportCodeModal = function (): void {
+  if (typeof window.isPro !== 'undefined' && !window.isPro) {
+    if (typeof window.showPaywall === 'function') {
+      window.showPaywall();
+    } else {
+      _alert('This feature is locked for Pro users.', 'Pro Feature');
     }
-
-    if (!window.generatedAgents || window.generatedAgents.length === 0) {
-        window.appAlert("No agents generated yet.", "Export Unavailable");
-        return;
-    }
-
-    const modal = (document.getElementById('export-code-modal') as HTMLElement);
-    if (modal) modal.classList.add('open');
+    return;
+  }
+  if (!window.generatedAgents || window.generatedAgents.length === 0) {
+    _alert('No agents generated yet.', 'Export Unavailable');
+    return;
+  }
+  const modal = document.getElementById('export-code-modal') as HTMLElement | null;
+  if (modal) modal.classList.add('open');
 };
 
-window.closeExportCodeModal = function () {
-    const modal = (document.getElementById('export-code-modal') as HTMLElement);
-    if (modal) modal.classList.remove('open');
+window.closeExportCodeModal = function (): void {
+  const modal = document.getElementById('export-code-modal') as HTMLElement | null;
+  if (modal) modal.classList.remove('open');
 };
 
-window.exportCode = function (framework: string) {
-    if (!window.generatedAgents || window.generatedAgents.length === 0) {
-        window.appAlert("No agents generated yet.", "Export Unavailable");
-        return;
-    }
-
-    let code = "";
-    if (framework === 'crewai') {
-        code = Exporter.toCrewAI(window.generatedAgents);
-    } else if (framework === 'langgraph') {
-        code = Exporter.toLangGraph(window.generatedAgents);
-    }
-
-    Exporter.download(`agents_${framework}.py`, code);
-    window.closeExportCodeModal();
+window.exportCode = function (framework: string): void {
+  if (!window.generatedAgents || window.generatedAgents.length === 0) {
+    _alert('No agents generated yet.', 'Export Unavailable');
+    return;
+  }
+  let code = '';
+  if (framework === 'crewai') {
+    code = Exporter.toCrewAI(window.generatedAgents);
+  } else if (framework === 'langgraph') {
+    code = Exporter.toLangGraph(window.generatedAgents);
+  }
+  Exporter.download(`agents_${framework}.py`, code);
+  if (typeof window.closeExportCodeModal === 'function') window.closeExportCodeModal();
 };

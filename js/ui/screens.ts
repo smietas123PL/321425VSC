@@ -2,15 +2,15 @@ import { state } from '../core/state.js';
 
 let _drawerOpen = false;
 
-function toggleDrawer() {
+function toggleDrawer(): void {
   _drawerOpen ? closeDrawer() : openDrawer();
 }
 
-function openDrawer() {
+function openDrawer(): void {
   _drawerOpen = true;
   (document.getElementById('nav-drawer') as HTMLElement)?.classList.add('open');
   (document.getElementById('nav-drawer-overlay') as HTMLElement)?.classList.add('open');
-  const btn = (document.getElementById('burger-btn') as HTMLElement);
+  const btn = document.getElementById('burger-btn') as HTMLElement | null;
   if (btn) {
     btn.classList.add('open');
     btn.setAttribute('aria-expanded', 'true');
@@ -19,10 +19,10 @@ function openDrawer() {
   updateDrawerActive();
 }
 
-function closeDrawer() {
+function closeDrawer(): void {
   _drawerOpen = false;
   (document.getElementById('nav-drawer') as HTMLElement)?.classList.remove('open');
-  const overlay = (document.getElementById('nav-drawer-overlay') as HTMLElement);
+  const overlay = document.getElementById('nav-drawer-overlay') as HTMLElement | null;
   if (overlay) {
     overlay.style.opacity = '0';
     setTimeout(() => {
@@ -30,7 +30,7 @@ function closeDrawer() {
       overlay.style.opacity = '';
     }, 280);
   }
-  const btn = (document.getElementById('burger-btn') as HTMLElement);
+  const btn = document.getElementById('burger-btn') as HTMLElement | null;
   if (btn) {
     btn.classList.remove('open');
     btn.setAttribute('aria-expanded', 'false');
@@ -38,10 +38,10 @@ function closeDrawer() {
   document.body.style.overflow = '';
 }
 
-function updateDrawerActive() {
+function updateDrawerActive(): void {
   const screens = ['home', 'projects', 'chat', 'results'];
   let active = 'home';
-  screens.forEach(s => {
+  screens.forEach((s: string) => {
     const screen = document.getElementById('screen-' + (s === 'home' ? 'topic' : s));
     if (screen && screen.classList.contains('active')) active = s;
   });
@@ -50,20 +50,20 @@ function updateDrawerActive() {
   if (activeEl) activeEl.classList.add('active');
 
   // Badge sync
-  const tabBadge = (document.getElementById('tab-badge') as HTMLElement);
-  const dnavBadge = (document.getElementById('dnav-badge') as HTMLElement);
+  const tabBadge = document.getElementById('tab-badge') as HTMLElement | null;
+  const dnavBadge = document.getElementById('dnav-badge') as HTMLElement | null;
   if (dnavBadge && tabBadge) {
     dnavBadge.textContent = tabBadge.textContent;
     dnavBadge.style.display = tabBadge.style.display;
   }
 
   // Theme icon
-  const themeIcon = (document.getElementById('dnav-theme-icon') as HTMLElement);
+  const themeIcon = document.getElementById('dnav-theme-icon') as HTMLElement | null;
   const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
   if (themeIcon) themeIcon.textContent = isDark ? '🌙' : '☀️';
 }
 
-function showScreen(name: string) {
+function showScreen(name: string): void {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   const target = document.getElementById(`screen-${name}`);
   if (target) target.classList.add('active');
@@ -76,28 +76,28 @@ function showScreen(name: string) {
     window.trackEvent('screen_view', { success: true, screen: name });
   }
 
-  // Context bar update
   if (window._updateContextBar) window._updateContextBar(name);
   updateDrawerActive();
 
-  // Re-init swipe gestures after projects screen loads
   if (name === 'projects' && window._initSwipeGestures) {
     setTimeout(window._initSwipeGestures, 200);
   }
 }
 
-function syncIosTabBar(screenName: string) {
-  const tabMap = {
-    'topic': 'home',
-    'gallery': 'gallery',
-    'projects': 'projects',
-    'chat': 'chat',
-    'results': 'results',
-  };
-  const activeTab = (tabMap as any)[screenName] || 'home';
+type TabName = 'topic' | 'gallery' | 'projects' | 'chat' | 'results';
 
-  const chatTab = (document.getElementById('tab-chat') as HTMLElement);
-  const resultsTab = (document.getElementById('tab-results') as HTMLElement);
+function syncIosTabBar(screenName: string): void {
+  const tabMap: Record<TabName, string> = {
+    topic: 'home',
+    gallery: 'gallery',
+    projects: 'projects',
+    chat: 'chat',
+    results: 'results',
+  };
+  const activeTab = tabMap[screenName as TabName] || 'home';
+
+  const chatTab = document.getElementById('tab-chat') as HTMLElement | null;
+  const resultsTab = document.getElementById('tab-results') as HTMLElement | null;
   if (chatTab) chatTab.style.display = (screenName === 'chat' || screenName === 'results') ? '' : 'none';
   if (resultsTab) resultsTab.style.display = (screenName === 'results') ? '' : 'none';
 
@@ -106,7 +106,7 @@ function syncIosTabBar(screenName: string) {
   if (activeBtn) activeBtn.classList.add('active');
 }
 
-function iosTabNav(tab: string) {
+function iosTabNav(tab: string): void {
   if (tab === 'home') showScreen('topic');
   else if (tab === 'gallery') {
     showScreen('gallery');
@@ -132,11 +132,10 @@ window.syncIosTabBar = syncIosTabBar;
 window.iosTabNav = iosTabNav;
 
 // Key listeners
-document.addEventListener('keydown', e => {
+document.addEventListener('keydown', (e: KeyboardEvent) => {
   if (e.key === 'Escape' && _drawerOpen) closeDrawer();
 });
 
-// Handle back-to-top sync if needed
 window.addEventListener('scroll', () => {
   if (window._syncBackToTop) window._syncBackToTop();
 }, { passive: true });

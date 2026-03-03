@@ -29,10 +29,42 @@ build/
 # Environment
 .env
 .env.local
+.env.production
 .env.*.local
+backend/.env
+backend/.env.local
+
+# Firebase service accounts (NEVER commit)
+serviceAccount.json
+service-account.json
+firebase-adminsdk*.json
+*-firebase-adminsdk*.json
 
 # Netlify
 .netlify/
 
 # Vercel
 .vercel/
+
+# SQLite local DB
+backend/data/*.db
+*.db
+*.sqlite
+*.sqlite3
+
+# Migration/temp scripts
+mig_*.py
+migrate_*.py
+refactor.py
+append_css.py
+cast_dom.py
+check_errors.py
+fix_graph.py
+remove_blocks.py
+remove_nocheck.py
+update_*.py
+peek.txt
+top_errors.txt
+app_errors*.txt
+errors*.txt
+ts_errors*.txt

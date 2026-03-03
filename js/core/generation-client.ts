@@ -215,6 +215,18 @@ export async function callGemini(systemInstruction: string, userMessage: string,
     }
 
     setTypingStatus('');
+    // H-11: Explicitly surface the error to user — don't rely on caller to show a UI error.
+    // Without this, some callers silently swallow the throw and leave the UI in limbo.
+    const errorMsg = lastError?.message || 'All models failed';
+    console.error('[AgentSpark] All models exhausted:', errorMsg);
+    if (typeof showNotif === 'function') {
+        showNotif(
+            lang === 'en'
+                ? `⚠ Generation failed: ${errorMsg}`
+                : `⚠ Błąd generowania: ${errorMsg}`,
+            true
+        );
+    }
     throw lastError || new Error('All models failed');
 }
 

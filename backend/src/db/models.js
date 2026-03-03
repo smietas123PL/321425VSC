@@ -1,31 +1,27 @@
+// ─── DB/MODELS.JS — Firestore data models ────────────────────────────────
+// Fixed H-04: Replaced Math.random() UUID with crypto.randomUUID() (Node 18+).
+// Fixed M-02: Added downloads: 0 to createCommunityTemplate.
+// Fixed L-04: createProject ignores client-supplied `id` — always generates server-side.
+
 import { db } from './firestore.js';
 import crypto from 'crypto';
-
-// Helper for generating UUID v4
-function uuidv4() {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-    var r = Math.random() * 16 | 0,
-      v = c === 'x' ? r : (r & 0x3 | 0x8);
-    return v.toString(16);
-  });
-}
 
 // ─── USERS ─────────────────────────────────────
 
 export async function createUser(email, name, provider = 'google') {
-  const id = uuidv4();
+  // L-01: Separate getUserByEmail error so outer catch gives readable message
+  let existing;
   try {
-    const existing = await getUserByEmail(email);
-    if (existing) {
-      return existing; // Return existing if email is already tracked
-    }
-
-    const userData = { id, email, name, provider, createdAt: new Date().toISOString() };
-    await db.collection('users').doc(id).set(userData);
-    return userData;
-  } catch (error) {
-    throw error;
+    existing = await getUserByEmail(email);
+  } catch (lookupErr) {
+    throw new Error(`User lookup failed: ${lookupErr.message}`);
   }
+  if (existing) return existing; // idempotent — return existing user
+
+  const id = crypto.randomUUID(); // H-04: crypto-safe UUID
+  const userData = { id, email, name, provider, createdAt: new Date().toISOString() };
+  await db.collection('users').doc(id).set(userData);
+  return userData;
 }
 
 export async function getUserByEmail(email) {
@@ -43,7 +39,8 @@ export async function getUserById(id) {
 // ─── PROJECTS ──────────────────────────────────
 
 export async function createProject(userId, projectData) {
-  const id = projectData.id || uuidv4();
+  // L-04: Always generate ID server-side — never trust client-supplied id
+  const id = crypto.randomUUID();
   const now = new Date().toISOString();
   const createdAt = projectData.createdAt || now;
   const updatedAt = projectData.updatedAt || now;
@@ -58,7 +55,7 @@ export async function createProject(userId, projectData) {
     agents: projectData.agents || [],
     files: projectData.files || [],
     createdAt,
-    updatedAt
+    updatedAt,
   };
 
   try {
@@ -119,7 +116,7 @@ export async function createRefreshToken(userId) {
   await db.collection('refresh_tokens').doc(token).set({
     userId,
     token,
-    expiresAt: expiresAt.toISOString()
+    expiresAt: expiresAt.toISOString(),
   });
 
   return token;
@@ -145,7 +142,7 @@ export async function logAudit(userId, action, resource, details, ipAddress) {
       resource,
       details,
       ipAddress,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     console.error('Error logging audit:', error);
@@ -155,7 +152,7 @@ export async function logAudit(userId, action, resource, details, ipAddress) {
 // ─── COMMUNITY TEMPLATES (v1.4.0) ──────────────
 
 export async function createCommunityTemplate(userId, templateData) {
-  const id = uuidv4();
+  const id = crypto.randomUUID(); // H-04: crypto-safe UUID
   const now = new Date().toISOString();
 
   const data = {
@@ -167,8 +164,9 @@ export async function createCommunityTemplate(userId, templateData) {
     difficulty: templateData.difficulty || 'intermediate',
     agents: templateData.agents || [],
     approved: false, // Not approved yet
+    downloads: 0,    // M-02: initialize to 0 so orderBy('downloads') queries work
     createdAt: now,
-    updatedAt: now
+    updatedAt: now,
   };
 
   try {

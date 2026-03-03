@@ -38,9 +38,11 @@ export function requireAuth(req, res, next) {
 }
 
 export function generateToken(userId, email) {
+  // H-08: Reduced from '7d' to '15m' — short-lived access token
+  // Clients should use refresh tokens for long sessions
   return jwt.sign(
     { id: userId, email },
     process.env.JWT_SECRET,
-    { expiresIn: '7d' }
+    { expiresIn: '15m' }
   );
 }

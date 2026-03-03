@@ -203,14 +203,17 @@ function setLang(l: string): void {
   window.lang = l;
   (document.getElementById('btn-en') as HTMLElement)?.classList.toggle('active', l === 'en');
   (document.getElementById('btn-pl') as HTMLElement)?.classList.toggle('active', l === 'pl');
-  (window as any).renderTopicScreen();
+  // renderTopicScreen lives in app.ts; call via window to avoid compile-time dependency
+  if (typeof window.renderTopicScreen === 'function') {
+    window.renderTopicScreen();
+  }
   refreshStaticI18n();
 }
 
 function refreshStaticI18n(): void {
-  const drawerImport = (document.getElementById('drawer-import-label') as HTMLElement);
-  const importModalTitle = (document.getElementById('import-modal-title') as HTMLElement);
-  const shareCopyBtn = (document.getElementById('share-copy-btn') as HTMLElement);
+  const drawerImport = document.getElementById('drawer-import-label') as HTMLElement | null;
+  const importModalTitle = document.getElementById('import-modal-title') as HTMLElement | null;
+  const shareCopyBtn = document.getElementById('share-copy-btn') as HTMLElement | null;
   if (drawerImport) drawerImport.textContent = tr('Import Project', 'Importuj projekt');
   if (importModalTitle) importModalTitle.textContent = tr('📥 Import Project', '📥 Importuj projekt');
   if (shareCopyBtn && !shareCopyBtn.classList.contains('copied')) {
@@ -218,8 +221,7 @@ function refreshStaticI18n(): void {
   }
 }
 
-
-window.t = t;
+// Attach to window — single assignment each
 window.t = t;
 window.tr = tr;
 window.setLang = setLang;

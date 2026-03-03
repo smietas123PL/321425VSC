@@ -1,16 +1,13 @@
 // ─── RESULTS SCREEN ───────────────────────────────────────
-declare function _renderSkeletonCards(n: number): void;
-declare function renderVersionPanel(): void;
-declare function renderTraceLive(): void;
-declare function renderScoring(data: any): void;
-declare let refineSnapshots: any[];
-declare let selectedRefineAction: any;
+// All declare statements moved to js/globals.d.ts — do NOT re-declare here.
 
-function showResults(skipReset = false) {
+function showResults(skipReset = false): void {
   showScreen('results');
-  _updateContextBar('results');
+  if (window._updateContextBar) window._updateContextBar('results');
   // Show skeleton while agents render
-  if (!skipReset) _renderSkeletonCards(4);
+  if (!skipReset && typeof window._renderSkeletonCards === 'function') {
+    window._renderSkeletonCards(4);
+  }
 
   (document.getElementById('result-badge') as HTMLElement).textContent = t('resultBadge');
   (document.getElementById('result-title') as HTMLElement).textContent = t('resultTitle');
@@ -21,8 +18,8 @@ function showResults(skipReset = false) {
   (document.getElementById('md-preview-btn') as HTMLElement).textContent = lang === 'en' ? '📄 Preview Docs' : '📄 Podgląd Docs';
   (document.getElementById('fw-export-btn') as HTMLElement).textContent = lang === 'en' ? '🚀 Export Framework' : '🚀 Eksport Framework';
 
-  renderVersionPanel();
-  renderTraceLive();
+  if (typeof renderVersionPanel === 'function') renderVersionPanel();
+  if (typeof renderTraceLive === 'function') renderTraceLive();
 
   if (!skipReset) {
     refineHistory = [];
@@ -35,76 +32,105 @@ function showResults(skipReset = false) {
 
   const lvl = t('levels').find((l: any) => l.id === currentLevel);
   if (lvl) {
-    (document.getElementById('result-badge') as HTMLElement).textContent = lvl.emoji + ' ' + lvl.name.toUpperCase() + ' — ' + t('resultBadge');
-    (document.getElementById('result-badge') as HTMLElement).style.borderColor = lvl.color + '66';
-    (document.getElementById('result-badge') as HTMLElement).style.color = lvl.color;
+    const badge = document.getElementById('result-badge') as HTMLElement;
+    badge.textContent = lvl.emoji + ' ' + lvl.name.toUpperCase() + ' — ' + t('resultBadge');
+    badge.style.borderColor = lvl.color + '66';
+    badge.style.color = lvl.color;
   }
 
   if (!skipReset) {
     let scoringAttempts = 0;
-    const tryRenderScoring = () => {
+    const tryRenderScoring = (): void => {
       scoringAttempts++;
       if (window._scoringData !== undefined) {
-        renderScoring(window._scoringData);
+        if (typeof renderScoring === 'function') renderScoring(window._scoringData);
       } else if (scoringAttempts < 30) {
         setTimeout(tryRenderScoring, 400);
       }
-      // silently give up after 12s — scoring is non-critical
     };
     setTimeout(tryRenderScoring, 300);
   }
 
   // Always ensure graph section is visible when results are shown
-  (document.getElementById('graph-title') as HTMLElement).textContent = lang === 'en' ? 'Agent Dependency Graph' : 'Graf Zależności Agentów';
+  (document.getElementById('graph-title') as HTMLElement).textContent = lang === 'en'
+    ? 'Agent Dependency Graph' : 'Graf Zależności Agentów';
   (document.getElementById('graph-section') as HTMLElement).style.display = 'block';
 
-  // Auto-save hook (#1)
-  _onAgentsReady();
+  // Auto-save hook
+  if (typeof _onAgentsReady === 'function') _onAgentsReady();
 
-  const grid = (document.getElementById('agents-grid') as HTMLElement);
+  const grid = document.getElementById('agents-grid') as HTMLElement;
   grid.innerHTML = '';
 
-  const technical = generatedAgents.filter(a => a.type === 'technical');
-  const business = generatedAgents.filter(a => a.type !== 'technical');
+  const technical = generatedAgents.filter((a: any) => a.type === 'technical');
+  const business = generatedAgents.filter((a: any) => a.type !== 'technical');
 
-  function makeAgentCard(agent: any) {
+  // XSS-safe HTML escape helper for results-render (LLM output hardening)
+  function _rrEsc(s: string): string {
+    if (!s) return '';
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  function makeAgentCard(agent: any): HTMLElement {
     const isTech = agent.type === 'technical';
     const card = document.createElement('div');
     card.className = 'agent-card';
     card.dataset.type = agent.type || 'technical';
     card.dataset.agentId = agent.id;
+    // XSS hardening: all agent fields escaped — LLM output may contain HTML
+    const eName = _rrEsc(agent.name);
+    const eRole = _rrEsc(agent.role);
+    const eDesc = _rrEsc(agent.description);
+    const eId = _rrEsc(agent.id);
+    const eEmoji = _rrEsc(agent.emoji || '🤖');
     card.innerHTML = `
       <div class="agent-card-header">
-        <div class="agent-avatar" style="background:${isTech ? 'linear-gradient(145deg,#c49a0a,#f2b90d)' : 'linear-gradient(145deg,#c44010,#e05a1a)'}">${agent.emoji || '🤖'}</div>
+        <div class="agent-avatar" style="background:${isTech
+        ? 'linear-gradient(145deg,#c49a0a,#f2b90d)'
+        : 'linear-gradient(145deg,#c44010,#e05a1a)'}">${eEmoji}</div>
         <div class="agent-card-meta">
-          <div class="agent-name">${agent.name}</div>
-          <div class="agent-role">${agent.role}</div>
-          <div class="agent-type-badge ${isTech ? 'badge-tech' : 'badge-biz'}" style="display:inline-block;margin-top:0.4rem;">${isTech ? (lang === 'en' ? 'Technical' : 'Techniczny') : (lang === 'en' ? 'Business' : 'Biznesowy')}</div>
+          <div class="agent-name">${eName}</div>
+          <div class="agent-role">${eRole}</div>
+          <div class="agent-type-badge ${isTech ? 'badge-tech' : 'badge-biz'}" style="display:inline-block;margin-top:0.4rem;">
+            ${isTech
+        ? (lang === 'en' ? 'Technical' : 'Techniczny')
+        : (lang === 'en' ? 'Business' : 'Biznesowy')}
+          </div>
         </div>
         <div style="margin-left:auto;display:flex;gap:6px;">
-           <button class="feedback-btn" onclick="event.stopPropagation();this.innerText='👍';this.style.color='var(--success)';this.style.transform='scale(1.2)'" style="background:none;border:none;cursor:pointer;font-size:1.1rem;opacity:0.6;transition:all 0.2s;" title="Like">👍</button>
-           <button class="feedback-btn" onclick="event.stopPropagation();this.innerText='👎';this.style.color='var(--accent2)';this.style.transform='scale(1.2)'" style="background:none;border:none;cursor:pointer;font-size:1.1rem;opacity:0.6;transition:all 0.2s;" title="Dislike">👎</button>
+          <button class="feedback-btn" onclick="event.stopPropagation();this.innerText='👍';this.style.color='var(--success)';this.style.transform='scale(1.2)'" style="background:none;border:none;cursor:pointer;font-size:1.1rem;opacity:0.6;transition:all 0.2s;" title="Like">👍</button>
+          <button class="feedback-btn" onclick="event.stopPropagation();this.innerText='👎';this.style.color='var(--accent2)';this.style.transform='scale(1.2)'" style="background:none;border:none;cursor:pointer;font-size:1.1rem;opacity:0.6;transition:all 0.2s;" title="Dislike">👎</button>
         </div>
       </div>
       <div class="agent-card-divider"></div>
       <div class="agent-card-body">
-        <div class="agent-desc">${agent.description}</div>
+        <div class="agent-desc">${eDesc}</div>
         <div class="file-chips-group">
           <span class="file-chips-label">Files</span>
           <div class="file-chips">
-            <div class="file-chip" tabindex="0" role="button" onclick="previewFile('agent-${agent.id}.md')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();previewFile('agent-${agent.id}.md')}">agent-${agent.id}.md</div>
-            <div class="file-chip" tabindex="0" role="button" onclick="previewFile('skill-${agent.id}.md')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();previewFile('skill-${agent.id}.md')}">skill-${agent.id}.md</div>
+            <div class="file-chip" tabindex="0" role="button"
+              onclick="previewFile('agent-${eId}.md')"
+              onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();previewFile('agent-${eId}.md')}">agent-${eId}.md</div>
+            <div class="file-chip" tabindex="0" role="button"
+              onclick="previewFile('skill-${eId}.md')"
+              onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();previewFile('skill-${eId}.md')}">skill-${eId}.md</div>
           </div>
         </div>
       </div>
     `;
     card.tabIndex = 0;
     card.setAttribute('role', 'article');
-    card.setAttribute('aria-label', `${agent.name} — ${agent.role}`);
+    card.setAttribute('aria-label', `${eName} — ${eRole}`);
     return card;
   }
 
-  function makeSection(title: string, icon: string, agents: any[], colorClass: string) {
+
+  function makeSection(title: string, icon: string, agents: any[], colorClass: string): void {
     if (agents.length === 0) return;
     const section = document.createElement('div');
     section.className = 'agent-section';
@@ -155,12 +181,13 @@ function showResults(skipReset = false) {
   configGrid.appendChild(configCard);
   configWrap.appendChild(configGrid);
   grid.appendChild(configWrap);
-  // Sync FAB after agents rendered
-  _syncFab();
+
+  if (typeof _syncFab === 'function') _syncFab();
 
   setTimeout(() => {
-    (window as any).buildGraphFromAgents();
-    const gc = (document.querySelector('.graph-container') as HTMLElement);
+    // buildGraphFromAgents is declared in globals.d.ts with optional agents param
+    if (typeof buildGraphFromAgents === 'function') buildGraphFromAgents(generatedAgents);
+    const gc = document.querySelector('.graph-container') as HTMLElement | null;
     if (gc && !gc.querySelector('.graph-legend')) {
       const leg = document.createElement('div');
       leg.className = 'graph-legend';
@@ -174,13 +201,13 @@ function showResults(skipReset = false) {
   }, 100);
 }
 
-function showInstructions() {
-  const section = (document.getElementById('instructions-section') as HTMLElement);
+function showInstructions(): void {
+  const section = document.getElementById('instructions-section') as HTMLElement;
   const isHidden = getComputedStyle(section).display === 'none';
   section.style.display = isHidden ? 'block' : 'none';
   if (isHidden) {
     (document.getElementById('instr-title') as HTMLElement).textContent = t('instrTitle');
-    const steps = (document.getElementById('instr-steps') as HTMLElement);
+    const steps = document.getElementById('instr-steps') as HTMLElement;
     steps.innerHTML = '';
     t('instrSteps').forEach((step: any, i: number) => {
       const div = document.createElement('div');
@@ -192,7 +219,7 @@ function showInstructions() {
   }
 }
 
-async function downloadZip() {
+async function downloadZip(): Promise<void> {
   if (typeof JSZip === 'undefined') {
     showNotif('JSZip not loaded', true);
     trackEvent('export_zip', { success: false, reason: 'jszip_missing' });
@@ -200,19 +227,17 @@ async function downloadZip() {
   }
   const zip = new JSZip();
 
-  // ── Core agent files ──────────────────────────────────────
   Object.entries(generatedFiles).forEach(([name, content]) => {
     zip.file(name, content);
   });
 
-  // ── config.json — structured metadata ────────────────────
   const cfg = {
     name: currentTopic,
     version: '1.0.0',
     generated_by: 'AgentSpark v1.1.0',
     generated_at: new Date().toISOString(),
     level: currentLevel,
-    agents: generatedAgents.map(a => ({
+    agents: generatedAgents.map((a: any) => ({
       id: a.id, name: a.name, role: a.role,
       description: a.description,
       agent_file: 'agent-' + a.id + '.md',
@@ -225,7 +250,6 @@ async function downloadZip() {
   };
   zip.file('config.json', JSON.stringify(cfg, null, 2));
 
-  // ── agentspark.json — full re-import manifest ─────────────
   const manifest = {
     v: 2, source: 'agentspark', topic: currentTopic,
     level: currentLevel, lang, agents: generatedAgents,
@@ -233,21 +257,13 @@ async function downloadZip() {
   };
   zip.file('agentspark.json', JSON.stringify(manifest, null, 2));
 
-  // ── examples/python_example.py ────────────────────────────
-  const firstId = generatedAgents[0] ? generatedAgents[0].id : 'agent-0';
-  const pyAgents = generatedAgents.map(a =>
-    '    "' + a.id + '": open("agent-' + a.id + '.md").read(),'
+  const firstId: string = generatedAgents[0] ? generatedAgents[0].id : 'agent';
+  const pyAgents: string = generatedAgents.map((a: any) =>
+    `    "${a.id}": open("agent-${a.id}.md").read(),`
   ).join('\n');
-  const pyCode = [
-    '#!/usr/bin/env python3',
-    '"""',
-    currentTopic + ' — AgentSpark Team',
-    'Generated by AgentSpark v1.1.0',
-    '',
-    'Usage:',
-    '  pip install anthropic',
-    '  python python_example.py',
-    '"""',
+  const pyCode: string = [
+    `# ${currentTopic} — AgentSpark Team`,
+    '# pip install anthropic',
     '',
     'import anthropic',
     '',
@@ -257,33 +273,28 @@ async function downloadZip() {
     '',
     'client = anthropic.Anthropic()  # set ANTHROPIC_API_KEY env var',
     '',
-    'def chat_with_agent(agent_id, user_message, history=None):',
+    'def chat_with_agent(agent_id: str, user_message: str, history: list = []):',
     '    system_prompt = AGENTS[agent_id]',
-    '    messages = list(history or [])',
-    '    messages.append({"role": "user", "content": user_message})',
+    '    messages = history + [{"role": "user", "content": user_message}]',
     '    response = client.messages.create(',
-    '        model="claude-sonnet-4-6",',
-    '        max_tokens=2048,',
-    '        system=system_prompt,',
-    '        messages=messages',
+    '        model="claude-sonnet-4-6", max_tokens=2048,',
+    '        system=system_prompt, messages=messages',
     '    )',
     '    return response.content[0].text',
     '',
-    'if __name__ == "__main__":',
-    '    agent_id = "' + firstId + '"',
-    '    print(f"Chatting with: {agent_id}\\n")',
-    '    reply = chat_with_agent(agent_id, "Hello! What can you help me with?")',
-    '    print(f"Agent: {reply}")',
+    `agent_id = "${firstId}"`,
+    'print(f"Chatting with: {agent_id}\\n")',
+    'reply = chat_with_agent(agent_id, "Hello! What can you help me with?")',
+    'print(f"Agent: {reply}")',
     ''
   ].join('\n');
   zip.file('examples/python_example.py', pyCode);
 
-  // ── examples/node_example.mjs ─────────────────────────────
-  const jsAgents = generatedAgents.map(a =>
-    '  "' + a.id + '": fs.readFileSync(path.join(__dirname, "..", "agent-' + a.id + '.md"), "utf8"),'
+  const jsAgents: string = generatedAgents.map((a: any) =>
+    `  "${a.id}": fs.readFileSync(path.join(__dirname, "..", "agent-${a.id}.md"), "utf8"),`
   ).join('\n');
-  const jsCode = [
-    '// ' + currentTopic + ' — AgentSpark Team',
+  const jsCode: string = [
+    `// ${currentTopic} — AgentSpark Team`,
     '// npm install @anthropic-ai/sdk',
     '',
     'import Anthropic from "@anthropic-ai/sdk";',
@@ -292,12 +303,11 @@ async function downloadZip() {
     'import { fileURLToPath } from "url";',
     '',
     'const __dirname = path.dirname(fileURLToPath(import.meta.url));',
-    '',
     'const AGENTS = {',
     jsAgents,
     '};',
     '',
-    'const client = new Anthropic(); // set ANTHROPIC_API_KEY env var',
+    'const client = new Anthropic();',
     '',
     'async function chatWithAgent(agentId, userMessage, history = []) {',
     '  const systemPrompt = AGENTS[agentId];',
@@ -309,7 +319,7 @@ async function downloadZip() {
     '  return response.content[0].text;',
     '}',
     '',
-    'const agentId = "' + firstId + '";',
+    `const agentId = "${firstId}";`,
     'console.log(`Chatting with: ${agentId}\\n`);',
     'const reply = await chatWithAgent(agentId, "Hello! What can you help me with?");',
     'console.log(`Agent: ${reply}`);',
@@ -317,7 +327,6 @@ async function downloadZip() {
   ].join('\n');
   zip.file('examples/node_example.mjs', jsCode);
 
-  // ── Generate and trigger download ────────────────────────
   const blob = await zip.generateAsync({ type: 'blob' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
@@ -331,17 +340,15 @@ async function downloadZip() {
   });
 }
 
-// ─── MARKDOWN RENDERER ───────────────────────────────────
-function renderMarkdown(md: string) {
+// ─── MARKDOWN RENDERER ────────────────────────────────────
+function renderMarkdown(md: string): string {
   if (!md) return '';
 
-  // Step 1: Extract fenced code blocks and inline code before ANY other processing
-  // so that their content is never HTML-escaped or regex-mangled
+  // Step 1: Extract fenced code blocks and inline code first
   const codeBlocks: string[] = [];
   const inlineCodes: string[] = [];
 
-  let text = md
-    // Fenced code blocks: save content raw, replace with placeholder
+  let text: string = md
     .replace(/```([\w]*)\n?([\s\S]*?)```/g, (_: string, lang: string, code: string) => {
       const escaped = code.trim()
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -349,7 +356,6 @@ function renderMarkdown(md: string) {
       codeBlocks.push(`<pre><code>${escaped}</code></pre>`);
       return `\x02CODE_BLOCK_${idx}\x03`;
     })
-    // Inline code: save raw, replace with placeholder
     .replace(/`([^`\n]+)`/g, (_: string, code: string) => {
       const escaped = code
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -358,7 +364,7 @@ function renderMarkdown(md: string) {
       return `\x02INLINE_CODE_${idx}\x03`;
     });
 
-  // Step 2: Escape remaining HTML in normal text
+  // Step 2: Escape remaining HTML
   text = text
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -366,38 +372,29 @@ function renderMarkdown(md: string) {
 
   // Step 3: Apply markdown transformations
   text = text
-    // Headings
     .replace(/^### (.+)$/gm, '<h3>$1</h3>')
     .replace(/^## (.+)$/gm, '<h2>$1</h2>')
     .replace(/^# (.+)$/gm, '<h1>$1</h1>')
-    // Horizontal rule
     .replace(/^---$/gm, '<hr>')
-    // Bold + italic
     .replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
-    // Bold
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    // Italic (skip lone asterisks used as list bullets)
     .replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, '<em>$1</em>')
-    // Unordered lists
     .replace(/^\s*[-+] (.+)$/gm, '<li>$1</li>')
-    // Ordered lists
     .replace(/^\s*\d+\. (.+)$/gm, '<li>$1</li>')
-    // Blockquotes
     .replace(/^&gt; (.+)$/gm, '<blockquote>$1</blockquote>');
 
-  // Step 4: Line-by-line block wrapping — prevents paragraph text from being
-  // swallowed into <ul> when it appears in the same \n\n block as list items
+  // Step 4: Line-by-line block wrapping
   const outLines: string[] = [];
   let inList = false;
   let paraAcc: string[] = [];
 
-  const flushPara = () => {
+  const flushPara = (): void => {
     if (paraAcc.length) {
       outLines.push('<p>' + paraAcc.join('<br>') + '</p>');
       paraAcc = [];
     }
   };
-  const flushList = () => {
+  const flushList = (): void => {
     if (inList) { outLines.push('</ul>'); inList = false; }
   };
 
@@ -410,7 +407,6 @@ function renderMarkdown(md: string) {
       return;
     }
 
-    // Block-level tags / placeholders — emit as-is
     if (line.startsWith('<h') || line.startsWith('<pre') ||
       line.startsWith('<hr') || line.startsWith('<blockquote') ||
       line.startsWith('\x02CODE_BLOCK_')) {
@@ -420,7 +416,6 @@ function renderMarkdown(md: string) {
       return;
     }
 
-    // List item
     if (line.startsWith('<li>')) {
       flushPara();
       if (!inList) { outLines.push('<ul>'); inList = true; }
@@ -428,7 +423,6 @@ function renderMarkdown(md: string) {
       return;
     }
 
-    // Regular text
     flushList();
     paraAcc.push(line);
   });
@@ -439,10 +433,10 @@ function renderMarkdown(md: string) {
   text = outLines.join('\n');
 
   // Step 5: Restore code placeholders
-  codeBlocks.forEach((html, i) => {
+  codeBlocks.forEach((html: string, i: number) => {
     text = text.replace(`\x02CODE_BLOCK_${i}\x03`, html);
   });
-  inlineCodes.forEach((html, i) => {
+  inlineCodes.forEach((html: string, i: number) => {
     text = text.replace(`\x02INLINE_CODE_${i}\x03`, html);
   });
 
@@ -450,7 +444,7 @@ function renderMarkdown(md: string) {
 }
 
 // ─── FILE PREVIEW MODAL ───────────────────────────────────
-function previewFile(filename: string) {
+function previewFile(filename: string): void {
   const content = generatedFiles[filename];
   if (!content) return;
 
@@ -461,22 +455,19 @@ function previewFile(filename: string) {
   (document.getElementById('modal-filesize') as HTMLElement).textContent =
     `${(new Blob([content]).size / 1024).toFixed(1)} KB`;
 
-  // Render both panes
   (document.getElementById('modal-preview-pane') as HTMLElement).innerHTML = renderMarkdown(content);
   (document.getElementById('modal-raw-pane') as HTMLElement).textContent = content;
 
-  // Show preview by default
   switchModalTab('preview');
-
   (document.getElementById('modal') as HTMLElement).classList.add('open');
 }
 
-function switchModalTab(tab: string) {
+function switchModalTab(tab: string): void {
   currentModalTab = tab;
-  const previewPane = (document.getElementById('modal-preview-pane') as HTMLElement);
-  const rawPane = (document.getElementById('modal-raw-pane') as HTMLElement);
-  const tabPreview = (document.getElementById('tab-preview') as HTMLElement);
-  const tabRaw = (document.getElementById('tab-raw') as HTMLElement);
+  const previewPane = document.getElementById('modal-preview-pane') as HTMLElement;
+  const rawPane = document.getElementById('modal-raw-pane') as HTMLElement;
+  const tabPreview = document.getElementById('tab-preview') as HTMLElement;
+  const tabRaw = document.getElementById('tab-raw') as HTMLElement;
 
   if (tab === 'preview') {
     previewPane.style.display = 'block';
@@ -491,7 +482,7 @@ function switchModalTab(tab: string) {
   }
 }
 
-function downloadCurrentFile() {
+function downloadCurrentFile(): void {
   if (!currentModalFile || !generatedFiles[currentModalFile]) return;
   const blob = new Blob([generatedFiles[currentModalFile]], { type: 'text/markdown' });
   const a = document.createElement('a');
@@ -501,24 +492,23 @@ function downloadCurrentFile() {
   showNotif(`✓ ${currentModalFile} downloaded`);
 }
 
-function closeModal() {
+function closeModal(): void {
   (document.getElementById('modal') as HTMLElement).classList.remove('open');
 }
 
 // ─── MARKDOWN BROWSER (all files) ─────────────────────────
-function openMarkdownPreview() {
+function openMarkdownPreview(): void {
   if (!Object.keys(generatedFiles).length) {
     showNotif(lang === 'en' ? '⚠ No files yet — generate a team first' : '⚠ Brak plików — najpierw wygeneruj zespół', true);
     return;
   }
-  const modal = (document.getElementById('md-browser-modal') as HTMLElement);
+  const modal = document.getElementById('md-browser-modal') as HTMLElement;
   modal.classList.add('open');
 
   const mdFiles = Object.keys(generatedFiles).filter(f => f.endsWith('.md'));
-  const sidebar = (document.getElementById('md-browser-sidebar') as HTMLElement);
+  const sidebar = document.getElementById('md-browser-sidebar') as HTMLElement;
   sidebar.innerHTML = '';
 
-  // File groups
   const groups = [
     { label: lang === 'en' ? '📋 Config' : '📋 Konfiguracja', files: mdFiles.filter(f => f === 'README.md' || f === 'team-config.md') },
     { label: lang === 'en' ? '⚙️ Agents' : '⚙️ Agenci', files: mdFiles.filter(f => f.startsWith('agent-')) },
@@ -533,7 +523,7 @@ function openMarkdownPreview() {
     groupLabel.textContent = group.label;
     sidebar.appendChild(groupLabel);
 
-    group.files.forEach(f => {
+    group.files.forEach((f: string) => {
       const item = document.createElement('button');
       item.style.cssText = `
         display:block;width:100%;text-align:left;
@@ -552,38 +542,37 @@ function openMarkdownPreview() {
     });
   });
 
-  // Select first file
   if (mdFiles.length > 0) {
     selectMdBrowserFile('README.md' in generatedFiles ? 'README.md' : mdFiles[0]);
   }
 }
 
-function selectMdBrowserFile(filename: string) {
+function selectMdBrowserFile(filename: string): void {
   mdBrowserActiveFile = filename;
   const content = generatedFiles[filename] || '';
 
-  // Update sidebar active state
-  document.querySelectorAll('#md-browser-sidebar button').forEach(btn => {
-    const isActive = (btn as HTMLElement).dataset.file === filename;
-    (btn as HTMLElement).style.borderLeftColor = isActive ? 'var(--accent)' : 'transparent';
-    (btn as HTMLElement).style.color = isActive ? 'var(--accent)' : 'var(--muted)';
-    (btn as HTMLElement).style.background = isActive ? 'rgba(242,185,13,0.06)' : 'none';
+  // Update sidebar active state — cast to HTMLElement to access .dataset / .style
+  document.querySelectorAll('#md-browser-sidebar button').forEach((btn: Element) => {
+    const el = btn as HTMLElement;
+    const isActive = el.dataset.file === filename;
+    el.style.borderLeftColor = isActive ? 'var(--accent)' : 'transparent';
+    el.style.color = isActive ? 'var(--accent)' : 'var(--muted)';
+    el.style.background = isActive ? 'rgba(242,185,13,0.06)' : 'none';
   });
 
   (document.getElementById('md-browser-rendered') as HTMLElement).innerHTML = renderMarkdown(content);
   (document.getElementById('md-browser-active-file') as HTMLElement).textContent =
     `${filename} · ${(new Blob([content]).size / 1024).toFixed(1)} KB`;
 
-  // Scroll content pane to top
-  const contentPane = (document.getElementById('md-browser-content') as HTMLElement);
+  const contentPane = document.getElementById('md-browser-content') as HTMLElement;
   contentPane.scrollTop = 0;
 }
 
-function closeMdBrowser() {
+function closeMdBrowser(): void {
   (document.getElementById('md-browser-modal') as HTMLElement).classList.remove('open');
 }
 
-async function downloadAllMd() {
+async function downloadAllMd(): Promise<void> {
   if (typeof JSZip === 'undefined') {
     showNotif('JSZip not loaded', true); return;
   }
@@ -600,7 +589,7 @@ async function downloadAllMd() {
   showNotif(lang === 'en' ? '✓ Docs ZIP downloaded!' : '✓ Docs ZIP pobrany!');
 }
 
-
+// ─── WINDOW EXPORTS ───────────────────────────────────────
 window.showResults = showResults;
 window.showInstructions = showInstructions;
 window.downloadZip = downloadZip;

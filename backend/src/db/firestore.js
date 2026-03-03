@@ -1,4 +1,9 @@
-const admin = require('firebase-admin');
+// ─── FIRESTORE.JS — Firebase Admin SDK (ESM) ─────────────────────────────
+// Fixed C-01: Converted from CommonJS (require/module.exports) to ESM
+// (import/export). backend/package.json has "type":"module" — CJS caused
+// server crash on startup. No logic changes.
+
+import admin from 'firebase-admin';
 
 // Ensure this is only initialized once
 if (!admin.apps.length) {
@@ -20,9 +25,7 @@ if (!admin.apps.length) {
     }
 
     try {
-        admin.initializeApp({
-            credential: credential
-        });
+        admin.initializeApp({ credential });
         console.log('[Firestore] Firebase Admin initialized.');
     } catch (err) {
         console.error('[Firestore] Init error:', err.message);
@@ -31,7 +34,4 @@ if (!admin.apps.length) {
 
 const db = admin.firestore();
 
-module.exports = {
-    db,
-    admin
-};
+export { db, admin };

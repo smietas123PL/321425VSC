@@ -1,3 +1,4 @@
+import { state } from './state';
 
 declare let t: any;
 declare let lang: any;
@@ -112,7 +113,7 @@ async function callSingleModel(modelDef: any, key: string, systemInstruction: st
     const t0 = Date.now();
 
     const span: any = {
-        id: traceSpans.length,
+        id: state.traceSpans.length,
         label: traceLabel || 'API Call',
         model: modelDef.label || model,
         provider,
@@ -125,7 +126,7 @@ async function callSingleModel(modelDef: any, key: string, systemInstruction: st
         error: null,
     };
     if (!traceSessionStart) traceSessionStart = t0;
-    traceSpans.push(span);
+    state.traceSpans.push(span);
     if (typeof renderTraceLive === 'function') renderTraceLive();
 
     const finalize = (status: string, tokens: number | null, error: string | null) => {
@@ -143,12 +144,12 @@ async function callSingleModel(modelDef: any, key: string, systemInstruction: st
             throw new Error('API client not initialized');
         }
 
-        const levelData = typeof t === 'function' ? t('levels').find((l: any) => l.id === currentLevel) : null;
+        const levelData = typeof t === 'function' ? t('levels').find((l: any) => l.id === state.currentLevel) : null;
         const agentCount = parseInt((levelData?.agentCount || '3').toString().split('-')[0], 10) || 3;
 
         const data = await window.agentsparkGenerateRequest({
-            topic: currentTopic,
-            level: currentLevel,
+            topic: state.currentTopic,
+            level: state.currentLevel,
             agentCount,
             modelProvider: provider,
             modelTag: modelDef.tag || provider,
@@ -171,8 +172,8 @@ async function callSingleModel(modelDef: any, key: string, systemInstruction: st
 
 export async function callGemini(systemInstruction: string, userMessage: string, traceLabel: string, multiTurnMessages: any[]) {
     const keyInput = (document.getElementById('apiKeyInput') as HTMLInputElement) as HTMLInputElement;
-    const key = apiKey || keyInput?.value?.trim() || '';
-    const chain = FALLBACK_CHAINS[selectedModel.tag] || [];
+    const key = state.apiKey || keyInput?.value?.trim() || '';
+    const chain = FALLBACK_CHAINS[state.selectedModel.tag] || [];
     const primary = { ...selectedModel };
     const rest = chain.filter((m: any) => m.model !== primary.model);
     const attempts = [primary, ...rest];
@@ -192,12 +193,12 @@ export async function callGemini(systemInstruction: string, userMessage: string,
         try {
             const result = await callSingleModel(attemptModel, key, systemInstruction, userMessage, spanLabel, multiTurnMessages);
             if (i > 0) {
-                const span = traceSpans[traceSpans.length - 1];
+                const span = state.traceSpans[state.traceSpans.length - 1];
                 if (span) { span.status = 'fallback'; span.isFallback = true; }
                 renderTraceLive();
                 const modelName = attemptModel.label || attemptModel.model;
                 setTimeout(() => showNotif(
-                    lang === 'en' ? `↩ Fell back to ${modelName}` : `↩ Przełączono na ${modelName}`
+                    state.lang === 'en' ? `↩ Fell back to ${modelName}` : `↩ Przełączono na ${modelName}`
                 ), 300);
                 const badgeEl = (document.getElementById('headerModelBadge') as HTMLElement);
                 if (badgeEl) badgeEl.textContent = attemptModel.model + ' (fallback)';
@@ -221,7 +222,7 @@ export async function callGemini(systemInstruction: string, userMessage: string,
     console.error('[AgentSpark] All models exhausted:', errorMsg);
     if (typeof showNotif === 'function') {
         showNotif(
-            lang === 'en'
+            state.lang === 'en'
                 ? `⚠ Generation failed: ${errorMsg}`
                 : `⚠ Błąd generowania: ${errorMsg}`,
             true

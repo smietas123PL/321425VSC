@@ -1,3 +1,4 @@
+import { state } from './core/state';
 ﻿import * as Sentry from '@sentry/browser';
 
 // ─── SENTRY — conditional init ────────────────────────────
@@ -55,9 +56,9 @@ function onModelChange() {
   if (!sel) return;
   const parts = sel.value.split('|');
   const label = sel.options[sel.selectedIndex]?.text || parts[1];
-  selectedModel = { provider: parts[0], model: parts[1], endpoint: parts[2], tag: parts[3], label } as any;
+  state.selectedModel = { provider: parts[0], model: parts[1], endpoint: parts[2], tag: parts[3], label } as any;
 
-  const info = MODEL_KEY_HINTS[selectedModel.tag] || MODEL_KEY_HINTS.gemini;
+  const info = MODEL_KEY_HINTS[state.selectedModel.tag] || MODEL_KEY_HINTS.gemini;
   const labelEl = (document.getElementById('apiKeyLabel') as HTMLElement);
   const hintEl = (document.getElementById('modelHint') as HTMLElement);
   const inputEl = (document.getElementById('apiKeySetupInput') as HTMLInputElement);
@@ -69,7 +70,7 @@ function onModelChange() {
   if (headerInputEl) headerInputEl.placeholder = info.label;
 
   // Reset key when switching provider
-  apiKey = '';
+  state.apiKey = '';
   if (inputEl) inputEl.value = '';
   const status = (document.getElementById('apiKeySetupStatus') as HTMLElement);
   if (status) { status.textContent = ''; status.className = 'api-key-status'; }
@@ -77,11 +78,11 @@ function onModelChange() {
 
 // ─── API KEY ──────────────────────────────────────────────
 function syncApiKey(val: string) {
-  apiKey = val.trim();
+  state.apiKey = val.trim();
   const headerInput = (document.getElementById('apiKeyInput') as HTMLInputElement);
-  if (headerInput) headerInput.value = apiKey;
-  if (apiKey.length > 10) {
-    sessionStorage.setItem('agentspark-api-key', apiKey);
+  if (headerInput) headerInput.value = state.apiKey;
+  if (state.apiKey.length > 10) {
+    sessionStorage.setItem('agentspark-api-key', state.apiKey);
     localStorage.removeItem('agentspark-api-key');
     const demoCta = (document.getElementById('demo-cta') as HTMLElement);
     if (demoCta) demoCta.style.display = 'none';
@@ -104,7 +105,7 @@ function _resetApiKeyInactivityTimer() {
   _clearApiKeyInactivityTimer();
   // Clear API key after 15 minutes of inactivity
   _apiKeyInactivityTimeout = setTimeout(() => {
-    apiKey = '';
+    state.apiKey = '';
     sessionStorage.removeItem('agentspark-api-key');
     showNotif(tr('⏳ Session expired. API Key cleared for security.', '⏳ Sesja wygasła. Klucz API został wyczyszczony.'));
     checkApiKey();
@@ -112,12 +113,12 @@ function _resetApiKeyInactivityTimer() {
 }
 
 // Reset timer on user activity
-document.addEventListener('mousemove', () => { if (apiKey.length > 10) _resetApiKeyInactivityTimer(); }, { passive: true });
-document.addEventListener('keydown', () => { if (apiKey.length > 10) _resetApiKeyInactivityTimer(); }, { passive: true });
+document.addEventListener('mousemove', () => { if (state.apiKey.length > 10) _resetApiKeyInactivityTimer(); }, { passive: true });
+document.addEventListener('keydown', () => { if (state.apiKey.length > 10) _resetApiKeyInactivityTimer(); }, { passive: true });
 
 function checkApiKey() {
-  const val = apiKey || (document.getElementById('apiKeySetupInput') as HTMLInputElement)?.value?.trim() || '';
-  apiKey = val;
+  const val = state.apiKey || (document.getElementById('apiKeySetupInput') as HTMLInputElement)?.value?.trim() || '';
+  state.apiKey = val;
   const status = (document.getElementById('apiKeySetupStatus') as HTMLElement);
   if (val.length > 10) {
     if (status) { status.textContent = '✓ Key set'; status.className = 'api-key-status ok'; }
@@ -134,28 +135,28 @@ function renderLevelGrid() {
   if (!grid) return;
   grid.innerHTML = '';
   const label = (document.getElementById('level-section-label') as HTMLElement);
-  if (label) label.textContent = lang === 'en' ? 'COMPLEXITY LEVEL' : 'POZIOM ZŁOŻONOŚCI';
+  if (label) label.textContent = state.lang === 'en' ? 'COMPLEXITY LEVEL' : 'POZIOM ZŁOŻONOŚCI';
 
   t('levels').forEach((level: any) => {
     const div = document.createElement('div');
-    div.className = 'level-card' + (currentLevel === level.id ? ' selected' : '');
-    div.style.borderColor = currentLevel === level.id ? level.color : '';
-    div.style.boxShadow = currentLevel === level.id ? `0 0 20px ${level.color}33` : '';
+    div.className = 'level-card' + (state.currentLevel === level.id ? ' selected' : '');
+    div.style.borderColor = state.currentLevel === level.id ? level.color : '';
+    div.style.boxShadow = state.currentLevel === level.id ? `0 0 20px ${level.color}33` : '';
     div.innerHTML = `
       <span class="level-emoji">${level.emoji}</span>
       <div class="level-name" style="color:${level.color}">${level.name}</div>
       <div class="level-tagline">${level.tagline}</div>
       <div class="level-agents" style="color:${level.color};border-color:${level.color}33;background:${level.color}11">
-        ${level.agentCount} ${lang === 'en' ? 'agents' : 'agentów'}
+        ${level.agentCount} ${state.lang === 'en' ? 'agents' : 'agentów'}
       </div>
     `;
     div.title = level.desc;
     div.tabIndex = 0;
     div.setAttribute('role', 'radio');
-    div.setAttribute('aria-checked', currentLevel === level.id ? 'true' : 'false');
+    div.setAttribute('aria-checked', state.currentLevel === level.id ? 'true' : 'false');
     div.onclick = () => {
-      currentLevel = level.id;
-      MAX_QUESTIONS = level.questions;
+      state.currentLevel = level.id;
+      state.MAX_QUESTIONS = level.questions;
       renderLevelGrid();
     };
     div.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); div.click(); } };
@@ -215,8 +216,8 @@ function renderTopicScreen() {
 
 function startWithTopic() {
   const val = (document.getElementById('apiKeySetupInput') as HTMLInputElement).value.trim();
-  apiKey = val;
-  if (!apiKey || apiKey.length < 10) {
+  state.apiKey = val;
+  if (!state.apiKey || state.apiKey.length < 10) {
     showNotif(
       tr(
         'ℹ No BYOK provided — backend server key will be used if configured',
@@ -226,10 +227,10 @@ function startWithTopic() {
   }
   const topic = (document.getElementById('customTopic') as HTMLInputElement).value.trim();
   if (!topic) {
-    showNotif(lang === 'en' ? '⚠ Please select or enter a topic' : '⚠ Wybierz lub wpisz temat', true);
+    showNotif(state.lang === 'en' ? '⚠ Please select or enter a topic' : '⚠ Wybierz lub wpisz temat', true);
     return;
   }
-  currentTopic = topic;
+  state.currentTopic = topic;
   startChat();
 }
 
@@ -237,22 +238,22 @@ function startWithTopic() {
 // --- INTERVIEW FLOW MOVED TO js/features/interview.js ---
 
 function getSystemPrompt() {
-  const levelData = t('levels').find((l: any) => l.id === currentLevel) || t('levels')[0];
+  const levelData = t('levels').find((l: any) => l.id === state.currentLevel) || t('levels')[0];
   return `You are AgentSpark, an expert AI system designer. Your job is to interview the user about their app idea using CLOSED questions with multiple choice answers.
 
-Language: ${lang === 'en' ? 'English' : 'Polish'}
-App topic: ${currentTopic}
+Language: ${state.lang === 'en' ? 'English' : 'Polish'}
+App topic: ${state.currentTopic}
 Complexity level: ${levelData.name} — ${levelData.tagline}
 Agent count to generate: ${levelData.agentCount}
 Focus areas for this level: ${levelData.focus}
 
-INTERVIEW STRUCTURE — ${MAX_QUESTIONS} questions total, split into 3 adaptive sections:
+INTERVIEW STRUCTURE — ${state.MAX_QUESTIONS} questions total, split into 3 adaptive sections:
 
-SECTION 1 — BUSINESS (first ${Math.ceil(MAX_QUESTIONS * 0.3)} questions):
+SECTION 1 — BUSINESS (first ${Math.ceil(state.MAX_QUESTIONS * 0.3)} questions):
 Focus: target users, monetization model, core value proposition, market.
 Example topics: who uses the app, how it makes money, what problem it solves, main competitors.
 
-SECTION 2 — FRONTEND (next ${Math.ceil(MAX_QUESTIONS * 0.35)} questions):
+SECTION 2 — FRONTEND (next ${Math.ceil(state.MAX_QUESTIONS * 0.35)} questions):
 Focus: UI paradigm, navigation, key user flows, device targets, design priorities.
 Example topics: onboarding flow, main screens, mobile vs web, key interactions.
 
@@ -282,7 +283,7 @@ RESPONSE FORMAT — for EVERY question respond with ONLY this JSON, no extra tex
   ]
 }
 
-After exactly ${MAX_QUESTIONS} questions respond with ONLY:
+After exactly ${state.MAX_QUESTIONS} questions respond with ONLY:
 { "complete": true, "summary": "Coherent 3-4 sentence spec summary covering business model, frontend approach, and backend architecture based on all answers." }
 
 IMPORTANT: Pure JSON only. No markdown. No text outside JSON. Make every question feel like the natural next step after the previous answer.
@@ -341,15 +342,15 @@ function selectOption(label: string, text: string) {
 async function submitAnswer(answer: string) {
   clearOptions();
   addMessage('user', answer);
-  chatHistory.push({ role: 'user', text: answer });
-  questionCount++;
+  state.chatHistory.push({ role: 'user', text: answer });
+  state.questionCount++;
 
-  if (conversationState === 'interview') {
+  if (state.conversationState === 'interview') {
     addTypingIndicator();
     try {
-      const history = chatHistory.map(m => `${m.role === 'user' ? 'User' : 'AgentSpark'}: ${m.text}`).join('\n');
-      const prompt = `${history}\n\nThis was answer ${questionCount} of ${MAX_QUESTIONS}. Ask next question or finalize.`;
-      const reply = await callGemini(getSystemPrompt(), prompt, `🎤 Interview · Q${questionCount} of ${MAX_QUESTIONS}`, []);
+      const history = state.chatHistory.map(m => `${m.role === 'user' ? 'User' : 'AgentSpark'}: ${m.text}`).join('\n');
+      const prompt = `${history}\n\nThis was answer ${state.questionCount} of ${state.MAX_QUESTIONS}. Ask next question or finalize.`;
+      const reply = await callGemini(getSystemPrompt(), prompt, `🎤 Interview · Q${state.questionCount} of ${state.MAX_QUESTIONS}`, []);
       removeTypingIndicator();
 
       // Parse JSON response
@@ -362,22 +363,22 @@ async function submitAnswer(answer: string) {
       if (parsed && parsed.complete) {
         // Interview complete
         if (parsed.summary) addMessage('ai', parsed.summary);
-        chatHistory.push({ role: 'ai', text: parsed.summary || 'Interview complete.' });
-        conversationState = 'generating';
+        state.chatHistory.push({ role: 'ai', text: parsed.summary || 'Interview complete.' });
+        state.conversationState = 'generating';
         renderProgressSteps(1);
         clearOptions();
         setTimeout(generateAgents, 1200);
       } else if (parsed && parsed.question && parsed.options) {
         // Valid question JSON — show question as AI message, options as cards
         addMessage('ai', parsed.question);
-        chatHistory.push({ role: 'ai', text: parsed.question });
+        state.chatHistory.push({ role: 'ai', text: parsed.question });
         renderOptions(parsed);
       } else {
         // Fallback: show raw reply and try legacy parse
         addMessage('ai', reply);
-        chatHistory.push({ role: 'ai', text: reply });
-        if (reply.includes('[INTERVIEW_COMPLETE]') || questionCount >= MAX_QUESTIONS) {
-          conversationState = 'generating';
+        state.chatHistory.push({ role: 'ai', text: reply });
+        if (reply.includes('[INTERVIEW_COMPLETE]') || state.questionCount >= state.MAX_QUESTIONS) {
+          state.conversationState = 'generating';
           renderProgressSteps(1);
           clearOptions();
           setTimeout(generateAgents, 1200);
@@ -495,13 +496,13 @@ function clearOptions() {
 }
 
 async function generateScoring(history: string) {
-  const lvl = t('levels').find((l: any) => l.id === currentLevel);
-  const scoringPrompt = `You are a project complexity analyst. Based on this interview about the app "${currentTopic}", generate a project scoring report.
+  const lvl = t('levels').find((l: any) => l.id === state.currentLevel);
+  const scoringPrompt = `You are a project complexity analyst. Based on this interview about the app "${state.currentTopic}", generate a project scoring report.
 
 Interview:
 ${history}
 
-Chosen level: ${lvl ? lvl.name : currentLevel}
+Chosen level: ${lvl ? lvl.name : state.currentLevel}
 
 Respond ONLY with a JSON object, no markdown:
 {
@@ -516,13 +517,13 @@ Respond ONLY with a JSON object, no markdown:
   "risks": ["Risk 1 in 10 words max", "Risk 2", "Risk 3"],
   "levelMatch": "ok",
   "levelSuggestion": "Your chosen level matches the project complexity well.",
-  "suggestedLevel": "${currentLevel}"
+  "suggestedLevel": "${state.currentLevel}"
 }
 
 levelMatch must be: "ok", "upgrade", or "downgrade".
 suggestedLevel must be one of: iskra, plomien, pozar, inferno.
 Keep risks under 12 words each. Be specific to this project.
-Language: ${lang === 'en' ? 'English' : 'Polish'}`;
+Language: ${state.lang === 'en' ? 'English' : 'Polish'}`;
 
   try {
     const raw = await callGemini('You are a project analyst. Return only JSON.', scoringPrompt, '📊 Scoring · Complexity analysis', []);
@@ -569,14 +570,14 @@ function renderScoring(data: any) {
 
   panel.innerHTML = `
     <div class="scoring-header">
-      <h3>${lang === 'en' ? 'PROJECT SCORING' : 'OCENA PROJEKTU'}</h3>
+      <h3>${state.lang === 'en' ? 'PROJECT SCORING' : 'OCENA PROJEKTU'}</h3>
       <div class="score-badge">
         <div class="score-number" style="color:${scoreColor}">${data.overallScore}</div>
-        <div class="score-label"><strong>${data.overallLabel}</strong>${lang === 'en' ? 'out of 100' : 'na 100'}</div>
+        <div class="score-label"><strong>${data.overallLabel}</strong>${state.lang === 'en' ? 'out of 100' : 'na 100'}</div>
       </div>
     </div>
     <div class="scoring-grid">${metricsHTML}</div>
-    ${risksHTML ? `<div class="scoring-risks"><h4>${lang === 'en' ? '⚠ POTENTIAL RISKS' : '⚠ POTENCJALNE RYZYKA'}</h4>${risksHTML}</div>` : ''}
+    ${risksHTML ? `<div class="scoring-risks"><h4>${state.lang === 'en' ? '⚠ POTENTIAL RISKS' : '⚠ POTENCJALNE RYZYKA'}</h4>${risksHTML}</div>` : ''}
     <div class="level-suggestion ${isWarn ? 'warn' : ''}">
       <span class="ls-icon">${suggestionIcon}</span>
       <span>${data.levelSuggestion}${suggestedLvl && isWarn ? ' <strong>→ ' + suggestedLvl.name + '</strong>' : ''}</span>
@@ -600,13 +601,13 @@ async function generateAgents() {
   if (startBtn) startBtn.disabled = true;
   regenBtns.forEach((b: HTMLButtonElement) => { b.disabled = true; });
   addTypingIndicator();
-  if (typeof showLoader === 'function') showLoader(lang === 'en' ? 'Generating team...' : 'Generowanie zespołu...', true);
-  const history = chatHistory.map(m => `${m.role === 'user' ? 'User' : 'AgentSpark'}: ${m.text}`).join('\n');
+  if (typeof showLoader === 'function') showLoader(state.lang === 'en' ? 'Generating team...' : 'Generowanie zespołu...', true);
+  const history = state.chatHistory.map(m => `${m.role === 'user' ? 'User' : 'AgentSpark'}: ${m.text}`).join('\n');
   const prompt = `Here is the complete interview:\n${history}\n\n[GENERATE]\nGenerate the agent team JSON now based on the interview.`;
 
   try {
-    const levelData = t('levels').find((l: any) => l.id === currentLevel) || t('levels')[0];
-    const raw = await callGemini(getSystemPrompt(), prompt, `⚡ Generate Team · ${levelData.agentCount} agents · ${currentLevel}`, []);
+    const levelData = t('levels').find((l: any) => l.id === state.currentLevel) || t('levels')[0];
+    const raw = await callGemini(getSystemPrompt(), prompt, `⚡ Generate Team · ${levelData.agentCount} agents · ${state.currentLevel}`, []);
     removeTypingIndicator();
     if (typeof hideLoader === 'function') hideLoader();
 
@@ -614,45 +615,45 @@ async function generateAgents() {
     if (!jsonMatch) throw new Error('Could not parse agent data');
     const data = JSON.parse(jsonMatch[0]);
 
-    generatedAgents = data.agents || [];
-    generatedFiles = {} as Record<string, string>;
+    state.generatedAgents = data.agents || [];
+    state.generatedFiles = {} as Record<string, string>;
 
-    generatedAgents.forEach((a: any) => {
-      generatedFiles[`agent-${a.id}.md`] = a.agentMd || `# Agent: ${a.name}\n\n**Role:** ${a.role || ''}\n\n${a.description || ''}`;
-      generatedFiles[`skill-${a.id}.md`] = a.skillMd || `# Skill: ${a.name}\n\n## Capabilities\n\n${a.description || ''}`;
+    state.generatedAgents.forEach((a: any) => {
+      state.generatedFiles[`agent-${a.id}.md`] = a.agentMd || `# Agent: ${a.name}\n\n**Role:** ${a.role || ''}\n\n${a.description || ''}`;
+      state.generatedFiles[`skill-${a.id}.md`] = a.skillMd || `# Skill: ${a.name}\n\n## Capabilities\n\n${a.description || ''}`;
     });
-    generatedFiles['team-config.md'] = data.teamConfig || `# Team Configuration\n\n**Project:** ${currentTopic}\n\n## Agents\n\n${generatedAgents.map(a => `- **${a.name}** (${a.role || a.id})`).join('\n')}`;
-    generatedFiles['README.md'] = generateReadme();
+    state.generatedFiles['team-config.md'] = data.teamConfig || `# Team Configuration\n\n**Project:** ${state.currentTopic}\n\n## Agents\n\n${state.generatedAgents.map(a => `- **${a.name}** (${a.role || a.id})`).join('\n')}`;
+    state.generatedFiles['README.md'] = generateReadme();
     trackEvent('team_generated', {
       success: true,
-      agents: generatedAgents.length,
-      level: currentLevel
+      agents: state.generatedAgents.length,
+      level: state.currentLevel
     });
 
     window._scoringData = undefined;
-    const historyForScoring = chatHistory.map(m => `${m.role === 'user' ? 'User' : 'AgentSpark'}: ${m.text}`).join('\n');
+    const historyForScoring = state.chatHistory.map(m => `${m.role === 'user' ? 'User' : 'AgentSpark'}: ${m.text}`).join('\n');
     generateScoring(historyForScoring).then(scoreData => {
       window._scoringData = scoreData;
     });
 
     renderProgressSteps(3);
-    addMessage('ai', lang === 'en'
-      ? `✅ Done! I've designed ${generatedAgents.length} specialized agents for your "${currentTopic}" app. Your files are ready — switching to results view now!`
-      : `✅ Gotowe! Zaprojektowałem ${generatedAgents.length} wyspecjalizowanych agentów dla Twojej aplikacji "${currentTopic}". Pliki są gotowe — przechodzę do widoku wyników!`
+    addMessage('ai', state.lang === 'en'
+      ? `✅ Done! I've designed ${state.generatedAgents.length} specialized agents for your "${state.currentTopic}" app. Your files are ready — switching to results view now!`
+      : `✅ Gotowe! Zaprojektowałem ${state.generatedAgents.length} wyspecjalizowanych agentów dla Twojej aplikacji "${state.currentTopic}". Pliki są gotowe — przechodzę do widoku wyników!`
     );
 
     setTimeout(() => {
       // Seed v1 "Origin" snapshot
-      versionHistory = [] as any[];
-      versionHistory.push({
+      state.versionHistory = [] as any[];
+      state.versionHistory.push({
         id: Date.now(),
-        label: lang === 'en' ? `Original team — ${currentTopic}` : `Oryginalny zespół — ${currentTopic}`,
+        label: state.lang === 'en' ? `Original team — ${state.currentTopic}` : `Oryginalny zespół — ${state.currentTopic}`,
         ts: new Date(),
-        agents: JSON.parse(JSON.stringify(generatedAgents)),
-        files: JSON.parse(JSON.stringify(generatedFiles)),
+        agents: JSON.parse(JSON.stringify(state.generatedAgents)),
+        files: JSON.parse(JSON.stringify(state.generatedFiles)),
         diff: { added: [], removed: [], changed: [] },
         removedNames: {},
-        agentNames: Object.fromEntries(generatedAgents.map((a: any) => [a.id, a.name])),
+        agentNames: Object.fromEntries(state.generatedAgents.map((a: any) => [a.id, a.name])),
         vNum: 1,
         isOrigin: true,
       });
@@ -674,12 +675,12 @@ async function generateAgents() {
 }
 
 function generateReadme() {
-  const technical = (generatedAgents as any[]).filter(a => a.type === 'technical');
-  const business = (generatedAgents as any[]).filter(a => a.type !== 'technical');
+  const technical = (state.generatedAgents as any[]).filter(a => a.type === 'technical');
+  const business = (state.generatedAgents as any[]).filter(a => a.type !== 'technical');
   const techList = technical.map(a => `- **${a.name}** [TECHNICAL] (${a.role}): ${a.description}`).join('\n');
   const bizList = business.map(a => `- **${a.name}** [BUSINESS] (${a.role}): ${a.description}`).join('\n');
-  const lvl = t('levels').find((l: any) => l.id === currentLevel);
-  return `# AgentSpark — Generated Team\n\n**Project:** ${currentTopic}\n**Level:** ${lvl ? lvl.name : currentLevel}\n**Generated:** ${new Date().toLocaleString()}\n**Language:** ${lang.toUpperCase()}\n\n## ⚙️ Technical Agents\n\n${techList || 'none'}\n\n## 💼 Business Agents\n\n${bizList || 'none'}\n\n## Files\n\n${Object.keys(generatedFiles).filter(f => f !== 'README.md').map(f => `- \`${f}\``).join('\n')}\n\n## How to use\n\nSee instructions inside the app or visit agentspark docs\n`;
+  const lvl = t('levels').find((l: any) => l.id === state.currentLevel);
+  return `# AgentSpark — Generated Team\n\n**Project:** ${state.currentTopic}\n**Level:** ${lvl ? lvl.name : state.currentLevel}\n**Generated:** ${new Date().toLocaleString()}\n**Language:** ${state.lang.toUpperCase()}\n\n## ⚙️ Technical Agents\n\n${techList || 'none'}\n\n## 💼 Business Agents\n\n${bizList || 'none'}\n\n## Files\n\n${Object.keys(state.generatedFiles).filter(f => f !== 'README.md').map(f => `- \`${f}\``).join('\n')}\n\n## How to use\n\nSee instructions inside the app or visit agentspark docs\n`;
 }
 
 
@@ -712,7 +713,7 @@ function openRefine() {
   const applyBtn = (document.getElementById('refine-apply-btn') as HTMLElement);
   if (applyBtn) applyBtn.style.display = 'none';
   (document.getElementById('refine-history') as HTMLElement).innerHTML = '';
-  _pendingRefineData = null;
+  state._pendingRefineData = null;
 
   const chips = (document.getElementById('refine-action-chips') as HTMLElement);
   chips.innerHTML = '';
@@ -729,10 +730,10 @@ function openRefine() {
       const ta = (document.getElementById('refine-input') as HTMLInputElement);
       if (!ta.value.trim()) {
         const hints: Record<string, string> = {
-          improve: lang === 'en' ? 'Improve overall agent descriptions and add more specific skills...' : 'Ulepsz opisy agentów i dodaj bardziej szczegółowe umiejętności...',
-          add: lang === 'en' ? 'Add a [type] agent that handles [responsibility]...' : 'Dodaj agenta [typ] który zajmuje się [odpowiedzialność]...',
-          remove: lang === 'en' ? 'Remove the [agent name] agent and redistribute its responsibilities...' : 'Usuń agenta [nazwa] i redystrybuuj jego obowiązki...',
-          connections: lang === 'en' ? 'Change the connection so that [agent A] sends results directly to [agent B]...' : 'Zmień połączenie tak żeby [agent A] wysyłał wyniki bezpośrednio do [agent B]...',
+          improve: state.lang === 'en' ? 'Improve overall agent descriptions and add more specific skills...' : 'Ulepsz opisy agentów i dodaj bardziej szczegółowe umiejętności...',
+          add: state.lang === 'en' ? 'Add a [type] agent that handles [responsibility]...' : 'Dodaj agenta [typ] który zajmuje się [odpowiedzialność]...',
+          remove: state.lang === 'en' ? 'Remove the [agent name] agent and redistribute its responsibilities...' : 'Usuń agenta [nazwa] i redystrybuuj jego obowiązki...',
+          connections: state.lang === 'en' ? 'Change the connection so that [agent A] sends results directly to [agent B]...' : 'Zmień połączenie tak żeby [agent A] wysyłał wyniki bezpośrednio do [agent B]...',
         };
         ta.value = '';
         ta.placeholder = hints[action.id] || t('refinePlaceholder');
@@ -748,7 +749,7 @@ function openRefine() {
 function closeRefine() {
   (document.getElementById('refine-panel') as HTMLElement).style.display = 'none';
   selectedRefineAction = null;
-  _pendingRefineData = null;
+  state._pendingRefineData = null;
   // Reset to step 1
   const s1 = (document.getElementById('refine-step1') as HTMLElement);
   const s2 = (document.getElementById('refine-step2') as HTMLElement);
@@ -756,8 +757,8 @@ function closeRefine() {
   if (s2) s2.style.display = 'none';
   const applyBtn = (document.getElementById('refine-apply-btn') as HTMLElement);
   if (applyBtn) applyBtn.style.display = 'none';
-  if (isRefining) {
-    isRefining = false;
+  if (state.isRefining) {
+    state.isRefining = false;
     (document.getElementById('refine-submit-btn') as HTMLButtonElement).disabled = false;
     removeRefineThinking();
   }
@@ -768,7 +769,7 @@ function updateRefineCounter() {
   const counter = (document.getElementById('refine-counter') as HTMLElement);
   const revertBtn = (document.getElementById('refine-revert-btn') as HTMLElement);
   // ── FIX: was missing quotes around 'ę' causing SyntaxError ──
-  if (lang === 'pl') {
+  if (state.lang === 'pl') {
     const suffix = count === 1 ? 'ę' : count > 1 && count < 5 ? 'e' : 'i';
     counter.textContent = count > 0 ? `Wykonano ${count} rewizj${suffix}` : '';
   } else {
@@ -782,7 +783,7 @@ function addRefineMessage(role: string, html: string) {
   const div = document.createElement('div');
   div.className = `refine-msg ${role}`;
   div.innerHTML = `
-    <div class="refine-msg-sender">${role === 'ai' ? '⚡ AgentSpark' : (lang === 'en' ? 'You' : 'Ty')}</div>
+    <div class="refine-msg-sender">${role === 'ai' ? '⚡ AgentSpark' : (state.lang === 'en' ? 'You' : 'Ty')}</div>
     <div class="refine-bubble">${html}</div>
   `;
   history.appendChild(div);
@@ -813,15 +814,15 @@ function removeRefineThinking() {
 }
 
 function getRefineSystemPrompt() {
-  const lvl = t('levels').find((l: any) => l.id === currentLevel);
-  const currentTeamJSON = JSON.stringify(generatedAgents.map((a: any) => ({
+  const lvl = t('levels').find((l: any) => l.id === state.currentLevel);
+  const currentTeamJSON = JSON.stringify(state.generatedAgents.map((a: any) => ({
     id: a.id, name: a.name, type: a.type, role: a.role, description: a.description
   })), null, 2);
 
   return `You are AgentSpark, an expert AI system designer in REFINE mode.
-Language: ${lang === 'en' ? 'English' : 'Polish'}
-App topic: ${currentTopic}
-Complexity level: ${lvl ? lvl.name : currentLevel}
+Language: ${state.lang === 'en' ? 'English' : 'Polish'}
+App topic: ${state.currentTopic}
+Complexity level: ${lvl ? lvl.name : state.currentLevel}
 
 CURRENT TEAM:
 ${currentTeamJSON}
@@ -856,12 +857,12 @@ let _pendingRefineData: any = null;
 async function submitRefine() {
   const input = (document.getElementById('refine-input') as HTMLInputElement);
   const text = input.value.trim();
-  if (!text || isRefining) return;
+  if (!text || state.isRefining) return;
 
   const actionCtx = selectedRefineAction ? '[Action: ' + selectedRefineAction + '] ' : '';
   const fullRequest = actionCtx + text;
 
-  isRefining = true;
+  state.isRefining = true;
   (document.getElementById('refine-submit-btn') as HTMLButtonElement).disabled = true;
 
   // Switch to step 2
@@ -874,14 +875,14 @@ async function submitRefine() {
   addRefineThinking();
 
   try {
-    const history = refineHistory.map(m => (m.role === 'user' ? 'User' : 'AI') + ': ' + m.text).join('\n');
+    const history = state.refineHistory.map(m => (m.role === 'user' ? 'User' : 'AI') + ': ' + m.text).join('\n');
     const prompt = history
       ? 'Previous context:\n' + history + '\n\nNew request: ' + fullRequest
       : 'Request: ' + fullRequest;
 
     const refineActionEmoji: Record<string, string> = { improve: '⚡', add: '➕', remove: '🗑', connections: '🔗' };
     const refineEmoji = refineActionEmoji[selectedRefineAction] || '✏️';
-    const refineVer = versionHistory.length + 1;
+    const refineVer = state.versionHistory.length + 1;
     const raw = await callGemini(getRefineSystemPrompt(), prompt, refineEmoji + ' Refine · v' + refineVer + (selectedRefineAction ? ' · ' + selectedRefineAction : ''), []);
     removeRefineThinking();
     if (typeof hideLoader === 'function') hideLoader();
@@ -895,9 +896,9 @@ async function submitRefine() {
       const jm = raw.match(/\{[\s\S]*"agents"[\s\S]*\}/);
       if (jm) {
         jsonPart = jm[0];
-        summary = raw.slice(0, raw.indexOf(jm[0])).trim() || (lang === 'en' ? 'Team updated.' : 'Zespół zaktualizowany.');
+        summary = raw.slice(0, raw.indexOf(jm[0])).trim() || (state.lang === 'en' ? 'Team updated.' : 'Zespół zaktualizowany.');
       } else {
-        throw new Error(lang === 'en' ? 'Could not parse updated team.' : 'Nie udało się przetworzyć zaktualizowanego zespołu.');
+        throw new Error(state.lang === 'en' ? 'Could not parse updated team.' : 'Nie udało się przetworzyć zaktualizowanego zespołu.');
       }
     }
 
@@ -906,12 +907,12 @@ async function submitRefine() {
     const data = JSON.parse(jm2[0]);
     if (!data.agents || !Array.isArray(data.agents)) throw new Error('Invalid agents data');
 
-    const prevIds = new Set(generatedAgents.map(a => a.id));
+    const prevIds = new Set(state.generatedAgents.map(a => a.id));
     const newIds = new Set(data.agents.map((a: any) => a.id));
     const addedIds = [...newIds].filter(id => !prevIds.has(id));
     const removedIds = [...prevIds].filter(id => !newIds.has(id));
-    const changedIds = [...newIds].filter(id => prevIds.has(id) && JSON.stringify(data.agents.find((a: any) => a.id === id)) !== JSON.stringify(generatedAgents.find((a: any) => a.id === id)));
-    const removedNames = Object.fromEntries(removedIds.map(id => [id, generatedAgents.find((a: any) => a.id === id)?.name || id]));
+    const changedIds = [...newIds].filter(id => prevIds.has(id) && JSON.stringify(data.agents.find((a: any) => a.id === id)) !== JSON.stringify(state.generatedAgents.find((a: any) => a.id === id)));
+    const removedNames = Object.fromEntries(removedIds.map(id => [id, state.generatedAgents.find((a: any) => a.id === id)?.name || id]));
 
     const diffBadges = [
       ...addedIds.map(id => '<span class="refine-diff-added">+' + (data.agents.find((a: any) => a.id === id)?.name || id) + '</span>'),
@@ -920,7 +921,7 @@ async function submitRefine() {
     ].join(' ');
 
     addRefineMessage('ai', (summary || '') + (diffBadges ? '<br/><br/>' + diffBadges : ''));
-    _pendingRefineData = { data, text, fullRequest, addedIds, removedIds, changedIds, removedNames, summary };
+    state._pendingRefineData = { data, text, fullRequest, addedIds, removedIds, changedIds, removedNames, summary };
 
     const applyBtn = (document.getElementById('refine-apply-btn') as HTMLElement);
     if (applyBtn) {
@@ -933,43 +934,43 @@ async function submitRefine() {
     removeRefineThinking();
     if (typeof hideLoader === 'function') hideLoader();
     addRefineMessage('ai', '<span style="color:var(--accent2)">⚠ ' + err.message + '</span>');
-    showNotif(lang === 'en' ? '⚠ Refine failed.' : '⚠ Błąd generowania.', true);
-    _pendingRefineData = null;
+    showNotif(state.lang === 'en' ? '⚠ Refine failed.' : '⚠ Błąd generowania.', true);
+    state._pendingRefineData = null;
   }
 
-  isRefining = false;
+  state.isRefining = false;
   (document.getElementById('refine-submit-btn') as HTMLButtonElement).disabled = false;
 }
 
 function applyRefinement() {
-  if (!_pendingRefineData) return;
-  const { data, text, fullRequest, addedIds, removedIds, changedIds, removedNames, summary } = _pendingRefineData;
-  _pendingRefineData = null;
+  if (!state._pendingRefineData) return;
+  const { data, text, fullRequest, addedIds, removedIds, changedIds, removedNames, summary } = state._pendingRefineData;
+  state._pendingRefineData = null;
 
-  refineSnapshots.push(JSON.parse(JSON.stringify({ agents: generatedAgents, files: generatedFiles })));
+  refineSnapshots.push(JSON.parse(JSON.stringify({ agents: state.generatedAgents, files: state.generatedFiles })));
 
-  generatedAgents = data.agents;
+  state.generatedAgents = data.agents;
   data.agents.forEach((a: any) => {
-    generatedFiles['agent-' + a.id + '.md'] = a.agentMd || '# Agent: ' + a.name + '\n\n**Role:** ' + (a.role || '') + '\n\n' + (a.description || '');
-    generatedFiles['skill-' + a.id + '.md'] = a.skillMd || '# Skill: ' + a.name + '\n\n## Capabilities\n\n' + (a.description || '');
+    state.generatedFiles['agent-' + a.id + '.md'] = a.agentMd || '# Agent: ' + a.name + '\n\n**Role:** ' + (a.role || '') + '\n\n' + (a.description || '');
+    state.generatedFiles['skill-' + a.id + '.md'] = a.skillMd || '# Skill: ' + a.name + '\n\n## Capabilities\n\n' + (a.description || '');
   });
   removedIds.forEach((id: string) => {
-    delete generatedFiles['agent-' + id + '.md'];
-    delete generatedFiles['skill-' + id + '.md'];
+    delete state.generatedFiles['agent-' + id + '.md'];
+    delete state.generatedFiles['skill-' + id + '.md'];
   });
-  if (data.teamConfig) generatedFiles['team-config.md'] = data.teamConfig;
-  generatedFiles['README.md'] = generateReadme();
+  if (data.teamConfig) state.generatedFiles['team-config.md'] = data.teamConfig;
+  state.generatedFiles['README.md'] = generateReadme();
 
-  refineHistory.push({ role: 'user', text: fullRequest });
-  refineHistory.push({ role: 'ai', text: summary });
+  state.refineHistory.push({ role: 'user', text: fullRequest });
+  state.refineHistory.push({ role: 'ai', text: summary });
 
-  const vNum = versionHistory.length + 2;
-  versionHistory.push({
+  const vNum = state.versionHistory.length + 2;
+  state.versionHistory.push({
     id: Date.now(),
     label: text.length > 60 ? text.slice(0, 57) + '…' : text,
     ts: new Date(),
-    agents: JSON.parse(JSON.stringify(generatedAgents)),
-    files: JSON.parse(JSON.stringify(generatedFiles)),
+    agents: JSON.parse(JSON.stringify(state.generatedAgents)),
+    files: JSON.parse(JSON.stringify(state.generatedFiles)),
     diff: { added: addedIds, removed: removedIds, changed: changedIds },
     removedNames,
     agentNames: Object.fromEntries(data.agents.map((a: any) => [a.id, a.name])),
@@ -978,20 +979,20 @@ function applyRefinement() {
   renderVersionPanel();
   closeRefine();
   showResults(true);
-  scheduleAutoSave();
+  (window as any).scheduleAutoSave();
 
   setTimeout(() => {
     addedIds.forEach((id: string) => { const c = document.querySelector('[data-agent-id="' + id + '"]'); if (c) c.classList.add('just-added'); });
     changedIds.forEach((id: string) => { const c = document.querySelector('[data-agent-id="' + id + '"]'); if (c) c.classList.add('just-updated'); });
   }, 150);
-  setTimeout(() => buildGraphFromAgents(generatedAgents as any[]), 300);
-  showNotif(lang === 'en' ? '✓ Team updated!' : '✓ Zespół zaktualizowany!');
+  setTimeout(() => buildGraphFromAgents(state.generatedAgents as any[]), 300);
+  showNotif(state.lang === 'en' ? '✓ Team updated!' : '✓ Zespół zaktualizowany!');
   const revertBtn = (document.getElementById('refine-revert-btn') as HTMLElement);
   if (revertBtn) revertBtn.style.display = 'inline-flex';
 }
 
 function backToRefineStep1() {
-  _pendingRefineData = null;
+  state._pendingRefineData = null;
   (document.getElementById('refine-step1') as HTMLElement).style.display = 'block';
   (document.getElementById('refine-step2') as HTMLElement).style.display = 'none';
   const applyBtn = (document.getElementById('refine-apply-btn') as HTMLElement);
@@ -1003,14 +1004,14 @@ function backToRefineStep1() {
 function revertLastRefine() {
   if (!refineSnapshots.length) return;
   const snap = refineSnapshots.pop();
-  generatedAgents = snap.agents;
-  generatedFiles = snap.files;
-  refineHistory = refineHistory.slice(0, -2);
+  state.generatedAgents = snap.agents;
+  state.generatedFiles = snap.files;
+  state.refineHistory = state.refineHistory.slice(0, -2);
   updateRefineCounter();
   showResults(true);
-  buildGraphFromAgents(generatedAgents);
-  addRefineMessage('ai', lang === 'en' ? '↩ Reverted to previous version.' : '↩ Przywrócono poprzednią wersję.');
-  showNotif(lang === 'en' ? '↩ Reverted.' : '↩ Przywrócono.');
+  buildGraphFromAgents(state.generatedAgents);
+  addRefineMessage('ai', state.lang === 'en' ? '↩ Reverted to previous version.' : '↩ Przywrócono poprzednią wersję.');
+  showNotif(state.lang === 'en' ? '↩ Reverted.' : '↩ Przywrócono.');
 }
 
 // ─── CHAT HELPERS ─────────────────────────────────────────
@@ -1031,7 +1032,7 @@ function addMessage(role: string, text: string) {
   div.className = `msg ${role}`;
   const sender = document.createElement('div');
   sender.className = 'msg-sender';
-  sender.textContent = role === 'ai' ? '⚡ AgentSpark' : (lang === 'en' ? 'You' : 'Ty');
+  sender.textContent = role === 'ai' ? '⚡ AgentSpark' : (state.lang === 'en' ? 'You' : 'Ty');
   const bubble = document.createElement('div');
   bubble.className = 'msg-bubble';
   // User messages are plain text; AI messages pass through strict HTML sanitizer.
@@ -1157,10 +1158,10 @@ function _renderSkeletonCards(count = 4) {
 function _showGeneratingState(stepIndex: number) {
   // stepIndex 0=interviewing, 1=generating, 2=writing files, 3=done
   const steps = [
-    lang === 'en' ? 'Analyzing your requirements…' : 'Analizuję wymagania…',
-    lang === 'en' ? 'Designing agent team…' : 'Projektuję zespół agentów…',
-    lang === 'en' ? 'Writing configuration files…' : 'Zapisuję pliki konfiguracyjne…',
-    lang === 'en' ? 'Finalizing…' : 'Finalizuję…',
+    state.lang === 'en' ? 'Analyzing your requirements…' : 'Analizuję wymagania…',
+    state.lang === 'en' ? 'Designing agent team…' : 'Projektuję zespół agentów…',
+    state.lang === 'en' ? 'Writing configuration files…' : 'Zapisuję pliki konfiguracyjne…',
+    state.lang === 'en' ? 'Finalizing…' : 'Finalizuję…',
   ];
   const grid = (document.getElementById('agents-grid') as HTMLElement);
   if (!grid) return;
@@ -1175,7 +1176,7 @@ function _showGeneratingState(stepIndex: number) {
   `).join('');
   overlay.innerHTML = `
     <div class="generating-spinner"></div>
-    <div class="generating-label">${lang === 'en' ? 'Building your AI team…' : 'Buduję Twój zespół AI…'}</div>
+    <div class="generating-label">${state.lang === 'en' ? 'Building your AI team…' : 'Buduję Twój zespół AI…'}</div>
     <div class="generating-steps">${stepsHtml}</div>
   `;
   grid.innerHTML = '';
@@ -1213,12 +1214,12 @@ function openSettingsSheet() {
             <div class="ios-list-item" onclick="setLang('en');(document.getElementById('ios-settings-sheet') as HTMLElement).classList.remove('open')">
               <div class="ios-list-icon" style="background:rgba(242,185,13,0.15);">🇬🇧</div>
               <div style="flex:1"><div class="ios-list-label">English</div></div>
-              <span id="settings-lang-en" style="color:var(--accent);font-size:0.9rem;">✓</span>
+              <span id="settings-state.lang-en" style="color:var(--accent);font-size:0.9rem;">✓</span>
             </div>
             <div class="ios-list-item" onclick="setLang('pl');(document.getElementById('ios-settings-sheet') as HTMLElement).classList.remove('open')">
               <div class="ios-list-icon" style="background:rgba(242,185,13,0.15);">🇵🇱</div>
               <div style="flex:1"><div class="ios-list-label">Polski</div></div>
-              <span id="settings-lang-pl" style="color:var(--accent);font-size:0.9rem;display:none;">✓</span>
+              <span id="settings-state.lang-pl" style="color:var(--accent);font-size:0.9rem;display:none;">✓</span>
             </div>
           </div>
           <div class="ios-section-label" style="margin-bottom:0.5rem;" id="settings-about-label">About</div>
@@ -1243,9 +1244,9 @@ function openSettingsSheet() {
     document.body.appendChild(sheet);
   }
   // Update language indicators
-  const isEn = lang === 'en';
-  const langEn = (document.getElementById('settings-lang-en') as HTMLElement);
-  const langPl = (document.getElementById('settings-lang-pl') as HTMLElement);
+  const isEn = state.lang === 'en';
+  const langEn = (document.getElementById('settings-state.lang-en') as HTMLElement);
+  const langPl = (document.getElementById('settings-state.lang-pl') as HTMLElement);
   if (langEn) langEn.style.display = isEn ? '' : 'none';
   if (langPl) langPl.style.display = !isEn ? '' : 'none';
   // Update theme label
@@ -1299,7 +1300,7 @@ function renderResults() {
 
 async function restart() {
   // If there's unsaved work and a project in progress, offer to save
-  if (generatedAgents.length && _currentProjectId === null) {
+  if (state.generatedAgents.length && state.currentProjectId === null) {
     const save = await uiConfirm(
       'Save current project before starting over?',
       'Zapisać bieżący projekt przed rozpoczęciem od nowa?',
@@ -1308,30 +1309,30 @@ async function restart() {
     );
     if (save) { saveCurrentProject(false); }
   }
-  _currentProjectId = null;
-  chatHistory = [] as any[];
-  generatedAgents = [] as any[];
-  generatedFiles = {} as Record<string, string>;
-  refineHistory = [] as any[];
+  state.currentProjectId = null;
+  state.chatHistory = [] as any[];
+  state.generatedAgents = [] as any[];
+  state.generatedFiles = {} as Record<string, string>;
+  state.refineHistory = [] as any[];
   refineSnapshots = [];
-  versionHistory = [] as any[];
+  state.versionHistory = [] as any[];
   versionPanelOpen = false;
-  traceSpans = [];
+  state.traceSpans = [];
   tracePanelOpen = false;
   traceSessionStart = null;
-  isRefining = false;
+  state.isRefining = false;
   selectedRefineAction = null;
-  questionCount = 0;
-  conversationState = 'interview';
-  currentModalFile = '';
-  mdBrowserActiveFile = '';
+  state.questionCount = 0;
+  state.conversationState = 'interview';
+  state.currentModalFile = '';
+  state.mdBrowserActiveFile = '';
   (document.getElementById('chat-messages') as HTMLElement).innerHTML = '';
   clearOptions();
   if ((document.getElementById('refine-history') as HTMLElement)) (document.getElementById('refine-history') as HTMLElement).innerHTML = '';
   (document.getElementById('refine-panel') as HTMLElement).style.display = 'none';
   (document.getElementById('version-panel') as HTMLElement).style.display = 'none';
-  currentLevel = 'iskra';
-  MAX_QUESTIONS = 4;
+  state.currentLevel = 'iskra';
+  state.MAX_QUESTIONS = 4;
   if (graphAnimFrame) { cancelAnimationFrame(graphAnimFrame); graphAnimFrame = null; }
   graphNodes = []; graphEdges = [];
   (document.getElementById('scoring-panel') as HTMLElement).style.display = 'none';
@@ -1390,22 +1391,22 @@ function renderTraceLive() {
   const panel = (document.getElementById('trace-panel') as HTMLElement);
   if (!panel) return;
 
-  if (!traceSpans.length) { panel.style.display = 'none'; return; }
+  if (!state.traceSpans.length) { panel.style.display = 'none'; return; }
   panel.style.display = 'block';
 
   // Count badge
-  const doneCount = traceSpans.filter(s => s.status !== 'pending').length;
-  (document.getElementById('trace-span-count') as HTMLElement).textContent = traceSpans.length.toString();
+  const doneCount = state.traceSpans.filter(s => s.status !== 'pending').length;
+  (document.getElementById('trace-span-count') as HTMLElement).textContent = state.traceSpans.length.toString();
 
   // Summary pills
   const pills = (document.getElementById('trace-summary-pills') as HTMLElement);
-  const totalMs = traceSpans.reduce((n, s) => n + (s.durationMs || 0), 0);
-  const totalTok = traceSpans.reduce((n, s) => n + (s.tokens || 0), 0);
-  const totalCost = traceSpans.reduce((n, s) => n + (s.cost || 0), 0);
-  const hasCostData = traceSpans.some(s => s.cost !== null && s.cost !== undefined);
-  const hasFallback = traceSpans.some(s => s.isFallback);
-  const hasError = traceSpans.some(s => s.status === 'error');
-  const hasPending = traceSpans.some(s => s.status === 'pending');
+  const totalMs = state.traceSpans.reduce((n, s) => n + (s.durationMs || 0), 0);
+  const totalTok = state.traceSpans.reduce((n, s) => n + (s.tokens || 0), 0);
+  const totalCost = state.traceSpans.reduce((n, s) => n + (s.cost || 0), 0);
+  const hasCostData = state.traceSpans.some(s => s.cost !== null && s.cost !== undefined);
+  const hasFallback = state.traceSpans.some(s => s.isFallback);
+  const hasError = state.traceSpans.some(s => s.status === 'error');
+  const hasPending = state.traceSpans.some(s => s.status === 'pending');
   pills.innerHTML = `
     <span class="trace-pill ${hasError ? 'error' : hasFallback ? 'warn' : 'ok'}">
       ${hasError ? '⚠ error' : hasFallback ? '↩ fallback' : '✓ ok'}
@@ -1420,12 +1421,12 @@ function renderTraceLive() {
   const spansEl = (document.getElementById('trace-spans') as HTMLElement);
 
   // Calculate timeline scale
-  const sessionStart = traceSessionStart || (traceSpans[0]?.startMs || Date.now());
+  const sessionStart = traceSessionStart || (state.traceSpans[0]?.startMs || Date.now());
   const sessionEnd = Math.max(...traceSpans.map(s => s.endMs || Date.now()));
   const sessionRange = Math.max(sessionEnd - sessionStart, 1);
 
   spansEl.innerHTML = '';
-  traceSpans.forEach(s => {
+  state.traceSpans.forEach(s => {
     const left = ((s.startMs - sessionStart) / sessionRange) * 100;
     const width = s.durationMs
       ? Math.max((s.durationMs / sessionRange) * 100, 1.5)
@@ -1508,25 +1509,25 @@ function renderTraceLive() {
 
   // Footer stats — improved (#9)
   const footerEl = (document.getElementById('trace-footer') as HTMLElement);
-  const calls = traceSpans.length;
-  const errors = traceSpans.filter(s => s.status === 'error').length;
-  const fallbacks = traceSpans.filter(s => s.isFallback).length;
-  const phases = [...new Set(traceSpans.map(s => {
+  const calls = state.traceSpans.length;
+  const errors = state.traceSpans.filter(s => s.status === 'error').length;
+  const fallbacks = state.traceSpans.filter(s => s.isFallback).length;
+  const phases = [...new Set(state.traceSpans.map(s => {
     const raw = s.label || '';
     const dot = raw.indexOf(' · ');
     return dot !== -1 ? raw.slice(0, dot) : raw.split(':')[0];
   }))];
   const avgDur = calls ? Math.round(totalMs / calls) : 0;
   footerEl.innerHTML = `
-    <span><strong>${calls}</strong> ${lang === 'en' ? (calls === 1 ? 'call' : 'calls') : 'wywołań'}</span>
-    <span><strong>${(totalMs / 1000).toFixed(1)}s</strong> ${lang === 'en' ? 'total' : 'łącznie'}</span>
-    ${totalTok ? `<span title="${lang === 'en' ? 'Total tokens consumed' : 'Łączna liczba tokenów'}"><strong>${totalTok.toLocaleString()}</strong> tok</span>` : ''}
-    ${hasCostData && totalCost > 0 ? `<span style="color:var(--success);font-weight:700;" title="${lang === 'en' ? 'Estimated total API cost for this session (based on public pricing)' : 'Szacowany koszt API sesji'}">~${_formatCost(totalCost)}</span>` : ''}
+    <span><strong>${calls}</strong> ${state.lang === 'en' ? (calls === 1 ? 'call' : 'calls') : 'wywołań'}</span>
+    <span><strong>${(totalMs / 1000).toFixed(1)}s</strong> ${state.lang === 'en' ? 'total' : 'łącznie'}</span>
+    ${totalTok ? `<span title="${state.lang === 'en' ? 'Total tokens consumed' : 'Łączna liczba tokenów'}"><strong>${totalTok.toLocaleString()}</strong> tok</span>` : ''}
+    ${hasCostData && totalCost > 0 ? `<span style="color:var(--success);font-weight:700;" title="${state.lang === 'en' ? 'Estimated total API cost for this session (based on public pricing)' : 'Szacowany koszt API sesji'}">~${_formatCost(totalCost)}</span>` : ''}
     ${hasCostData && totalCost === 0 ? `<span style="color:var(--success);" title="Free tier model">free</span>` : ''}
-    ${calls > 1 ? `<span style="color:var(--muted)">~${avgDur >= 1000 ? (avgDur / 1000).toFixed(1) + 's' : avgDur + 'ms'} ${lang === 'en' ? 'avg/call' : 'śr/call'}</span>` : ''}
-    ${fallbacks ? `<span title="${lang === 'en' ? 'Model fallbacks used' : 'Użyte fallbacki modelu'}">↩ <strong>${fallbacks}</strong> ${lang === 'en' ? 'fallback' : 'fallback'}</span>` : ''}
-    ${errors ? `<span style="color:var(--accent2)" title="${lang === 'en' ? 'Failed calls' : 'Nieudane wywołania'}">⚠ <strong>${errors}</strong> ${lang === 'en' ? 'error' : 'błąd'}</span>` : ''}
-    <span style="margin-left:auto;color:var(--muted);font-size:0.68rem;" title="${lang === 'en' ? 'Session start time' : 'Czas startu sesji'}">${new Date(sessionStart).toLocaleTimeString()}</span>
+    ${calls > 1 ? `<span style="color:var(--muted)">~${avgDur >= 1000 ? (avgDur / 1000).toFixed(1) + 's' : avgDur + 'ms'} ${state.lang === 'en' ? 'avg/call' : 'śr/call'}</span>` : ''}
+    ${fallbacks ? `<span title="${state.lang === 'en' ? 'Model fallbacks used' : 'Użyte fallbacki modelu'}">↩ <strong>${fallbacks}</strong> ${state.lang === 'en' ? 'fallback' : 'fallback'}</span>` : ''}
+    ${errors ? `<span style="color:var(--accent2)" title="${state.lang === 'en' ? 'Failed calls' : 'Nieudane wywołania'}">⚠ <strong>${errors}</strong> ${state.lang === 'en' ? 'error' : 'błąd'}</span>` : ''}
+    <span style="margin-left:auto;color:var(--muted);font-size:0.68rem;" title="${state.lang === 'en' ? 'Session start time' : 'Czas startu sesji'}">${new Date(sessionStart).toLocaleTimeString()}</span>
   `;
 }
 
@@ -1538,7 +1539,7 @@ function renderVersionPanel() {
   const badge = (document.getElementById('version-count-badge') as HTMLElement);
   const icon = (document.getElementById('version-toggle-icon') as HTMLElement);
 
-  const total = versionHistory.length;
+  const total = state.versionHistory.length;
   if (total === 0) { panel.style.display = 'none'; return; }
 
   panel.style.display = 'block';
@@ -1553,7 +1554,7 @@ function renderVersionPanel() {
 
   reversed.forEach((v, ri) => {
     const isCurrentIdx = ri === 0;
-    const origIdx = versionHistory.indexOf(v);           // index in versionHistory array
+    const origIdx = state.versionHistory.indexOf(v);           // index in state.versionHistory array
 
     const entry = document.createElement('div');
     entry.className = 'version-entry' + (isCurrentIdx ? ' current' : '') + (v.isOrigin ? ' origin' : '');
@@ -1576,11 +1577,11 @@ function renderVersionPanel() {
 
     // Actions: can't restore current, can't diff origin
     const restoreBtn = !isCurrentIdx
-      ? `<button class="version-btn restore-btn" onclick="restoreVersion(${origIdx})">↩ ${lang === 'en' ? 'Restore' : 'Przywróć'}</button>`
+      ? `<button class="version-btn restore-btn" onclick="restoreVersion(${origIdx})">↩ ${state.lang === 'en' ? 'Restore' : 'Przywróć'}</button>`
       : `<span class="version-current-tag">CURRENT</span>`;
 
     const diffBtn = origIdx > 0
-      ? `<button class="version-btn diff-btn" onclick="showDiffModal(${origIdx})">🔍 ${lang === 'en' ? 'Diff' : 'Porównaj'}</button>`
+      ? `<button class="version-btn diff-btn" onclick="showDiffModal(${origIdx})">🔍 ${state.lang === 'en' ? 'Diff' : 'Porównaj'}</button>`
       : '';
 
     const downloadBtn = `<button class="version-btn" onclick="downloadVersionZip(${origIdx})">⬇ ZIP</button>`;
@@ -1618,70 +1619,70 @@ function formatVersionTime(ts: any) {
   const now = new Date();
   const diffMs = now.getTime() - d.getTime();
   const diffM = Math.floor(diffMs / 60000);
-  if (diffM < 1) return lang === 'en' ? 'just now' : 'przed chwilą';
-  if (diffM < 60) return `${diffM}m ${lang === 'en' ? 'ago' : 'temu'}`;
+  if (diffM < 1) return state.lang === 'en' ? 'just now' : 'przed chwilą';
+  if (diffM < 60) return `${diffM}m ${state.lang === 'en' ? 'ago' : 'temu'}`;
   const diffH = Math.floor(diffM / 60);
-  if (diffH < 24) return `${diffH}h ${lang === 'en' ? 'ago' : 'temu'}`;
+  if (diffH < 24) return `${diffH}h ${state.lang === 'en' ? 'ago' : 'temu'}`;
   return d.toLocaleDateString();
 }
 
 function restoreVersion(idx: number) {
-  if (idx < 0 || idx >= versionHistory.length) return;
-  const v = versionHistory[idx];
+  if (idx < 0 || idx >= state.versionHistory.length) return;
+  const v = state.versionHistory[idx];
 
   // Save current state as new version before restoring
-  const alreadySaved = versionHistory[versionHistory.length - 1];
+  const alreadySaved = state.versionHistory[state.versionHistory.length - 1];
   // Don't double-save if idx is already last
-  if (idx !== versionHistory.length - 1) {
-    versionHistory.push({
+  if (idx !== state.versionHistory.length - 1) {
+    state.versionHistory.push({
       id: Date.now(),
-      label: lang === 'en' ? `Restored v${v.vNum}` : `Przywrócono v${v.vNum}`,
+      label: state.lang === 'en' ? `Restored v${v.vNum}` : `Przywrócono v${v.vNum}`,
       ts: new Date(),
       agents: JSON.parse(JSON.stringify(v.agents)),
       files: JSON.parse(JSON.stringify(v.files)),
       diff: { added: [], removed: [], changed: [] },
       removedNames: {},
       agentNames: Object.fromEntries(v.agents.map((a: any) => [a.id, a.name])),
-      vNum: versionHistory.length + 1,
+      vNum: state.versionHistory.length + 1,
     });
   }
 
-  generatedAgents = JSON.parse(JSON.stringify(v.agents));
-  generatedFiles = JSON.parse(JSON.stringify(v.files));
+  state.generatedAgents = JSON.parse(JSON.stringify(v.agents));
+  state.generatedFiles = JSON.parse(JSON.stringify(v.files));
 
   showResults(true);
-  buildGraphFromAgents(generatedAgents);
+  buildGraphFromAgents(state.generatedAgents);
   renderVersionPanel();
 
-  showNotif(lang === 'en'
+  showNotif(state.lang === 'en'
     ? `↩ Restored to v${v.vNum}: "${v.label}"`
     : `↩ Przywrócono v${v.vNum}: "${v.label}"`);
 }
 
 async function downloadVersionZip(idx: number) {
   if (typeof JSZip === 'undefined') { showNotif('JSZip not loaded', true); return; }
-  const v = versionHistory[idx];
+  const v = state.versionHistory[idx];
   if (!v) return;
   const zip = new JSZip();
   Object.entries(v.files).forEach(([name, content]) => zip.file(name, content));
   const blob = await zip.generateAsync({ type: 'blob' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `agentspark-v${v.vNum}-${currentTopic.toLowerCase().replace(/\s+/g, '-')}.zip`;
+  a.download = `agentspark-v${v.vNum}-${state.currentTopic.toLowerCase().replace(/\s+/g, '-')}.zip`;
   a.click();
   showNotif(`✓ v${v.vNum} ZIP downloaded`);
 }
 
 function showDiffModal(idx: number) {
-  if (idx < 1 || idx >= versionHistory.length) return;
-  const vNew = versionHistory[idx];
-  const vOld = versionHistory[idx - 1];
+  if (idx < 1 || idx >= state.versionHistory.length) return;
+  const vNew = state.versionHistory[idx];
+  const vOld = state.versionHistory[idx - 1];
 
   const modal = (document.getElementById('diff-modal') as HTMLElement);
   const title = (document.getElementById('diff-modal-title') as HTMLElement);
   const body = (document.getElementById('diff-modal-body') as HTMLElement);
 
-  title.textContent = lang === 'en'
+  title.textContent = state.lang === 'en'
     ? `🔍 v${vOld.vNum} → v${vNew.vNum}: "${vNew.label}"`
     : `🔍 v${vOld.vNum} → v${vNew.vNum}: "${vNew.label}"`;
 
@@ -1691,7 +1692,7 @@ function showDiffModal(idx: number) {
 
   if (added.length) {
     html += `<div class="diff-section">
-      <div class="diff-section-title" style="color:var(--success)">➕ ${lang === 'en' ? 'Added Agents' : 'Dodani Agenci'} (${added.length})</div>
+      <div class="diff-section-title" style="color:var(--success)">➕ ${state.lang === 'en' ? 'Added Agents' : 'Dodani Agenci'} (${added.length})</div>
       ${added.map((id: string) => {
       const a = vNew.agents.find((ag: any) => ag.id === id);
       if (!a) return '';
@@ -1705,7 +1706,7 @@ function showDiffModal(idx: number) {
 
   if (removed.length) {
     html += `<div class="diff-section">
-      <div class="diff-section-title" style="color:var(--accent2)">🗑 ${lang === 'en' ? 'Removed Agents' : 'Usunięci Agenci'} (${removed.length})</div>
+      <div class="diff-section-title" style="color:var(--accent2)">🗑 ${state.lang === 'en' ? 'Removed Agents' : 'Usunięci Agenci'} (${removed.length})</div>
       ${removed.map((id: string) => {
       const a = vOld.agents.find((ag: any) => ag.id === id);
       if (!a) return '';
@@ -1719,7 +1720,7 @@ function showDiffModal(idx: number) {
 
   if (changed.length) {
     html += `<div class="diff-section">
-      <div class="diff-section-title" style="color:#ffd580">✏ ${lang === 'en' ? 'Modified Agents' : 'Zmodyfikowani Agenci'} (${changed.length})</div>
+      <div class="diff-section-title" style="color:#ffd580">✏ ${state.lang === 'en' ? 'Modified Agents' : 'Zmodyfikowani Agenci'} (${changed.length})</div>
       ${changed.map((id: string) => {
       const aNew = vNew.agents.find((ag: any) => ag.id === id);
       const aOld = vOld.agents.find((ag: any) => ag.id === id);
@@ -1740,16 +1741,16 @@ function showDiffModal(idx: number) {
 
   if (!added.length && !removed.length && !changed.length) {
     html = `<div style="padding:2rem;text-align:center;color:var(--muted);font-family:'Space Mono',monospace;font-size:0.82rem;">
-      ${lang === 'en' ? 'No structural changes — metadata or descriptions updated.' : 'Brak zmian strukturalnych — zaktualizowano metadane lub opisy.'}
+      ${state.lang === 'en' ? 'No structural changes — metadata or descriptions updated.' : 'Brak zmian strukturalnych — zaktualizowano metadane lub opisy.'}
     </div>`;
   }
 
   // Agent count summary
   html = `<div style="display:flex;gap:1.5rem;padding:0 0 1.25rem;font-family:'Space Mono',monospace;font-size:0.72rem;color:var(--muted);border-bottom:1px solid var(--border);margin-bottom:1.25rem;">
-    <span>${lang === 'en' ? 'Before' : 'Przed'}: <strong style="color:var(--text)">${vOld.agents.length} ${lang === 'en' ? 'agents' : 'agentów'}</strong></span>
+    <span>${state.lang === 'en' ? 'Before' : 'Przed'}: <strong style="color:var(--text)">${vOld.agents.length} ${state.lang === 'en' ? 'agents' : 'agentów'}</strong></span>
     <span>→</span>
-    <span>${lang === 'en' ? 'After' : 'Po'}: <strong style="color:var(--text)">${vNew.agents.length} ${lang === 'en' ? 'agents' : 'agentów'}</strong></span>
-    <span style="margin-left:auto;">${lang === 'en' ? 'Change' : 'Zmiana'}: ${vNew.agents.length - vOld.agents.length > 0 ? '+' : ''}${vNew.agents.length - vOld.agents.length}</span>
+    <span>${state.lang === 'en' ? 'After' : 'Po'}: <strong style="color:var(--text)">${vNew.agents.length} ${state.lang === 'en' ? 'agents' : 'agentów'}</strong></span>
+    <span style="margin-left:auto;">${state.lang === 'en' ? 'Change' : 'Zmiana'}: ${vNew.agents.length - vOld.agents.length > 0 ? '+' : ''}${vNew.agents.length - vOld.agents.length}</span>
   </div>` + html;
 
   body.innerHTML = html;
@@ -1804,7 +1805,7 @@ function openImportModal() {
   // Reset gist import section
   const gistInput = (document.getElementById('gist-import-input') as HTMLInputElement);
   if (gistInput) gistInput.value = '';
-  _clearGistImportError();
+  (window as any)._clearGistImportError();
   const gistLabel = (document.getElementById('gist-import-label') as HTMLElement);
   if (gistLabel) gistLabel.textContent = tr('Load ->', 'Wczytaj ->');
   (document.getElementById('import-modal') as HTMLElement).classList.add('open');
@@ -1855,7 +1856,7 @@ async function _parseImportJson(text: string, filename: string) {
   catch (e: any) { _showImportError(tr('Invalid JSON: ', 'Nieprawidlowy JSON: ') + e.message); return; }
 
   // Support multiple JSON shapes:
-  // 1) AgentSpark share payload  { v, agents, files, topic, level, lang }
+  // 1) AgentSpark share payload  { v, agents, files, topic, level, state.lang }
   // 2) AgentSpark project record { id, name, agents, files, topic, ... }
   // 3) Raw agents array           [ { id, name, ... }, ... ]
   let payload;
@@ -2000,39 +2001,39 @@ async function confirmImport() {
   const saveToDb = (document.getElementById('import-save-checkbox') as HTMLInputElement)?.checked !== false;
 
   // Restore state — same pattern as loadProject / share restore
-  currentTopic = p.topic || tr('Imported Project', 'Zaimportowany projekt');
-  currentLevel = p.level || 'iskra';
-  if (p.lang) { lang = p.lang; setLang(lang); }
-  generatedAgents = JSON.parse(JSON.stringify(p.agents || []));
-  generatedFiles = JSON.parse(JSON.stringify(p.files || {}));
+  state.currentTopic = p.topic || tr('Imported Project', 'Zaimportowany projekt');
+  state.currentLevel = p.level || 'iskra';
+  if (p.lang) { state.lang = p.lang; setLang(state.lang); }
+  state.generatedAgents = JSON.parse(JSON.stringify(p.agents || []));
+  state.generatedFiles = JSON.parse(JSON.stringify(p.files || {}));
 
   // Regenerate missing files
-  if (!generatedFiles['README.md'] && generatedAgents.length) {
-    generatedFiles['README.md'] = generateReadme();
+  if (!state.generatedFiles['README.md'] && state.generatedAgents.length) {
+    state.generatedFiles['README.md'] = generateReadme();
   }
-  generatedAgents.forEach(a => {
-    if (!generatedFiles[`agent-${a.id}.md`] && a.agentMd)
-      generatedFiles[`agent-${a.id}.md`] = a.agentMd;
-    if (!generatedFiles[`skill-${a.id}.md`] && a.skillMd)
-      generatedFiles[`skill-${a.id}.md`] = a.skillMd;
+  state.generatedAgents.forEach(a => {
+    if (!state.generatedFiles[`agent-${a.id}.md`] && a.agentMd)
+      state.generatedFiles[`agent-${a.id}.md`] = a.agentMd;
+    if (!state.generatedFiles[`skill-${a.id}.md`] && a.skillMd)
+      state.generatedFiles[`skill-${a.id}.md`] = a.skillMd;
   });
 
   // Bootstrap version history
-  versionHistory = [{
+  state.versionHistory = [{
     id: Date.now(),
-    label: lang === 'en' ? `Imported: ${currentTopic}` : `Zaimportowany: ${currentTopic}`,
+    label: state.lang === 'en' ? `Imported: ${state.currentTopic}` : `Zaimportowany: ${state.currentTopic}`,
     ts: new Date(),
-    agents: JSON.parse(JSON.stringify(generatedAgents)),
-    files: JSON.parse(JSON.stringify(generatedFiles)),
+    agents: JSON.parse(JSON.stringify(state.generatedAgents)),
+    files: JSON.parse(JSON.stringify(state.generatedFiles)),
     diff: { added: [], removed: [], changed: [] },
     removedNames: {},
-    agentNames: Object.fromEntries(generatedAgents.map(a => [a.id, a.name])),
+    agentNames: Object.fromEntries(state.generatedAgents.map(a => [a.id, a.name])),
     vNum: 1,
     isOrigin: true,
   }];
 
   // Reset project ID — will be assigned fresh by save
-  _currentProjectId = null;
+  state.currentProjectId = null;
 
   closeImportModal();
   showScreen('results');
@@ -2044,9 +2045,9 @@ async function confirmImport() {
     await saveCurrentProject(true);
   }
 
-  showNotif(lang === 'en'
-    ? `✓ Imported "${currentTopic}" — ${generatedAgents.length} agents`
-    : `✓ Zaimportowano "${currentTopic}" — ${generatedAgents.length} agentów`
+  showNotif(state.lang === 'en'
+    ? `✓ Imported "${state.currentTopic}" — ${state.generatedAgents.length} agents`
+    : `✓ Zaimportowano "${state.currentTopic}" — ${state.generatedAgents.length} agentów`
   );
 }
 
@@ -2133,7 +2134,7 @@ async function copyPromptToClipboard() {
 
 function downloadPromptTxt() {
   const content = _getPromptForTab(_activePromptTab);
-  const topicSlug = (currentTopic || 'agentspark').toLowerCase().replace(/\s+/g, '-');
+  const topicSlug = (state.currentTopic || 'agentspark').toLowerCase().replace(/\s+/g, '-');
   const filename = `prompt-${_activePromptTab}-${topicSlug}.txt`;
   const blob = new Blob([content], { type: 'text/plain' });
   const a = document.createElement('a');
@@ -2144,8 +2145,8 @@ function downloadPromptTxt() {
 }
 
 function openFrameworkExport() {
-  if (!generatedAgents.length) {
-    showNotif(lang === 'en' ? '⚠ Generate a team first' : '⚠ Najpierw wygeneruj zespół', true);
+  if (!state.generatedAgents.length) {
+    showNotif(state.lang === 'en' ? '⚠ Generate a team first' : '⚠ Najpierw wygeneruj zespół', true);
     return;
   }
   renderFwModal();
@@ -2190,8 +2191,8 @@ function renderFwModal() {
         </div>
         <div class="fw-footer-row">
           <div class="fw-pip">$ ${fw.pip}</div>
-          <button class="modal-download-btn" onclick="copyFwCode('${fw.id}')">📋 ${lang === 'en' ? 'Copy' : 'Kopiuj'}</button>
-          <button class="modal-download-btn" onclick="downloadFwCode('${fw.id}')">⬇ ${lang === 'en' ? 'Download .py' : 'Pobierz .py'}</button>
+          <button class="modal-download-btn" onclick="copyFwCode('${fw.id}')">📋 ${state.lang === 'en' ? 'Copy' : 'Kopiuj'}</button>
+          <button class="modal-download-btn" onclick="downloadFwCode('${fw.id}')">⬇ ${state.lang === 'en' ? 'Download .py' : 'Pobierz .py'}</button>
         </div>
       `;
     }
@@ -2206,16 +2207,16 @@ function escapeHtml(s: string) {
 function copyFwCode(fwId: string) {
   const code = generateFrameworkCode(fwId);
   navigator.clipboard.writeText(code).then(() => {
-    showNotif(lang === 'en' ? '✓ Code copied to clipboard!' : '✓ Kod skopiowany!');
+    showNotif(state.lang === 'en' ? '✓ Code copied to clipboard!' : '✓ Kod skopiowany!');
   }).catch(() => {
-    showNotif(lang === 'en' ? '⚠ Copy failed — select manually' : '⚠ Kopiowanie nieudane', true);
+    showNotif(state.lang === 'en' ? '⚠ Copy failed — select manually' : '⚠ Kopiowanie nieudane', true);
   });
 }
 
 function downloadFwCode(fwId: string) {
   if (fwId === 'claude') { downloadAllClaudePrompts(); return; }
   const code = generateFrameworkCode(fwId);
-  const slug = currentTopic.toLowerCase().replace(/\s+/g, '_');
+  const slug = state.currentTopic.toLowerCase().replace(/\s+/g, '_');
   const filename = `${fwId}_${slug}.py`;
   const blob = new Blob([code], { type: 'text/plain' });
   const a = document.createElement('a');
@@ -2248,7 +2249,7 @@ function taskVarName(agent: any) {
 // ── Claude Projects renderer ───────────────────────────────
 
 function renderClaudeProjectsPane() {
-  const agents = generatedAgents as any[];
+  const agents = state.generatedAgents as any[];
   const cards = agents.map((a, i) => {
     const prompt = genClaudeAgentPrompt(a);
     const safeId = `claude-agent-${i}`;
@@ -2307,21 +2308,21 @@ ${agent.skillMd ? agent.skillMd.replace(/^# Skill:.*\n/, '').trim() : (agent.ski
 Be concise, professional, and focused. Stay within your area of expertise. When a question falls outside your scope, say so clearly and suggest which team member is better suited.
 
 ## Team Context
-You are part of a ${generatedAgents.length}-agent team working on: **${currentTopic}**
-${generatedAgents.filter(a => a.id !== agent.id).map(a => `- ${a.emoji || '🤖'} **${a.name}** — ${a.role || a.type}`).join('\n')}
+You are part of a ${state.generatedAgents.length}-agent team working on: **${state.currentTopic}**
+${state.generatedAgents.filter(a => a.id !== agent.id).map(a => `- ${a.emoji || '🤖'} **${a.name}** — ${a.role || a.type}`).join('\n')}
 
 Always keep your team context in mind. If the user needs help from a colleague, recommend them by name.`;
 }
 
 function genClaudeProjects() {
   // Returns combined text for copy/download all
-  return generatedAgents.map(a =>
+  return state.generatedAgents.map(a =>
     `${'='.repeat(60)}\n# ${a.emoji || '🤖'} ${a.name}\n${'='.repeat(60)}\n\n${genClaudeAgentPrompt(a)}\n`
   ).join('\n\n');
 }
 
 function copyClaudePrompt(agentIndex: number) {
-  const agent = generatedAgents[agentIndex];
+  const agent = state.generatedAgents[agentIndex];
   if (!agent) return;
   navigator.clipboard.writeText(genClaudeAgentPrompt(agent)).then(() => {
     showNotif(`✓ ${agent.name} prompt copied — paste into Claude Project Instructions`);
@@ -2329,7 +2330,7 @@ function copyClaudePrompt(agentIndex: number) {
 }
 
 function downloadClaudePrompt(agentIndex: number) {
-  const agent = generatedAgents[agentIndex];
+  const agent = state.generatedAgents[agentIndex];
   if (!agent) return;
   const content = genClaudeAgentPrompt(agent);
   const slug = agent.name.toLowerCase().replace(/\s+/g, '-');
@@ -2348,13 +2349,13 @@ async function downloadAllClaudePrompts() {
     const blob = new Blob([content], { type: 'text/plain' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `claude-projects-${currentTopic.toLowerCase().replace(/\s+/g, '-')}.md`;
+    a.download = `claude-projects-${state.currentTopic.toLowerCase().replace(/\s+/g, '-')}.md`;
     a.click();
     showNotif('✓ All prompts downloaded as single file');
     return;
   }
   const zip = new JSZip();
-  generatedAgents.forEach(agent => {
+  state.generatedAgents.forEach(agent => {
     const slug = agent.name.toLowerCase().replace(/\s+/g, '-');
     zip.file(`claude-project-${slug}.md`, genClaudeAgentPrompt(agent));
   });
@@ -2363,17 +2364,17 @@ async function downloadAllClaudePrompts() {
   const blob = await zip.generateAsync({ type: 'blob' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `claude-projects-${currentTopic.toLowerCase().replace(/\s+/g, '-')}.zip`;
+  a.download = `claude-projects-${state.currentTopic.toLowerCase().replace(/\s+/g, '-')}.zip`;
   a.click();
-  showNotif(`✓ ${generatedAgents.length} Claude Project prompts downloaded`);
+  showNotif(`✓ ${state.generatedAgents.length} Claude Project prompts downloaded`);
 }
 
 function genClaudeTeamSummaryText() {
-  return `# ${currentTopic} — Claude Projects Setup
+  return `# ${state.currentTopic} — Claude Projects Setup
 
-## Your AI Team (${generatedAgents.length} agents)
+## Your AI Team (${state.generatedAgents.length} agents)
 
-${generatedAgents.map(a => `### ${a.emoji || '🤖'} ${a.name}
+${state.generatedAgents.map(a => `### ${a.emoji || '🤖'} ${a.name}
 - **Role:** ${a.role || a.type || 'Specialist'}
 - **Description:** ${a.description || ''}
 - **Claude Project file:** claude-project-${a.name.toLowerCase().replace(/\s+/g, '-')}.md`).join('\n\n')}
@@ -2401,8 +2402,8 @@ function copyClaudeTeamSummary() {
 }
 
 function genCrewAI() {
-  const topic = currentTopic;
-  const agents = generatedAgents;
+  const topic = state.currentTopic;
+  const agents = state.generatedAgents;
   const agentDefs = agents.map(a => `
 ${agentVarName(a)} = Agent(
     role="${a.role || a.name}",
@@ -2467,8 +2468,8 @@ if __name__ == "__main__":
 }
 
 function genLangGraph() {
-  const topic = currentTopic;
-  const agents = generatedAgents;
+  const topic = state.currentTopic;
+  const agents = state.generatedAgents;
 
   const stateFields = agents.map(a =>
     `    ${a.id.replace(/-/g, '_')}_output: str`
@@ -2551,8 +2552,8 @@ ${agents.map(a => `        "${a.id.replace(/-/g, '_')}_output": ""`).join(',\n')
 }
 
 function genAutoGen() {
-  const topic = currentTopic;
-  const agents = generatedAgents;
+  const topic = state.currentTopic;
+  const agents = state.generatedAgents;
 
   const agentDefs = agents.map(a => `
 ${a.id.replace(/-/g, '_')} = AssistantAgent(
@@ -2626,8 +2627,8 @@ if __name__ == "__main__":
 }
 
 function genSwarm() {
-  const topic = currentTopic;
-  const agents = generatedAgents;
+  const topic = state.currentTopic;
+  const agents = state.generatedAgents;
 
   const agentDefs = agents.map((a, i) => {
     const nextAgent = agents[i + 1];
@@ -2880,12 +2881,12 @@ const DEMO_TEAM = {
 
 function loadDemo() {
   localStorage.setItem('agentspark-onboarding-done', '1');
-  currentTopic = DEMO_TEAM.topic;
-  currentLevel = DEMO_TEAM.level;
-  generatedAgents = JSON.parse(JSON.stringify(DEMO_TEAM.agents));
-  generatedFiles = JSON.parse(JSON.stringify(DEMO_TEAM.files));
-  versionHistory = [] as any[];
-  traceSpans = [];
+  state.currentTopic = DEMO_TEAM.topic;
+  state.currentLevel = DEMO_TEAM.level;
+  state.generatedAgents = JSON.parse(JSON.stringify(DEMO_TEAM.agents));
+  state.generatedFiles = JSON.parse(JSON.stringify(DEMO_TEAM.files));
+  state.versionHistory = [] as any[];
+  state.traceSpans = [];
 
   // Show demo banner on results screen
   const banner = (document.getElementById('shared-banner') as HTMLElement);
@@ -2906,10 +2907,10 @@ function loadDemo() {
 // ─── LOAD FROM GIST URL ───────────────────────────────────
 
 (document.getElementById('template-detail-overlay') as HTMLElement).addEventListener('click', function (e) {
-  if (e.target === this) closeTemplateDetail();
+  if (e.target === this) (window as any).closeTemplateDetail();
 });
 (document.getElementById('unlock-modal') as HTMLElement).addEventListener('click', function (e) {
-  if (e.target === this) _unlockReject();
+  if (e.target === this) (window as any)._unlockReject();
 });
 
 // ─── THEME ────────────────────────────────────────────────
@@ -2945,7 +2946,7 @@ function _themeHoldStart() {
     if (btn) btn.textContent = next === 'light' ? '☀️' : '🌙';
     const metaTC = (document.getElementById('meta-theme-color') as HTMLMetaElement);
     if (metaTC) metaTC.content = next === 'light' ? '#faf7ee' : '#1a170d';
-    showNotif(lang === 'en' ? '🎨 Theme: following OS preference' : '🎨 Motyw: podąża za ustawieniami systemu');
+    showNotif(state.lang === 'en' ? '🎨 Theme: following OS preference' : '🎨 Motyw: podąża za ustawieniami systemu');
   }, 600);
 }
 
@@ -2975,11 +2976,11 @@ function _themeHoldStart() {
 
 // ─── INIT ─────────────────────────────────────────────────
 (async () => {
-  const loaded = await loadFromHash();
+  const loaded = await (window as any).loadFromHash();
   if (!loaded) renderTopicScreen();
-  refreshStaticI18n();
+  (window as any).refreshStaticI18n();
   maybeShowOnboarding();
-  loadFeaturedTemplates();
+  (window as any).loadFeaturedTemplates();
 })();
 
 // ─── NEW FEATURES 2026 ──────────────────────────────────
@@ -3002,12 +3003,12 @@ function startQuickTeam(type: string) {
   const config = configs[type as keyof typeof configs];
   if (!config) return;
 
-  currentTopic = config.topic;
+  state.currentTopic = config.topic;
   showScreen('chat');
   renderProgressSteps(3); // Show full progress
 
   // Fake chat history for context
-  chatHistory = [
+  state.chatHistory = [
     { role: 'user', text: `I need a ${config.topic}.` },
     { role: 'ai', text: `I'll create a team with: ${config.roles.join(', ')}.` }
   ];
@@ -3031,10 +3032,10 @@ async function regenerateTeam() {
 // loadPlaygroundExample moved to js/features/playground.js
 
 (document.getElementById('modal') as HTMLElement).addEventListener('click', function (e) {
-  if (e.target === this) closeModal();
+  if (e.target === this) (window as any).closeModal();
 });
 (document.getElementById('md-browser-modal') as HTMLElement).addEventListener('click', function (e) {
-  if (e.target === this) closeMdBrowser();
+  if (e.target === this) (window as any).closeMdBrowser();
 });
 
 // ── iOS: tap backdrop to dismiss ALL modal-overlays ────────

@@ -1,3 +1,4 @@
+import { state } from '../core/state';
 
 // Types
 interface AgentSparkWindow extends Window {
@@ -9,7 +10,7 @@ interface AgentSparkWindow extends Window {
 }
 declare let window: AgentSparkWindow;
 
-window.lang = 'en';
+state.lang = 'en';
 const T: any = {
   en: {
     badge: 'AI AGENT TEAM GENERATOR',
@@ -195,12 +196,12 @@ const T: any = {
   }
 };
 
-function t(key: string): any { return T[window.lang || 'en'][key]; }
-function tr(enText: string, plText: string): string { return (window.lang || 'en') === 'en' ? enText : plText; }
+function t(key: string): any { return T[state.lang || 'en'][key]; }
+function tr(enText: string, plText: string): string { return (state.lang || 'en') === 'en' ? enText : plText; }
 
 // ─── LANGUAGE ─────────────────────────────────────────────
 function setLang(l: string): void {
-  window.lang = l;
+  state.lang = l;
   (document.getElementById('btn-en') as HTMLElement)?.classList.toggle('active', l === 'en');
   (document.getElementById('btn-pl') as HTMLElement)?.classList.toggle('active', l === 'pl');
   // renderTopicScreen lives in app.ts; call via window to avoid compile-time dependency

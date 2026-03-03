@@ -1,6 +1,7 @@
+import { state } from './core/state';
 // ─── DB.TS — AgentSpark IndexedDB layer ──────────────────
-// Fixed: TS2451 duplicate _currentProjectId, TS18047 EventTarget null,
-//        TS18046 unknown type, TS2304 versionHistory, TS2339 property errors
+// Fixed: TS2451 duplicate state.currentProjectId, TS18047 EventTarget null,
+//        TS18046 unknown type, TS2304 state.versionHistory, TS2339 property errors
 
 const DB_NAME = 'agentspark-db';
 const DB_VERSION = 1;
@@ -8,7 +9,7 @@ const STORE_NAME = 'projects';
 
 let _db: IDBDatabase | null = null;
 // TS2451 fix: declare once here; remove any re-declaration elsewhere in this file
-let _currentProjectId: string | null = null;
+
 
 // ─── IndexedDB helpers ────────────────────────────────────
 function dbOpen(): Promise<IDBDatabase> {
@@ -74,16 +75,16 @@ async function dbDelete(id: string): Promise<void> {
 // ─── Project snapshot ─────────────────────────────────────
 function _projectSnapshot(): any {
   return {
-    topic: currentTopic,
-    level: currentLevel,
-    lang: lang,
-    modelProvider: selectedModel.provider,
-    modelId: selectedModel.model,
-    agents: JSON.parse(JSON.stringify(generatedAgents)),
-    files: JSON.parse(JSON.stringify(generatedFiles)),
-    // versionHistory declared as var in globals.d.ts — access safely
-    versionHistory: JSON.parse(JSON.stringify(typeof versionHistory !== 'undefined' ? versionHistory : [])),
-    chatHistory: JSON.parse(JSON.stringify(chatHistory)),
+    topic: state.currentTopic,
+    level: state.currentLevel,
+    lang: state.lang,
+    modelProvider: state.selectedModel.provider,
+    modelId: state.selectedModel.model,
+    agents: JSON.parse(JSON.stringify(state.generatedAgents)),
+    files: JSON.parse(JSON.stringify(state.generatedFiles)),
+    // state.versionHistory declared as var in globals.d.ts — access safely
+    versionHistory: JSON.parse(JSON.stringify(typeof state.versionHistory !== 'undefined' ? versionHistory : [])),
+    chatHistory: JSON.parse(JSON.stringify(state.chatHistory)),
   };
 }
 
@@ -95,51 +96,51 @@ function _projectName(topic: string): string {
 let _autoSaveTimer: ReturnType<typeof setTimeout> | null = null;
 
 function scheduleAutoSave(): void {
-  if (!generatedAgents.length) return;
+  if (!state.generatedAgents.length) return;
   if (_autoSaveTimer) clearTimeout(_autoSaveTimer);
   _autoSaveTimer = setTimeout(() => saveCurrentProject(true), 2000);
 }
 
 // ─── Save / Update ────────────────────────────────────────
 async function saveCurrentProject(silent = false): Promise<void> {
-  if (!generatedAgents.length) {
-    if (!silent) showNotif(lang === 'en' ? '⚠ Generate a team first before saving' : '⚠ Najpierw wygeneruj zespół', true);
+  if (!state.generatedAgents.length) {
+    if (!silent) showNotif(state.lang === 'en' ? '⚠ Generate a team first before saving' : '⚠ Najpierw wygeneruj zespół', true);
     return;
   }
   try {
     const now = Date.now();
     const snap = _projectSnapshot();
 
-    if (_currentProjectId) {
-      const existing = await dbGet(_currentProjectId);
+    if (state.currentProjectId) {
+      const existing = await dbGet(state.currentProjectId);
       if (existing) {
         await dbPut({ ...existing, ...snap, updatedAt: now });
       } else {
-        _currentProjectId = null;
+        state.currentProjectId = null;
       }
     }
 
-    if (!_currentProjectId) {
-      _currentProjectId = 'proj_' + now + '_' + Math.random().toString(36).slice(2, 7);
+    if (!state.currentProjectId) {
+      state.currentProjectId = 'proj_' + now + '_' + Math.random().toString(36).slice(2, 7);
       await dbPut({
-        id: _currentProjectId,
-        name: _projectName(currentTopic),
+        id: state.currentProjectId,
+        name: _projectName(state.currentTopic),
         createdAt: now,
         updatedAt: now,
         ...snap,
       });
     } else {
-      const existing = await dbGet(_currentProjectId);
-      if (existing) await dbPut({ ...existing, name: _projectName(currentTopic), updatedAt: now, ...snap });
+      const existing = await dbGet(state.currentProjectId);
+      if (existing) await dbPut({ ...existing, name: _projectName(state.currentTopic), updatedAt: now, ...snap });
     }
 
     _showSaveIndicator();
     await _updateProjectsBadge();
-    if (!silent) showNotif(lang === 'en' ? '✓ Project saved!' : '✓ Projekt zapisany!');
+    if (!silent) showNotif(state.lang === 'en' ? '✓ Project saved!' : '✓ Projekt zapisany!');
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error('[AgentSpark] Save failed:', err);
-    if (!silent) showNotif(lang === 'en' ? '⚠ Save failed: ' + msg : '⚠ Błąd zapisu: ' + msg, true);
+    if (!silent) showNotif(state.lang === 'en' ? '⚠ Save failed: ' + msg : '⚠ Błąd zapisu: ' + msg, true);
   }
 }
 
@@ -164,28 +165,28 @@ async function loadProject(id: string): Promise<void> {
     const proj = await dbGet(id);
     if (!proj) { showNotif('⚠ Project not found', true); return; }
 
-    currentTopic = proj.topic || '';
-    currentLevel = proj.level || 'beginner'; // M-05: was 'iskra' (Polish) — use English default
-    lang = proj.lang || 'en';
-    generatedAgents = proj.agents || [];
-    generatedFiles = proj.files || {};
-    chatHistory = proj.chatHistory || [];
-    // versionHistory is var — assign via window to keep globals in sync
+    state.currentTopic = proj.topic || '';
+    state.currentLevel = proj.level || 'beginner'; // M-05: was 'iskra' (Polish) — use English default
+    state.lang = proj.lang || 'en';
+    state.generatedAgents = proj.agents || [];
+    state.generatedFiles = proj.files || {};
+    state.chatHistory = proj.chatHistory || [];
+    // state.versionHistory is var — assign via window to keep globals in sync
     (window as any).versionHistory = proj.versionHistory || [];
-    _currentProjectId = proj.id;
+    state.currentProjectId = proj.id;
 
     if (proj.modelId) {
       const opt = document.querySelector(`#modelSelect option[value*="${proj.modelId}"]`) as HTMLOptionElement | null;
       if (opt) { opt.selected = true; if (typeof onModelChange === 'function') onModelChange(); }
     }
-    if (typeof setLang === 'function') setLang(lang);
+    if (typeof setLang === 'function') setLang(state.lang);
 
     showScreen('results');
     const apiKeyHeader = document.getElementById('apiKeyHeader') as HTMLElement | null;
     if (apiKeyHeader) apiKeyHeader.style.display = 'flex';
     if (typeof renderResults === 'function') renderResults();
     _showSaveIndicator();
-    showNotif(lang === 'en' ? `📂 "${proj.name}" loaded` : `📂 Załadowano "${proj.name}"`);
+    showNotif(state.lang === 'en' ? `📂 "${proj.name}" loaded` : `📂 Załadowano "${proj.name}"`);
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error('[AgentSpark] Load failed:', err);
@@ -203,17 +204,17 @@ async function deleteProject(id: string, name: string): Promise<void> {
       'Usuwanie projektu'
     )
     : Promise.resolve(window.confirm(
-      lang === 'en'
+      state.lang === 'en'
         ? `Delete project "${name}"? This cannot be undone.`
         : `Usunąć projekt "${name}"? Tej operacji nie można cofnąć.`
     )));
   if (!confirmed) return;
   try {
     await dbDelete(id);
-    if (_currentProjectId === id) _currentProjectId = null;
+    if (state.currentProjectId === id) state.currentProjectId = null;
     await renderProjectsList();
     await _updateProjectsBadge();
-    showNotif(lang === 'en' ? '🗑 Project deleted' : '🗑 Projekt usunięty');
+    showNotif(state.lang === 'en' ? '🗑 Project deleted' : '🗑 Projekt usunięty');
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     showNotif('⚠ Delete failed: ' + msg, true);
@@ -230,7 +231,7 @@ async function forkProject(id: string): Promise<void> {
     await dbPut({ ...proj, id: newId, name: proj.name + ' (copy)', createdAt: now, updatedAt: now });
     await renderProjectsList();
     await _updateProjectsBadge();
-    showNotif(lang === 'en' ? '✓ Project duplicated' : '✓ Projekt zduplikowany');
+    showNotif(state.lang === 'en' ? '✓ Project duplicated' : '✓ Projekt zduplikowany');
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     showNotif('⚠ Fork failed: ' + msg, true);
@@ -296,7 +297,7 @@ async function renderProjectsList(): Promise<void> {
     meta.className = 'project-meta';
 
     const agentsSpan = document.createElement('span');
-    agentsSpan.textContent = `🤖 ${agentCount} ${lang === 'en' ? 'agents' : 'agentów'}`;
+    agentsSpan.textContent = `🤖 ${agentCount} ${state.lang === 'en' ? 'agents' : 'agentów'}`;
 
     const levelSpan = document.createElement('span');
     levelSpan.textContent = p.level || '';
@@ -311,7 +312,7 @@ async function renderProjectsList(): Promise<void> {
     const loadBtn = document.createElement('button');
     loadBtn.className = 'btn-primary';
     loadBtn.style.cssText = 'font-size:0.8rem;padding:0.35rem 0.9rem;';
-    loadBtn.textContent = lang === 'en' ? 'Load' : 'Załaduj';
+    loadBtn.textContent = state.lang === 'en' ? 'Load' : 'Załaduj';
     loadBtn.addEventListener('click', () => loadProject(p.id));
 
     const forkBtn = document.createElement('button');
@@ -386,7 +387,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
   if (savedKey) {
-    apiKey = savedKey;
+    state.apiKey = savedKey;
     const inp = document.getElementById('apiKeySetupInput') as HTMLInputElement | null;
     if (inp) inp.value = savedKey;
     const demoCta = document.getElementById('demo-cta') as HTMLElement | null;

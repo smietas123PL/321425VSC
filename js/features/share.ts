@@ -1,3 +1,4 @@
+import { state } from '../core/state';
 // ─── FEATURES/SHARE.TS ───────────────────────────────────
 // Fixed: TS2339 .value on HTMLElement → cast to HTMLInputElement,
 //        .disabled on HTMLElement → cast to HTMLButtonElement,
@@ -14,11 +15,11 @@
 
     const payload = {
       v: 3,
-      topic: currentTopic,
-      level: currentLevel,
-      lang,
-      agents: generatedAgents,
-      files: generatedFiles,
+      topic: state.currentTopic,
+      level: state.currentLevel,
+      lang: state.lang,
+      agents: state.generatedAgents,
+      files: state.generatedFiles,
       ts: Date.now(),
       pw: usePassword,
     };
@@ -62,7 +63,7 @@
       }
 
       const agentEl = document.getElementById('share-agent-count') as HTMLElement | null;
-      if (agentEl) agentEl.textContent = `${generatedAgents.length} ${tr('agents', 'agentow')}`;
+      if (agentEl) agentEl.textContent = `${state.generatedAgents.length} ${tr('agents', 'agentow')}`;
       const verEl = document.getElementById('share-version-label') as HTMLElement | null;
       if (verEl) verEl.textContent = 'v3';
 
@@ -94,8 +95,8 @@
   }
 
   function openShareModal(): void {
-    if (!generatedAgents.length) {
-      showNotif(lang === 'en' ? '⚠ Generate a team first' : '⚠ Najpierw wygeneruj zespół', true);
+    if (!state.generatedAgents.length) {
+      showNotif(state.lang === 'en' ? '⚠ Generate a team first' : '⚠ Najpierw wygeneruj zespół', true);
       return;
     }
     shareMode = 'open';
@@ -144,9 +145,9 @@
           btn.classList.remove('copied');
         }, 1500);
       }
-      showNotif(lang === 'en' ? '✓ Share link copied!' : '✓ Link skopiowany!');
+      showNotif(state.lang === 'en' ? '✓ Share link copied!' : '✓ Link skopiowany!');
     } catch {
-      showNotif(lang === 'en' ? '⚠ Copy failed' : '⚠ Kopiowanie nieudane', true);
+      showNotif(state.lang === 'en' ? '⚠ Copy failed' : '⚠ Kopiowanie nieudane', true);
     }
   }
 
@@ -159,11 +160,11 @@
     }
   });
 
-  window.generateShareUrl = generateShareUrl;
-  window.onShareModeChange = onShareModeChange;
-  window.openShareModal = openShareModal;
-  window.closeShareModal = closeShareModal;
-  window.copyShareUrl = copyShareUrl;
+  (window as any).generateShareUrl = generateShareUrl;
+  (window as any).onShareModeChange = onShareModeChange;
+  (window as any).openShareModal = openShareModal;
+  (window as any).closeShareModal = closeShareModal;
+  (window as any).copyShareUrl = copyShareUrl;
 })();
 
 // ─── AES-GCM encryption helper (declared in globals) ─────

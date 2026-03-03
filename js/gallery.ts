@@ -1,5 +1,6 @@
+import { state } from './core/state';
 // ─── GALLERY TEMPLATES ────────────────────────────────────
-var GALLERY_TEMPLATES = [
+state.GALLERY_TEMPLATES = [
   {
     id: 'ecom-support-001', title: 'E-commerce Support Team',
     description: 'Complete customer support with order tracking, refunds, and product inquiries.',
@@ -129,7 +130,7 @@ function filterGallery(): void {
 function _applyGalleryFilters(): void {
   const searchEl = document.getElementById('gallery-search') as HTMLInputElement | null;
   const q = (searchEl?.value || '').toLowerCase().trim();
-  _galleryFiltered = GALLERY_TEMPLATES.filter((t: any) => {
+  _galleryFiltered = state.GALLERY_TEMPLATES.filter((t: any) => {
     const catOk = _galleryActiveCat === 'all' || t.category === _galleryActiveCat;
     const qOk = !q
       || t.title.toLowerCase().includes(q)
@@ -147,11 +148,11 @@ async function loadFeaturedTemplates(): Promise<void> {
     if (!res.ok) return;
     const remote = await res.json();
     if (!Array.isArray(remote) || remote.length === 0) return;
-    const existing = new Set(GALLERY_TEMPLATES.map((t: any) => t.id));
+    const existing = new Set(state.GALLERY_TEMPLATES.map((t: any) => t.id));
     remote.forEach((t: any) => {
       const parsed = normalizeTemplate(t);
       if (parsed && !existing.has(parsed.id)) {
-        GALLERY_TEMPLATES.push(parsed);
+        state.GALLERY_TEMPLATES.push(parsed);
       }
     });
     const screen = document.getElementById('screen-gallery') as HTMLElement | null;
@@ -279,7 +280,7 @@ function renderGalleryGrid(): void {
 
 // ─── TEMPLATE DETAIL ──────────────────────────────────────
 function showTemplateDetail(id: string): void {
-  const t = GALLERY_TEMPLATES.find((x: any) => x.id === id);
+  const t = state.GALLERY_TEMPLATES.find((x: any) => x.id === id);
   if (!t) return;
   _selectedTemplate = t;
 
@@ -369,7 +370,7 @@ function forkTemplate(): void {
 
 // ─── FORK / LOAD TEMPLATE ─────────────────────────────────
 function forkTemplateById(id: string): void {
-  const t = GALLERY_TEMPLATES.find((x: any) => x.id === id);
+  const t = state.GALLERY_TEMPLATES.find((x: any) => x.id === id);
   if (!t) return;
 
   // Typed with Record to avoid TS7053 index signature errors
@@ -386,7 +387,7 @@ function forkTemplateById(id: string): void {
   const fallback = ['🤖', '🧠', '⚙️', '📊', '🎯', '💡'];
   const emojis: string[] = catEmojis[t.category] || fallback;
 
-  generatedAgents = t.team.map((member: any, i: number) => ({
+  state.generatedAgents = t.team.map((member: any, i: number) => ({
     id: t.id + '-' + i,
     name: member.name,
     emoji: emojis[i] || fallback[i % fallback.length],
@@ -397,20 +398,20 @@ function forkTemplateById(id: string): void {
     skillMd: `# Skill: ${member.name}\n\n## Expertise\n${member.expertise.map((e: string) => '- ' + e).join('\n')}\n\n## Description\n${member.description}`,
   }));
 
-  generatedFiles = {};
-  generatedAgents.forEach((a: any) => {
-    generatedFiles['agent-' + a.id + '.md'] = a.agentMd;
-    generatedFiles['skill-' + a.id + '.md'] = a.skillMd;
+  state.generatedFiles = {};
+  state.generatedAgents.forEach((a: any) => {
+    state.generatedFiles['agent-' + a.id + '.md'] = a.agentMd;
+    state.generatedFiles['skill-' + a.id + '.md'] = a.skillMd;
   });
-  generatedFiles['README.md'] = `# ${t.title}\n\nForked from AgentSpark Gallery.\n\n## Agents\n${generatedAgents.map((a: any) => `- ${a.emoji} **${a.name}** \u2014 ${a.description}`).join('\n')}\n\n## Use Cases\n${t.useCases.map((u: string) => '- ' + u).join('\n')}`;
+  state.generatedFiles['README.md'] = `# ${t.title}\n\nForked from AgentSpark Gallery.\n\n## Agents\n${state.generatedAgents.map((a: any) => `- ${a.emoji} **${a.name}** \u2014 ${a.description}`).join('\n')}\n\n## Use Cases\n${t.useCases.map((u: string) => '- ' + u).join('\n')}`;
 
-  currentTopic = t.title;
+  state.currentTopic = t.title;
 
   // Typed with Record to avoid TS7053
   const levelMap: Record<string, string> = { beginner: 'iskra', intermediate: 'plomien', advanced: 'pozar' };
-  currentLevel = levelMap[t.difficulty] || 'iskra';
+  state.currentLevel = levelMap[t.difficulty] || 'iskra';
 
-  // versionHistory and traceSpans are declared as var in globals.d.ts
+  // state.versionHistory and state.traceSpans are declared as var in globals.d.ts
   // access via window to be safe across module boundaries
   (window as any).versionHistory = [];
   (window as any).traceSpans = [];
@@ -442,4 +443,4 @@ function forkTemplateById(id: string): void {
 (window as any).closeTemplateDetail = closeTemplateDetail;
 (window as any).forkTemplate = forkTemplate;
 (window as any).forkTemplateById = forkTemplateById;
-(window as any).GALLERY_TEMPLATES = GALLERY_TEMPLATES;
+(window as any).GALLERY_TEMPLATES = state.GALLERY_TEMPLATES;

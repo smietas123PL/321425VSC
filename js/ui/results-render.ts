@@ -1,3 +1,4 @@
+import { state } from '../core/state';
 // ─── RESULTS SCREEN ───────────────────────────────────────
 // All declare statements moved to js/globals.d.ts — do NOT re-declare here.
 
@@ -15,22 +16,22 @@ function showResults(skipReset = false): void {
   (document.getElementById('download-btn') as HTMLElement).textContent = t('downloadBtn');
   (document.getElementById('instr-btn') as HTMLElement).textContent = t('instrBtn');
   (document.getElementById('refine-btn') as HTMLElement).textContent = t('refineBtn');
-  (document.getElementById('md-preview-btn') as HTMLElement).textContent = lang === 'en' ? '📄 Preview Docs' : '📄 Podgląd Docs';
-  (document.getElementById('fw-export-btn') as HTMLElement).textContent = lang === 'en' ? '🚀 Export Framework' : '🚀 Eksport Framework';
+  (document.getElementById('md-preview-btn') as HTMLElement).textContent = state.lang === 'en' ? '📄 Preview Docs' : '📄 Podgląd Docs';
+  (document.getElementById('fw-export-btn') as HTMLElement).textContent = state.lang === 'en' ? '🚀 Export Framework' : '🚀 Eksport Framework';
 
   if (typeof renderVersionPanel === 'function') renderVersionPanel();
   if (typeof renderTraceLive === 'function') renderTraceLive();
 
   if (!skipReset) {
-    refineHistory = [];
-    isRefining = false;
+    state.refineHistory = [];
+    state.isRefining = false;
     refineSnapshots = [];
     selectedRefineAction = null;
     (document.getElementById('refine-panel') as HTMLElement).style.display = 'none';
     (document.getElementById('refine-history') as HTMLElement).innerHTML = '';
   }
 
-  const lvl = t('levels').find((l: any) => l.id === currentLevel);
+  const lvl = t('levels').find((l: any) => l.id === state.currentLevel);
   if (lvl) {
     const badge = document.getElementById('result-badge') as HTMLElement;
     badge.textContent = lvl.emoji + ' ' + lvl.name.toUpperCase() + ' — ' + t('resultBadge');
@@ -52,7 +53,7 @@ function showResults(skipReset = false): void {
   }
 
   // Always ensure graph section is visible when results are shown
-  (document.getElementById('graph-title') as HTMLElement).textContent = lang === 'en'
+  (document.getElementById('graph-title') as HTMLElement).textContent = state.lang === 'en'
     ? 'Agent Dependency Graph' : 'Graf Zależności Agentów';
   (document.getElementById('graph-section') as HTMLElement).style.display = 'block';
 
@@ -62,8 +63,8 @@ function showResults(skipReset = false): void {
   const grid = document.getElementById('agents-grid') as HTMLElement;
   grid.innerHTML = '';
 
-  const technical = generatedAgents.filter((a: any) => a.type === 'technical');
-  const business = generatedAgents.filter((a: any) => a.type !== 'technical');
+  const technical = state.generatedAgents.filter((a: any) => a.type === 'technical');
+  const business = state.generatedAgents.filter((a: any) => a.type !== 'technical');
 
   // XSS-safe HTML escape helper for results-render (LLM output hardening)
   function _rrEsc(s: string): string {
@@ -98,8 +99,8 @@ function showResults(skipReset = false): void {
           <div class="agent-role">${eRole}</div>
           <div class="agent-type-badge ${isTech ? 'badge-tech' : 'badge-biz'}" style="display:inline-block;margin-top:0.4rem;">
             ${isTech
-        ? (lang === 'en' ? 'Technical' : 'Techniczny')
-        : (lang === 'en' ? 'Business' : 'Biznesowy')}
+        ? (state.lang === 'en' ? 'Technical' : 'Techniczny')
+        : (state.lang === 'en' ? 'Business' : 'Biznesowy')}
           </div>
         </div>
         <div style="margin-left:auto;display:flex;gap:6px;">
@@ -143,17 +144,17 @@ function showResults(skipReset = false): void {
   }
 
   makeSection(
-    lang === 'en' ? 'Technical Agents — Build your app' : 'Agenci Techniczni — Budują aplikację',
+    state.lang === 'en' ? 'Technical Agents — Build your app' : 'Agenci Techniczni — Budują aplikację',
     '⚙️', technical, 'section-tech'
   );
   makeSection(
-    lang === 'en' ? 'Business Agents — Shape your vision' : 'Agenci Biznesowi — Nadają kontekst',
+    state.lang === 'en' ? 'Business Agents — Shape your vision' : 'Agenci Biznesowi — Nadają kontekst',
     '💼', business, 'section-biz'
   );
 
   const configWrap = document.createElement('div');
   configWrap.className = 'agent-section';
-  configWrap.innerHTML = `<div class="agent-section-header section-config"><span>🔗</span><span>${lang === 'en' ? 'Team Configuration' : 'Konfiguracja Zespołu'}</span></div>`;
+  configWrap.innerHTML = `<div class="agent-section-header section-config"><span>🔗</span><span>${state.lang === 'en' ? 'Team Configuration' : 'Konfiguracja Zespołu'}</span></div>`;
   const configGrid = document.createElement('div');
   configGrid.className = 'agents-grid';
   const configCard = document.createElement('div');
@@ -162,13 +163,13 @@ function showResults(skipReset = false): void {
     <div class="agent-card-header">
       <div class="agent-avatar" style="background:linear-gradient(145deg,#2a2510,#3a3218)">🔗</div>
       <div class="agent-card-meta">
-        <div class="agent-name">${lang === 'en' ? 'Team Configuration' : 'Konfiguracja Zespołu'}</div>
+        <div class="agent-name">${state.lang === 'en' ? 'Team Configuration' : 'Konfiguracja Zespołu'}</div>
         <div class="agent-role">Orchestration</div>
       </div>
     </div>
     <div class="agent-card-divider"></div>
     <div class="agent-card-body">
-      <div class="agent-desc">${lang === 'en' ? 'Defines how all agents connect and collaborate.' : 'Definiuje jak agenci się łączą i współpracują.'}</div>
+      <div class="agent-desc">${state.lang === 'en' ? 'Defines how all agents connect and collaborate.' : 'Definiuje jak agenci się łączą i współpracują.'}</div>
       <div class="file-chips-group">
         <span class="file-chips-label">Files</span>
         <div class="file-chips">
@@ -186,15 +187,15 @@ function showResults(skipReset = false): void {
 
   setTimeout(() => {
     // buildGraphFromAgents is declared in globals.d.ts with optional agents param
-    if (typeof buildGraphFromAgents === 'function') buildGraphFromAgents(generatedAgents);
+    if (typeof buildGraphFromAgents === 'function') buildGraphFromAgents(state.generatedAgents);
     const gc = document.querySelector('.graph-container') as HTMLElement | null;
     if (gc && !gc.querySelector('.graph-legend')) {
       const leg = document.createElement('div');
       leg.className = 'graph-legend';
       leg.innerHTML = `
-        <span><div class="legend-dot" style="background:#f2b90d"></div>${lang === 'en' ? 'Technical agent' : 'Agent techniczny'}</span>
-        <span><div class="legend-dot" style="background:#e05a1a"></div>${lang === 'en' ? 'Business agent' : 'Agent biznesowy'}</span>
-        <span style="font-size:0.65rem;margin-left:auto;color:var(--muted)">— — ${lang === 'en' ? 'context flow' : 'przepływ kontekstu'} &nbsp;&nbsp;—— ${lang === 'en' ? 'pipeline' : 'pipeline'}</span>
+        <span><div class="legend-dot" style="background:#f2b90d"></div>${state.lang === 'en' ? 'Technical agent' : 'Agent techniczny'}</span>
+        <span><div class="legend-dot" style="background:#e05a1a"></div>${state.lang === 'en' ? 'Business agent' : 'Agent biznesowy'}</span>
+        <span style="font-size:0.65rem;margin-left:auto;color:var(--muted)">— — ${state.lang === 'en' ? 'context flow' : 'przepływ kontekstu'} &nbsp;&nbsp;—— ${state.lang === 'en' ? 'pipeline' : 'pipeline'}</span>
       `;
       gc.appendChild(leg);
     }
@@ -227,17 +228,17 @@ async function downloadZip(): Promise<void> {
   }
   const zip = new JSZip();
 
-  Object.entries(generatedFiles).forEach(([name, content]) => {
+  Object.entries(state.generatedFiles).forEach(([name, content]) => {
     zip.file(name, content);
   });
 
   const cfg = {
-    name: currentTopic,
+    name: state.currentTopic,
     version: '1.0.0',
     generated_by: 'AgentSpark v1.1.0',
     generated_at: new Date().toISOString(),
-    level: currentLevel,
-    agents: generatedAgents.map((a: any) => ({
+    level: state.currentLevel,
+    agents: state.generatedAgents.map((a: any) => ({
       id: a.id, name: a.name, role: a.role,
       description: a.description,
       agent_file: 'agent-' + a.id + '.md',
@@ -251,18 +252,18 @@ async function downloadZip(): Promise<void> {
   zip.file('config.json', JSON.stringify(cfg, null, 2));
 
   const manifest = {
-    v: 2, source: 'agentspark', topic: currentTopic,
-    level: currentLevel, lang, agents: generatedAgents,
-    files: generatedFiles, ts: Date.now()
+    v: 2, source: 'agentspark', topic: state.currentTopic,
+    level: state.currentLevel, lang: state.lang, agents: state.generatedAgents,
+    files: state.generatedFiles, ts: Date.now()
   };
   zip.file('agentspark.json', JSON.stringify(manifest, null, 2));
 
-  const firstId: string = generatedAgents[0] ? generatedAgents[0].id : 'agent';
-  const pyAgents: string = generatedAgents.map((a: any) =>
+  const firstId: string = state.generatedAgents[0] ? state.generatedAgents[0].id : 'agent';
+  const pyAgents: string = state.generatedAgents.map((a: any) =>
     `    "${a.id}": open("agent-${a.id}.md").read(),`
   ).join('\n');
   const pyCode: string = [
-    `# ${currentTopic} — AgentSpark Team`,
+    `# ${state.currentTopic} — AgentSpark Team`,
     '# pip install anthropic',
     '',
     'import anthropic',
@@ -290,11 +291,11 @@ async function downloadZip(): Promise<void> {
   ].join('\n');
   zip.file('examples/python_example.py', pyCode);
 
-  const jsAgents: string = generatedAgents.map((a: any) =>
+  const jsAgents: string = state.generatedAgents.map((a: any) =>
     `  "${a.id}": fs.readFileSync(path.join(__dirname, "..", "agent-${a.id}.md"), "utf8"),`
   ).join('\n');
   const jsCode: string = [
-    `// ${currentTopic} — AgentSpark Team`,
+    `// ${state.currentTopic} — AgentSpark Team`,
     '// npm install @anthropic-ai/sdk',
     '',
     'import Anthropic from "@anthropic-ai/sdk";',
@@ -330,13 +331,13 @@ async function downloadZip(): Promise<void> {
   const blob = await zip.generateAsync({ type: 'blob' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'agentspark-' + currentTopic.toLowerCase().replace(/\s+/g, '-') + '.zip';
+  a.download = 'agentspark-' + state.currentTopic.toLowerCase().replace(/\s+/g, '-') + '.zip';
   a.click();
-  showNotif(lang === 'en' ? '✓ ZIP downloaded! Includes Python & Node.js examples.' : '✓ ZIP pobrany z przykładami Python i Node.js!');
+  showNotif(state.lang === 'en' ? '✓ ZIP downloaded! Includes Python & Node.js examples.' : '✓ ZIP pobrany z przykładami Python i Node.js!');
   trackEvent('export_zip', {
     success: true,
-    agents: generatedAgents.length,
-    files: Object.keys(generatedFiles || {}).length
+    agents: state.generatedAgents.length,
+    files: Object.keys(state.generatedFiles || {}).length
   });
 }
 
@@ -445,11 +446,11 @@ function renderMarkdown(md: string): string {
 
 // ─── FILE PREVIEW MODAL ───────────────────────────────────
 function previewFile(filename: string): void {
-  const content = generatedFiles[filename];
+  const content = state.generatedFiles[filename];
   if (!content) return;
 
-  currentModalFile = filename;
-  currentModalTab = 'preview';
+  state.currentModalFile = filename;
+  state.currentModalTab = 'preview';
 
   (document.getElementById('modal-title') as HTMLElement).textContent = filename;
   (document.getElementById('modal-filesize') as HTMLElement).textContent =
@@ -463,7 +464,7 @@ function previewFile(filename: string): void {
 }
 
 function switchModalTab(tab: string): void {
-  currentModalTab = tab;
+  state.currentModalTab = tab;
   const previewPane = document.getElementById('modal-preview-pane') as HTMLElement;
   const rawPane = document.getElementById('modal-raw-pane') as HTMLElement;
   const tabPreview = document.getElementById('tab-preview') as HTMLElement;
@@ -483,13 +484,13 @@ function switchModalTab(tab: string): void {
 }
 
 function downloadCurrentFile(): void {
-  if (!currentModalFile || !generatedFiles[currentModalFile]) return;
-  const blob = new Blob([generatedFiles[currentModalFile]], { type: 'text/markdown' });
+  if (!state.currentModalFile || !state.generatedFiles[state.currentModalFile]) return;
+  const blob = new Blob([state.generatedFiles[state.currentModalFile]], { type: 'text/markdown' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = currentModalFile;
+  a.download = state.currentModalFile;
   a.click();
-  showNotif(`✓ ${currentModalFile} downloaded`);
+  showNotif(`✓ ${state.currentModalFile} downloaded`);
 }
 
 function closeModal(): void {
@@ -498,21 +499,21 @@ function closeModal(): void {
 
 // ─── MARKDOWN BROWSER (all files) ─────────────────────────
 function openMarkdownPreview(): void {
-  if (!Object.keys(generatedFiles).length) {
-    showNotif(lang === 'en' ? '⚠ No files yet — generate a team first' : '⚠ Brak plików — najpierw wygeneruj zespół', true);
+  if (!Object.keys(state.generatedFiles).length) {
+    showNotif(state.lang === 'en' ? '⚠ No files yet — generate a team first' : '⚠ Brak plików — najpierw wygeneruj zespół', true);
     return;
   }
   const modal = document.getElementById('md-browser-modal') as HTMLElement;
   modal.classList.add('open');
 
-  const mdFiles = Object.keys(generatedFiles).filter(f => f.endsWith('.md'));
+  const mdFiles = Object.keys(state.generatedFiles).filter(f => f.endsWith('.md'));
   const sidebar = document.getElementById('md-browser-sidebar') as HTMLElement;
   sidebar.innerHTML = '';
 
   const groups = [
-    { label: lang === 'en' ? '📋 Config' : '📋 Konfiguracja', files: mdFiles.filter(f => f === 'README.md' || f === 'team-config.md') },
-    { label: lang === 'en' ? '⚙️ Agents' : '⚙️ Agenci', files: mdFiles.filter(f => f.startsWith('agent-')) },
-    { label: lang === 'en' ? '🎯 Skills' : '🎯 Umiejętności', files: mdFiles.filter(f => f.startsWith('skill-')) },
+    { label: state.lang === 'en' ? '📋 Config' : '📋 Konfiguracja', files: mdFiles.filter(f => f === 'README.md' || f === 'team-config.md') },
+    { label: state.lang === 'en' ? '⚙️ Agents' : '⚙️ Agenci', files: mdFiles.filter(f => f.startsWith('agent-')) },
+    { label: state.lang === 'en' ? '🎯 Skills' : '🎯 Umiejętności', files: mdFiles.filter(f => f.startsWith('skill-')) },
   ];
 
   groups.forEach(group => {
@@ -535,21 +536,21 @@ function openMarkdownPreview(): void {
       `;
       item.textContent = f;
       item.dataset.file = f;
-      item.onmouseenter = () => { if (f !== mdBrowserActiveFile) item.style.color = 'var(--text)'; };
-      item.onmouseleave = () => { if (f !== mdBrowserActiveFile) item.style.color = 'var(--muted)'; };
+      item.onmouseenter = () => { if (f !== state.mdBrowserActiveFile) item.style.color = 'var(--text)'; };
+      item.onmouseleave = () => { if (f !== state.mdBrowserActiveFile) item.style.color = 'var(--muted)'; };
       item.onclick = () => selectMdBrowserFile(f);
       sidebar.appendChild(item);
     });
   });
 
   if (mdFiles.length > 0) {
-    selectMdBrowserFile('README.md' in generatedFiles ? 'README.md' : mdFiles[0]);
+    selectMdBrowserFile('README.md' in state.generatedFiles ? 'README.md' : mdFiles[0]);
   }
 }
 
 function selectMdBrowserFile(filename: string): void {
-  mdBrowserActiveFile = filename;
-  const content = generatedFiles[filename] || '';
+  state.mdBrowserActiveFile = filename;
+  const content = state.generatedFiles[filename] || '';
 
   // Update sidebar active state — cast to HTMLElement to access .dataset / .style
   document.querySelectorAll('#md-browser-sidebar button').forEach((btn: Element) => {
@@ -577,16 +578,16 @@ async function downloadAllMd(): Promise<void> {
     showNotif('JSZip not loaded', true); return;
   }
   const zip = new JSZip();
-  Object.entries(generatedFiles)
+  Object.entries(state.generatedFiles)
     .filter(([name]) => name.endsWith('.md'))
     .forEach(([name, content]) => zip.file(name, content));
 
   const blob = await zip.generateAsync({ type: 'blob' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `agentspark-docs-${currentTopic.toLowerCase().replace(/\s+/g, '-')}.zip`;
+  a.download = `agentspark-docs-${state.currentTopic.toLowerCase().replace(/\s+/g, '-')}.zip`;
   a.click();
-  showNotif(lang === 'en' ? '✓ Docs ZIP downloaded!' : '✓ Docs ZIP pobrany!');
+  showNotif(state.lang === 'en' ? '✓ Docs ZIP downloaded!' : '✓ Docs ZIP pobrany!');
 }
 
 // ─── WINDOW EXPORTS ───────────────────────────────────────

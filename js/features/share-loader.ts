@@ -1,3 +1,4 @@
+import { state } from '../core/state';
 // ─── FEATURES/SHARE-LOADER.TS ────────────────────────────
 // Fixed: TS2339 .value/.disabled on HTMLElement → typed casts,
 //        TS7006 implicit params, TS7034/7005 implicit vars,
@@ -341,7 +342,7 @@ async function publishToGist(): Promise<void> {
     showNotif(tr('⚠ Enter your GitHub token first', '⚠ Najpierw podaj token GitHub'), true);
     return;
   }
-  if (!generatedAgents.length) {
+  if (!state.generatedAgents.length) {
     showNotif(tr('⚠ No agents to publish', '⚠ Brak agentow do publikacji'), true);
     return;
   }
@@ -354,8 +355,8 @@ async function publishToGist(): Promise<void> {
 
   const payload = {
     v: 3, source: 'agentspark',
-    topic: currentTopic, level: currentLevel, lang,
-    agents: generatedAgents, files: generatedFiles,
+    topic: state.currentTopic, level: state.currentLevel, lang: state.lang,
+    agents: state.generatedAgents, files: state.generatedFiles,
     ts: Date.now(),
   };
 
@@ -368,11 +369,11 @@ async function publishToGist(): Promise<void> {
         'Accept': 'application/vnd.github.v3+json',
       },
       body: JSON.stringify({
-        description: `AgentSpark: ${currentTopic}`,
+        description: `AgentSpark: ${state.currentTopic}`,
         public: true,
         files: {
           'agentspark-project.json': { content: JSON.stringify(payload, null, 2) },
-          'README.md': { content: `# AgentSpark Team: ${currentTopic}\n\n## Import\n1. Open AgentSpark\n2. Go to Results → Import\n3. Paste this Gist ID: \`{{GIST_ID}}\`` },
+          'README.md': { content: `# AgentSpark Team: ${state.currentTopic}\n\n## Import\n1. Open AgentSpark\n2. Go to Results → Import\n3. Paste this Gist ID: \`{{GIST_ID}}\`` },
         },
       }),
     });
@@ -391,7 +392,7 @@ async function publishToGist(): Promise<void> {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json', 'Authorization': `token ${token}` },
       body: JSON.stringify({
-        files: { 'README.md': { content: `# AgentSpark Team: ${currentTopic}\n\n## Import\n1. Open AgentSpark\n2. Paste this Gist URL or ID: \`${gistId}\`` } },
+        files: { 'README.md': { content: `# AgentSpark Team: ${state.currentTopic}\n\n## Import\n1. Open AgentSpark\n2. Paste this Gist URL or ID: \`${gistId}\`` } },
       }),
     });
 
@@ -481,7 +482,7 @@ async function loadFromHash(): Promise<boolean> {
       try {
         // TS2554 fix: descText is now optional
         pw = await _promptPassword(
-          lang === 'en'
+          state.lang === 'en'
             ? '🔒 This team is password protected. Enter the password to unlock it.'
             : '🔒 Ten zespół jest chroniony hasłem. Podaj hasło, aby go odblokować.'
         );
@@ -513,7 +514,7 @@ async function loadFromHash(): Promise<boolean> {
       let pw: string;
       try {
         pw = await _promptPassword(
-          lang === 'en'
+          state.lang === 'en'
             ? '🔒 This team is password protected (AES-256-GCM). Enter the password to unlock it.'
             : '🔒 Ten zespół jest zaszyfrowany (AES-256-GCM). Podaj hasło, aby go odblokować.'
         );
@@ -540,25 +541,25 @@ async function loadFromHash(): Promise<boolean> {
       return false;
     }
 
-    currentTopic = validated.topic || 'Shared Team';
-    currentLevel = validated.level || 'iskra';
-    if (validated.lang) lang = validated.lang;
-    generatedAgents = validated.agents;
-    generatedFiles = validated.files || {};
+    state.currentTopic = validated.topic || 'Shared Team';
+    state.currentLevel = validated.level || 'iskra';
+    if (validated.lang) state.lang = validated.lang;
+    state.generatedAgents = validated.agents;
+    state.generatedFiles = validated.files || {};
 
-    // TS2304 fix: versionHistory declared in globals.d.ts
-    versionHistory = [{
+    // TS2304 fix: state.versionHistory declared in globals.d.ts
+    state.versionHistory = [{
       id: Date.now(),
-      label: lang === 'en' ? 'Shared (original)' : 'Udostępniony (oryginał)',
-      agents: JSON.parse(JSON.stringify(generatedAgents)),
-      files: JSON.parse(JSON.stringify(generatedFiles)),
+      label: state.lang === 'en' ? 'Shared (original)' : 'Udostępniony (oryginał)',
+      agents: JSON.parse(JSON.stringify(state.generatedAgents)),
+      files: JSON.parse(JSON.stringify(state.generatedFiles)),
       ts: Date.now(),
     }];
 
     if (typeof renderProjectsList === 'function') await renderProjectsList();
     if (typeof showResults === 'function') showResults();
 
-    trackEvent('share_loaded', { success: true, agents: generatedAgents.length, encrypted: !!payload.pw });
+    trackEvent('share_loaded', { success: true, agents: state.generatedAgents.length, encrypted: !!payload.pw });
     return true;
   } catch (e: unknown) {
     // TS2339 fix: typed catch

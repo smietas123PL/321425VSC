@@ -1,3 +1,4 @@
+import { state } from './core/state';
 // ─── EXPORT.TS — AgentSpark Framework Export ─────────────
 // Fixed: TS2339 Exporter property errors, TS7006 implicit any params,
 //        TS7034/7005 tasks array, TS2304 appAlert
@@ -195,7 +196,7 @@ function _alert(msg: string, title?: string): void {
 }
 
 window.openExportCodeModal = function (): void {
-  if (typeof window.isPro !== 'undefined' && !window.isPro) {
+  if (typeof state.isPro !== 'undefined' && !state.isPro) {
     if (typeof window.showPaywall === 'function') {
       window.showPaywall();
     } else {
@@ -203,7 +204,7 @@ window.openExportCodeModal = function (): void {
     }
     return;
   }
-  if (!window.generatedAgents || window.generatedAgents.length === 0) {
+  if (!state.generatedAgents || state.generatedAgents.length === 0) {
     _alert('No agents generated yet.', 'Export Unavailable');
     return;
   }
@@ -217,15 +218,15 @@ window.closeExportCodeModal = function (): void {
 };
 
 window.exportCode = function (framework: string): void {
-  if (!window.generatedAgents || window.generatedAgents.length === 0) {
+  if (!state.generatedAgents || state.generatedAgents.length === 0) {
     _alert('No agents generated yet.', 'Export Unavailable');
     return;
   }
   let code = '';
   if (framework === 'crewai') {
-    code = Exporter.toCrewAI(window.generatedAgents);
+    code = Exporter.toCrewAI(state.generatedAgents);
   } else if (framework === 'langgraph') {
-    code = Exporter.toLangGraph(window.generatedAgents);
+    code = Exporter.toLangGraph(state.generatedAgents);
   }
   Exporter.download(`agents_${framework}.py`, code);
   if (typeof window.closeExportCodeModal === 'function') window.closeExportCodeModal();

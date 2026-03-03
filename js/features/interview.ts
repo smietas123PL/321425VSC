@@ -1,11 +1,12 @@
+import { state } from '../core/state';
 // ─── FEATURES/INTERVIEW.TS ───────────────────────────────
 // Fixed: TS7006 implicit params, TS2554 callGemini arg count,
-//        TS2345 chatHistory push never, TS18046 unknown err,
-//        TS7015/2339 generatedFiles/generatedAgents access
+//        TS2345 state.chatHistory push never, TS18046 unknown err,
+//        TS7015/2339 state.generatedFiles/state.generatedAgents access
 
 // NOTE: This file uses global vars declared in db.ts / globals.d.ts:
-//   chatHistory, questionCount, conversationState, MAX_QUESTIONS
-//   generatedAgents, generatedFiles, currentTopic, lang
+//   state.chatHistory, state.questionCount, state.conversationState, state.MAX_QUESTIONS
+//   state.generatedAgents, state.generatedFiles, state.currentTopic, state.lang
 
 // ─── Chat message type ────────────────────────────────────
 interface ChatMsg {
@@ -27,7 +28,7 @@ function addMessage(role: string, text: string): void {
   sender.className = 'msg-sender';
   sender.textContent = role === 'ai'
     ? '⚡ AgentSpark'
-    : (lang === 'en' ? 'You' : 'Ty');
+    : (state.lang === 'en' ? 'You' : 'Ty');
 
   const bubble = document.createElement('div');
   bubble.className = 'msg-bubble';
@@ -82,18 +83,18 @@ function removeTypingIndicator(): void {
 // ─── Start chat ───────────────────────────────────────────
 function startChat(): void {
   showScreen('chat');
-  // chatHistory is declared as var any[] in globals.d.ts
-  (chatHistory as ChatMsg[]).length = 0;
-  questionCount = 0;
-  conversationState = 'interview';
+  // state.chatHistory is declared as var any[] in globals.d.ts
+  (state.chatHistory as ChatMsg[]).length = 0;
+  state.questionCount = 0;
+  state.conversationState = 'interview';
 
   const apiKeyHeader = document.getElementById('apiKeyHeader') as HTMLElement | null;
   if (apiKeyHeader) apiKeyHeader.style.display = 'flex';
   const apiKeyInput = document.getElementById('apiKeyInput') as HTMLInputElement | null;
-  if (apiKeyInput) apiKeyInput.value = apiKey || '';
+  if (apiKeyInput) apiKeyInput.value = state.apiKey || '';
 
   const sidebarTopic = document.getElementById('sidebar-topic') as HTMLElement | null;
-  if (sidebarTopic) sidebarTopic.textContent = currentTopic || '';
+  if (sidebarTopic) sidebarTopic.textContent = state.currentTopic || '';
 
   const chatTitle = document.getElementById('chat-title') as HTMLElement | null;
   if (chatTitle) chatTitle.textContent = t('chatTitle') || 'Interview';
@@ -106,7 +107,7 @@ function startChat(): void {
   // callGemini requires 4 args: sysPrompt, userMsg, traceLabel, multiTurn[]
   callGemini(
     systemPrompt,
-    `The user wants to build: "${currentTopic}". Start the interview with your FIRST question. Respond ONLY with the JSON object as specified.`,
+    `The user wants to build: "${state.currentTopic}". Start the interview with your FIRST question. Respond ONLY with the JSON object as specified.`,
     '🎤 Interview · Start',
     []
   )
@@ -138,22 +139,22 @@ async function submitAnswer(answer: string): Promise<void> {
   if (window.clearOptions) window.clearOptions();
   addMessage('user', answer);
 
-  // chatHistory typed as any[] — push typed msg object
-  (chatHistory as ChatMsg[]).push({ role: 'user', text: answer });
-  questionCount++;
+  // state.chatHistory typed as any[] — push typed msg object
+  (state.chatHistory as ChatMsg[]).push({ role: 'user', text: answer });
+  state.questionCount++;
 
-  if (conversationState === 'interview') {
+  if (state.conversationState === 'interview') {
     addTypingIndicator();
     try {
-      const historyStr = (chatHistory as ChatMsg[])
+      const historyStr = (state.chatHistory as ChatMsg[])
         .map((m: ChatMsg) => `${m.role === 'user' ? 'User' : 'AgentSpark'}: ${m.text}`)
         .join('\n');
-      const prompt = `${historyStr}\n\nThis was answer ${questionCount} of ${MAX_QUESTIONS}. Ask next question or finalize.`;
+      const prompt = `${historyStr}\n\nThis was answer ${state.questionCount} of ${state.MAX_QUESTIONS}. Ask next question or finalize.`;
 
       const reply = await callGemini(
         window.getSystemPrompt ? window.getSystemPrompt() : '',
         prompt,
-        `🎤 Interview · Q${questionCount} of ${MAX_QUESTIONS}`,
+        `🎤 Interview · Q${state.questionCount} of ${state.MAX_QUESTIONS}`,
         []
       );
       removeTypingIndicator();
@@ -166,20 +167,20 @@ async function submitAnswer(answer: string): Promise<void> {
 
       if (parsed && parsed.complete) {
         if (parsed.summary) addMessage('ai', parsed.summary);
-        (chatHistory as ChatMsg[]).push({ role: 'ai', text: parsed.summary || 'Interview complete.' });
-        conversationState = 'generating';
+        (state.chatHistory as ChatMsg[]).push({ role: 'ai', text: parsed.summary || 'Interview complete.' });
+        state.conversationState = 'generating';
         if (window.renderProgressSteps) window.renderProgressSteps(1);
         if (window.clearOptions) window.clearOptions();
         setTimeout(generateAgents, 1200);
       } else if (parsed && parsed.question && parsed.options) {
         addMessage('ai', parsed.question);
-        (chatHistory as ChatMsg[]).push({ role: 'ai', text: parsed.question });
+        (state.chatHistory as ChatMsg[]).push({ role: 'ai', text: parsed.question });
         if (window.renderOptions) window.renderOptions(parsed);
       } else {
         addMessage('ai', reply);
-        (chatHistory as ChatMsg[]).push({ role: 'ai', text: reply });
-        if (reply.includes('[INTERVIEW_COMPLETE]') || questionCount >= MAX_QUESTIONS) {
-          conversationState = 'generating';
+        (state.chatHistory as ChatMsg[]).push({ role: 'ai', text: reply });
+        if (reply.includes('[INTERVIEW_COMPLETE]') || state.questionCount >= state.MAX_QUESTIONS) {
+          state.conversationState = 'generating';
           if (window.renderProgressSteps) window.renderProgressSteps(1);
           if (window.clearOptions) window.clearOptions();
           setTimeout(generateAgents, 1200);
@@ -200,10 +201,10 @@ async function generateAgents(): Promise<void> {
   if (_isGeneratingTeam) return;
   _isGeneratingTeam = true;
 
-  showLoader(lang === 'en' ? 'Generating team...' : 'Generowanie zespołu...', true);
+  showLoader(state.lang === 'en' ? 'Generating team...' : 'Generowanie zespołu...', true);
   addTypingIndicator();
 
-  const historyStr = (chatHistory as ChatMsg[])
+  const historyStr = (state.chatHistory as ChatMsg[])
     .map((m: ChatMsg) => `${m.role === 'user' ? 'User' : 'AgentSpark'}: ${m.text}`)
     .join('\n');
   const prompt = `Here is the complete interview:\n${historyStr}\n\n[GENERATE]\nGenerate the agent team JSON now based on the interview.`;
@@ -222,23 +223,23 @@ async function generateAgents(): Promise<void> {
     if (!jsonMatch) throw new Error('Could not parse agent data');
     const data = JSON.parse(jsonMatch[0]);
 
-    generatedAgents = data.agents || [];
-    // generatedFiles declared as Record<string, string> — safe to assign
-    generatedFiles = {} as Record<string, string>;
+    state.generatedAgents = data.agents || [];
+    // state.generatedFiles declared as Record<string, string> — safe to assign
+    state.generatedFiles = {} as Record<string, string>;
 
-    generatedAgents.forEach((a: any) => {
-      (generatedFiles as Record<string, string>)[`agent-${a.id}.md`] =
+    state.generatedAgents.forEach((a: any) => {
+      (state.generatedFiles as Record<string, string>)[`agent-${a.id}.md`] =
         a.agentMd || `# Agent: ${a.name}`;
-      (generatedFiles as Record<string, string>)[`skill-${a.id}.md`] =
+      (state.generatedFiles as Record<string, string>)[`skill-${a.id}.md`] =
         a.skillMd || `# Skill: ${a.name}`;
     });
-    (generatedFiles as Record<string, string>)['team-config.md'] =
+    (state.generatedFiles as Record<string, string>)['team-config.md'] =
       data.teamConfig || `# Team Configuration`;
-    (generatedFiles as Record<string, string>)['README.md'] =
+    (state.generatedFiles as Record<string, string>)['README.md'] =
       typeof generateReadme === 'function' ? generateReadme() : '';
 
     if (window.renderProgressSteps) window.renderProgressSteps(3);
-    addMessage('ai', lang === 'en' ? '✅ Done!' : '✅ Gotowe!');
+    addMessage('ai', state.lang === 'en' ? '✅ Done!' : '✅ Gotowe!');
 
     setTimeout(() => {
       if (typeof showResults === 'function') showResults();

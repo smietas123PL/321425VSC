@@ -1,3 +1,4 @@
+import { state } from './core/state';
 // ─── AUTH.TS — AgentSpark backend auth + RevenueCat ──────
 // Fixed: TS7006 implicit any params, TS18046 unknown catch, TS18047 null,
 //        TS2698 spread of unknown, TS2339 property on {}
@@ -29,8 +30,8 @@ async function initRevenueCat(): Promise<void> {
   }
   try {
     await Purchases.configure({ apiKey: RC_API_KEY });
-    if (window.currentUser) {
-      await checkProStatus(window.currentUser.uid);
+    if (state.currentUser) {
+      await checkProStatus(state.currentUser.uid);
     }
   } catch (e) {
     console.error('RC Init Error:', e);
@@ -56,7 +57,7 @@ async function _checkRevenueCatProStatus(uid: string): Promise<void> {
     // M-08: Use typed RC SDK accessor instead of double-destructure
     const { customerInfo } = await Purchases.logIn({ appUserID: uid });
     const isActive = !!customerInfo?.entitlements?.active?.[RC_ENTITLEMENT];
-    window.isPro = isActive;
+    state.isPro = isActive;
     updateProUI(isActive);
   } catch (e) {
     console.error('Check Pro Status Failed:', e);
@@ -65,7 +66,7 @@ async function _checkRevenueCatProStatus(uid: string): Promise<void> {
 
 function updateProUI(isPro: boolean): void {
   const badge = document.getElementById('pro-badge') as HTMLElement | null;
-  if (isPro) {
+  if (state.isPro) {
     if (badge) badge.style.display = 'inline-block';
     document.querySelectorAll('.locked-feature').forEach(el => el.classList.remove('locked'));
   } else {
@@ -108,10 +109,10 @@ async function purchasePackage(pkg: any): Promise<void> {
     // M-08: typed SDK access via _rcSdk() helper
     const { customerInfo } = await Purchases.purchasePackage({ aPackage: pkg });
     if (customerInfo?.entitlements?.active?.[RC_ENTITLEMENT]) {
-      window.isPro = true;
+      state.isPro = true;
       updateProUI(true);
       closePaywall();
-      showNotif(lang === 'en' ? '🎉 Welcome to Pro!' : '🎉 Witaj w wersji Pro!');
+      showNotif(state.lang === 'en' ? '🎉 Welcome to Pro!' : '🎉 Witaj w wersji Pro!');
     }
   } catch (e: any) {
     if (!e.userCancelled) {
@@ -237,23 +238,23 @@ function updateAuthUI(user: any): void {
   if (!label || !icon) return;   // TS18047 fix: null guard
 
   if (user) {
-    window.currentUser = {
+    state.currentUser = {
       ...user,
       uid: user.id || user.uid,
       displayName: user.name || user.displayName || user.email?.split('@')[0] || 'User',
     };
-    label.textContent = window.currentUser.displayName.split(' ')[0] || 'User';
+    label.textContent = state.currentUser.displayName.split(' ')[0] || 'User';
     icon.textContent = '✅';
     btn.classList.add('active');
-    btn.title = `Logged in as ${window.currentUser.email || 'user'}`;
-    checkProStatus(window.currentUser.uid);
+    btn.title = `Logged in as ${state.currentUser.email || 'user'}`;
+    checkProStatus(state.currentUser.uid);
   } else {
-    window.currentUser = null;
+    state.currentUser = null;
     label.textContent = tr('Login', 'Logowanie');
     icon.textContent = '👤';
     btn.classList.remove('active');
     btn.title = tr('Login with backend account', 'Zaloguj kontem backend');
-    window.isPro = false;
+    state.isPro = false;
   }
 }
 
@@ -261,10 +262,10 @@ function updateAuthUI(user: any): void {
 // H-10: Removed anonymous device auto-registration (backendRegister).
 // Login now directs users to Google OAuth only — no silent account creation.
 async function toggleAuth(): Promise<void> {
-  if (window.currentUser) {
+  if (state.currentUser) {
     const shouldLogout = await (window.uiConfirm
       ? window.uiConfirm('Log out?', 'Wylogować się?', 'Log Out', 'Wylogowanie')
-      : Promise.resolve(confirm(lang === 'en' ? 'Log out?' : 'Wylogować się?')));
+      : Promise.resolve(confirm(state.lang === 'en' ? 'Log out?' : 'Wylogować się?')));
     if (shouldLogout) {
       const refreshToken = getRefreshToken();
       try {
@@ -288,13 +289,13 @@ async function toggleAuth(): Promise<void> {
       setAuthToken('');
       setRefreshToken('');
       updateAuthUI(null);
-      showNotif(lang === 'en' ? '👋 Logged out' : '👋 Wylogowano');
+      showNotif(state.lang === 'en' ? '👋 Logged out' : '👋 Wylogowano');
       if (typeof renderProjectsList === 'function') renderProjectsList();
     }
   } else {
     // H-10: Direct user to Google OAuth — no silent anonymous device account creation
     showNotif(
-      lang === 'en'
+      state.lang === 'en'
         ? 'Please use Google Sign-In to log in'
         : 'Użyj Google Sign-In, aby się zalogować'
     );
@@ -306,8 +307,8 @@ async function toggleAuth(): Promise<void> {
 
 // ─── SYNC ─────────────────────────────────────────────────
 async function syncProjectsWithCloud(): Promise<void> {
-  if (!window.currentUser || !getAuthToken()) return;
-  showNotif(lang === 'en' ? '☁ Syncing...' : '☁ Synchronizacja...');
+  if (!state.currentUser || !getAuthToken()) return;
+  showNotif(state.lang === 'en' ? '☁ Syncing...' : '☁ Synchronizacja...');
   try {
     const remote = await apiFetch('/projects', { method: 'GET' }, true);
     const cloudProjects: any[] = Array.isArray(remote.projects) ? remote.projects : [];
@@ -341,7 +342,7 @@ async function syncProjectsWithCloud(): Promise<void> {
     }
 
     await renderProjectsList();
-    showNotif(lang === 'en' ? '☁ Sync complete' : '☁ Synchronizacja zakończona');
+    showNotif(state.lang === 'en' ? '☁ Sync complete' : '☁ Synchronizacja zakończona');
   } catch (e) {
     console.error('Sync failed:', e);
     showNotif('Sync Error', true);
@@ -352,7 +353,7 @@ async function syncProjectsWithCloud(): Promise<void> {
 async function checkProStatus(uid: string): Promise<void> {
   if (!uid) return;
   if (!RC_API_KEY || !window.Purchases) {
-    window.isPro = false;
+    state.isPro = false;
     updateProUI(false);
     return;
   }
